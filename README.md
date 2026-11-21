@@ -114,7 +114,7 @@ Permisos: `activeTab` (actuar solo sobre la pestaña actual cuando pulses, reser
 Emparejamiento: PKCE con `state`, aprobación en la web de Aplica y canje del código por un
 token. Puedes desconectar desde el panel o desde la web. Para desarrollar, todo va en Docker
 (comandos arriba) y la URL de vuelta de desarrollo en Chrome y Edge es la indicada en la
-sección anterior.
+sección de desarrollo, en «Redirect URLs for the local web app».
 
 ## Licence
 
