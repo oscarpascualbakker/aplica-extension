@@ -57,7 +57,9 @@ export function buildManifest(target, { version, dev = false }) {
           id: 'extension@aplica.cv',
           // 142: primera versión con data_collection_permissions también en Android.
           strict_min_version: '142.0',
-          data_collection_permissions: { required: ['authenticationInfo'] },
+          // CV-504: además del token (authenticationInfo), envía a Aplica el contenido de la oferta
+          // (websiteContent) y su enlace (browsingActivity), siempre después de que la persona pulse.
+          data_collection_permissions: { required: ['authenticationInfo', 'websiteContent', 'browsingActivity'] },
         },
       },
     };

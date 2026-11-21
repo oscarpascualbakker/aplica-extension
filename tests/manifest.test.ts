@@ -39,7 +39,7 @@ describe('diferencias por destino', () => {
     expect(m.browser_specific_settings).toMatchObject({
       gecko: {
         id: 'extension@aplica.cv',
-        data_collection_permissions: { required: ['authenticationInfo'] },
+        data_collection_permissions: { required: ['authenticationInfo', 'websiteContent', 'browsingActivity'] },
       },
     });
   });

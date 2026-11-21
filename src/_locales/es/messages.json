@@ -46,9 +46,9 @@
   "saveAnywayButton": { "message": "Guardar igualmente" },
   "saving": { "message": "Guardando…" },
   "readAgainButton": { "message": "Leer la página de nuevo" },
-  "readSelectionButton": { "message": "Guardar" },
-  "needsSelection": { "message": "Selecciona el texto de la oferta y pulsa Guardar" },
-  "noAccess": { "message": "Pulsa el icono de Aplica en esta página para leer la oferta" },
+  "readSelectionButton": { "message": "Usar el texto seleccionado" },
+  "needsSelection": { "message": "Selecciona el texto de la oferta en la página y pulsa «Usar el texto seleccionado»." },
+  "noAccess": { "message": "Pulsa el icono de Aplica en esta página para leer la oferta." },
   "unsupportedPage": { "message": "Abre una oferta de empleo en una página web para guardarla." },
   "readFailed": { "message": "No se ha podido leer la página. Inténtalo de nuevo." },
   "noticeTruncated": {

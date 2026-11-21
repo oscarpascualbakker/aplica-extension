@@ -292,8 +292,8 @@ describe('panel: lectura de la página', () => {
       },
     });
     await openPanel();
-    await until(() => body().includes('Selecciona el texto de la oferta y pulsa Guardar'));
-    (Array.from(document.querySelectorAll('button')).find((b) => b.textContent === 'Guardar') as HTMLButtonElement).click();
+    await until(() => body().includes('Selecciona el texto de la oferta en la página y pulsa «Usar el texto seleccionado».'));
+    (Array.from(document.querySelectorAll('button')).find((b) => b.textContent === 'Usar el texto seleccionado') as HTMLButtonElement).click();
     await until(() => heading() === 'Guardar oferta');
     expect((document.querySelector('#f-description') as HTMLTextAreaElement).value).toBe('Texto seleccionado');
     expect(body()).toContain('La descripción es el texto que tenías seleccionado en la página.');

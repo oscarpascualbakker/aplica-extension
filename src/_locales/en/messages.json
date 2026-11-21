@@ -20,70 +20,70 @@
   "errorNetwork": { "message": "Could not reach Aplica. Check your connection and try again." },
   "errorRateLimited": { "message": "Too many attempts. Wait a minute and try again." },
   "errorServer": { "message": "Aplica is not responding as expected. Please try again later." },
-  "readingPage": { "message": "Leyendo la oferta…" },
-  "previewTitle": { "message": "Guardar oferta" },
-  "previewIntro": { "message": "Revisa lo que Aplica ha leído de la página. Puedes corregirlo antes de guardar. Guardar es gratis." },
-  "fieldTitle": { "message": "Puesto" },
-  "fieldCompany": { "message": "Empresa" },
-  "fieldLocation": { "message": "Ubicación" },
-  "fieldWorkMode": { "message": "Modalidad" },
-  "workModeNone": { "message": "Sin indicar" },
-  "workModeOnsite": { "message": "Presencial" },
-  "workModeHybrid": { "message": "Híbrido" },
-  "workModeRemote": { "message": "Remoto" },
-  "fieldSalary": { "message": "Salario" },
-  "fieldDescription": { "message": "Descripción" },
+  "readingPage": { "message": "Reading the job posting…" },
+  "previewTitle": { "message": "Save job posting" },
+  "previewIntro": { "message": "Check what Aplica has read from the page. You can correct it before you save. Saving is free." },
+  "fieldTitle": { "message": "Job title" },
+  "fieldCompany": { "message": "Company" },
+  "fieldLocation": { "message": "Location" },
+  "fieldWorkMode": { "message": "Work mode" },
+  "workModeNone": { "message": "Not specified" },
+  "workModeOnsite": { "message": "On-site" },
+  "workModeHybrid": { "message": "Hybrid" },
+  "workModeRemote": { "message": "Remote" },
+  "fieldSalary": { "message": "Salary" },
+  "fieldDescription": { "message": "Description" },
   "descriptionCount": {
-    "message": "$COUNT$ de $MAX$ caracteres",
+    "message": "$COUNT$ of $MAX$ characters",
     "placeholders": {
       "count": { "content": "$1", "example": "1200" },
       "max": { "content": "$2", "example": "30000" }
     }
   },
-  "fieldLink": { "message": "Enlace" },
-  "fieldInvalid": { "message": "Este campo no es válido. Revísalo." },
-  "saveButton": { "message": "Guardar en Aplica" },
-  "saveAnywayButton": { "message": "Guardar igualmente" },
-  "saving": { "message": "Guardando…" },
-  "readAgainButton": { "message": "Leer la página de nuevo" },
-  "readSelectionButton": { "message": "Guardar" },
-  "needsSelection": { "message": "Selecciona el texto de la oferta y pulsa Guardar" },
-  "noAccess": { "message": "Pulsa el icono de Aplica en esta página para leer la oferta" },
-  "unsupportedPage": { "message": "Abre una oferta de empleo en una página web para guardarla." },
-  "readFailed": { "message": "No se ha podido leer la página. Inténtalo de nuevo." },
+  "fieldLink": { "message": "Link" },
+  "fieldInvalid": { "message": "This field is not valid. Check it." },
+  "saveButton": { "message": "Save to Aplica" },
+  "saveAnywayButton": { "message": "Save anyway" },
+  "saving": { "message": "Saving…" },
+  "readAgainButton": { "message": "Read the page again" },
+  "readSelectionButton": { "message": "Use the selected text" },
+  "needsSelection": { "message": "Select the job posting text on the page and press “Use the selected text”." },
+  "noAccess": { "message": "Click the Aplica icon on this page to read the job posting." },
+  "unsupportedPage": { "message": "Open a job posting on a web page to save it." },
+  "readFailed": { "message": "The page could not be read. Please try again." },
   "noticeTruncated": {
-    "message": "La descripción era demasiado larga y se ha recortado a $MAX$ caracteres.",
+    "message": "The description was too long and has been shortened to $MAX$ characters.",
     "placeholders": { "max": { "content": "$1", "example": "30000" } }
   },
-  "noticeFromSelection": { "message": "La descripción es el texto que tenías seleccionado en la página." },
-  "invalidFields": { "message": "Revisa los campos marcados." },
-  "errorScope": { "message": "Esta conexión no permite guardar ofertas. Desconecta y vuelve a conectar." },
+  "noticeFromSelection": { "message": "The description is the text you had selected on the page." },
+  "invalidFields": { "message": "Check the highlighted fields." },
+  "errorScope": { "message": "This connection does not allow saving job postings. Disconnect and connect again." },
   "possibleDuplicate": {
-    "message": "Ya tienes una candidatura parecida: $TITLE$ en $COMPANY$. Puede ser la misma oferta con otro enlace.",
+    "message": "You already have a similar application: $TITLE$ at $COMPANY$. It may be the same job posting with a different link.",
     "placeholders": {
       "title": { "content": "$1", "example": "Desarrolladora backend" },
       "company": { "content": "$2", "example": "Empresa Ficticia S.L." }
     }
   },
-  "savedTitle": { "message": "Oferta guardada" },
+  "savedTitle": { "message": "Job posting saved" },
   "savedText": {
-    "message": "$TITLE$ en $COMPANY$ está en tu cuenta como candidatura guardada.",
+    "message": "$TITLE$ at $COMPANY$ is in your account as a saved application.",
     "placeholders": {
       "title": { "content": "$1", "example": "Desarrolladora backend" },
       "company": { "content": "$2", "example": "Empresa Ficticia S.L." }
     }
   },
-  "duplicateTitle": { "message": "Ya tienes esta oferta en Aplica" },
+  "duplicateTitle": { "message": "You already have this job posting in Aplica" },
   "duplicateText": {
-    "message": "$TITLE$ en $COMPANY$",
+    "message": "$TITLE$ at $COMPANY$",
     "placeholders": {
       "title": { "content": "$1", "example": "Desarrolladora backend" },
       "company": { "content": "$2", "example": "Empresa Ficticia S.L." }
     }
   },
-  "openInAplica": { "message": "Abrir en Aplica" },
-  "devExportButton": { "message": "Exportar página" },
-  "devExportWarning": { "message": "Solo desarrollo. El fichero lleva datos personales y el contenido real de la página: no lo compartas fuera del proyecto." },
-  "devExportDone": { "message": "Fichero descargado. Guárdalo en fixtures-raw/." },
-  "devExportError": { "message": "No se ha podido exportar la página. Pulsa el icono de Aplica en ella y vuelve a intentarlo." }
+  "openInAplica": { "message": "Open in Aplica" },
+  "devExportButton": { "message": "Export page" },
+  "devExportWarning": { "message": "Development only. The file contains personal data and the page's real content: do not share it outside the project." },
+  "devExportDone": { "message": "File downloaded. Save it in fixtures-raw/." },
+  "devExportError": { "message": "The page could not be exported. Click the Aplica icon on it and try again." }
 }
