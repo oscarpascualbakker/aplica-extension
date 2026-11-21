@@ -52,7 +52,7 @@ export function workModeFromLabel(label: string): WorkMode | null {
   const value = label.toLowerCase().replace(/[\s_-]+/g, '');
   if (['onsite', 'presencial', 'enoficina'].includes(value)) return 'presencial';
   if (['hybrid', 'hibrido', 'híbrido'].includes(value)) return 'hibrido';
-  if (['remote', 'remoto', 'teletrabajo'].includes(value)) return 'remoto';
+  if (['remote', 'remoto', 'enremoto', 'teletrabajo'].includes(value)) return 'remoto';
   return null;
 }
 
@@ -177,9 +177,8 @@ const infoempleo: PortalExtractor = (doc) => {
   };
 };
 
-// Página de invitado de LinkedIn (/jobs/view/<id> sin sesión). El DOM con sesión iniciada no
-// se ha capturado todavía: ver README (portales pendientes de fixture).
-const linkedin: PortalExtractor = (doc) => {
+// Página de invitado de LinkedIn (/jobs/view/<id> sin sesión).
+const linkedinGuest: PortalExtractor = (doc) => {
   const description = doc.querySelector('.show-more-less-html__markup');
   return {
     title: textOf(doc, 'h1.top-card-layout__title'),
@@ -187,6 +186,69 @@ const linkedin: PortalExtractor = (doc) => {
     location: textOf(doc, '.topcard__flavor--bullet'),
     description: description ? elementToText(description) : '',
   };
+};
+
+/** `b` va antes que `a` en el documento (Node.DOCUMENT_POSITION_PRECEDING). */
+const PRECEDING = 2;
+
+/** Salario en una etiqueta de la tarjeta: una cifra con moneda. */
+const SALARY_LABEL = /(?:[€$£]|\b(?:EUR|USD|GBP)\b)\s*\d|\d[\d.,]*\s*[kK]?\s*(?:[€$£]|\b(?:EUR|USD|GBP)\b)/;
+
+// LinkedIn con sesión iniciada (interfaz de 2026): las clases están ofuscadas y no hay JSON-LD.
+// Anclas estables: `componentkey="JobDetails_AboutTheJob_<id>"` con la descripción en
+// `data-testid="expandable-text-box"`, y la tarjeta de arriba, que es la del último enlace a una
+// empresa antes de "About the job" (en la búsqueda, la lista de la izquierda tiene otros antes).
+// En la tarjeta, el primer párrafo después de la empresa es el puesto y el siguiente empieza por
+// la ubicación ("Ciudad, Región, País · hace 1 semana · ..."); las etiquetas son enlaces con la
+// modalidad, la jornada y, si lo publica, el salario.
+const linkedinSignedIn: PortalExtractor = (doc) => {
+  const about = doc.querySelector('[componentkey^="JobDetails_AboutTheJob_"]');
+  if (!about) return {};
+  // La descripción, sin el botón "… more" que la despliega (va dentro de la caja).
+  const box = about.querySelector('[data-testid="expandable-text-box"]')?.cloneNode(true) as Element | undefined;
+  box?.querySelectorAll('[data-testid="expandable-text-button"], button').forEach((el) => {
+    el.remove();
+  });
+  const fields: Partial<OfferFields> = { description: box ? elementToText(box) : '' };
+
+  const companyLink = Array.from(doc.querySelectorAll('a[href*="/company/"]'))
+    .filter((a) => (about.compareDocumentPosition(a) & PRECEDING) !== 0 && inlineText(a.textContent) !== '')
+    .at(-1);
+  if (!companyLink) return fields;
+  fields.company = inlineText(companyLink.textContent);
+
+  // Se sube desde la empresa hasta el bloque que tiene, detrás de ella, el puesto y la ubicación.
+  let card: Element | null = companyLink.parentElement;
+  for (let depth = 0; card && depth < 8; depth++, card = card.parentElement) {
+    const after = Array.from(card.querySelectorAll('p')).filter(
+      (p) => (companyLink.compareDocumentPosition(p) & PRECEDING) === 0 && !companyLink.contains(p) && inlineText(p.textContent) !== '',
+    );
+    const [titleP, metaP] = after;
+    if (!titleP || !metaP) continue;
+    fields.title = inlineText(titleP.textContent);
+    fields.location = inlineText(metaP.querySelector('span')?.textContent ?? metaP.textContent).split(' · ')[0] ?? '';
+    break;
+  }
+
+  // Las etiquetas van en un bloque aparte, entre la tarjeta y "About the job".
+  const between = (el: Element): boolean =>
+    (companyLink.compareDocumentPosition(el) & PRECEDING) === 0 && (about.compareDocumentPosition(el) & PRECEDING) !== 0;
+  const labels = Array.from(doc.querySelectorAll('a span span'))
+    .filter(between)
+    .map((el) => inlineText(el.textContent))
+    .filter((label) => label.length <= 60);
+  for (const label of labels) {
+    const mode = workModeFromLabel(label);
+    if (mode && !fields.workMode) fields.workMode = mode;
+    if (!fields.salary && SALARY_LABEL.test(label)) fields.salary = label;
+  }
+  return fields;
+};
+
+// LinkedIn: la página de invitado y, si no está, la de con sesión.
+const linkedin: PortalExtractor = (doc) => {
+  const guest = linkedinGuest(doc);
+  return guest.title || guest.description ? guest : linkedinSignedIn(doc);
 };
 
 export const EXTRACTORS: Partial<Record<PortalKey, PortalExtractor>> = {

@@ -8,6 +8,12 @@ describe('offerUrl', () => {
     );
   });
 
+  it('LinkedIn /jobs/search-results (la búsqueda con sesión) con currentJobId', () => {
+    expect(offerUrl('https://www.linkedin.com/jobs/search-results/?currentJobId=4400000004&keywords=datos&origin=JOB_SEARCH_PAGE')).toBe(
+      'https://www.linkedin.com/jobs/view/4400000004/',
+    );
+  });
+
   it('LinkedIn /jobs/collections con currentJobId', () => {
     expect(offerUrl('https://es.linkedin.com/jobs/collections/recommended/?currentJobId=4400000002')).toBe(
       'https://www.linkedin.com/jobs/view/4400000002/',

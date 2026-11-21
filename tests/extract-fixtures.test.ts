@@ -143,6 +143,23 @@ const CASES: Case[] = [
     full: { title: TITLE, company: COMPANY, location: 'Villanueva del Ejemplo', description: ABOUT },
     dom: {},
   },
+  {
+    // Con sesión iniciada, en la búsqueda con la oferta abierta: la lista de la izquierda y
+    // "Acerca de la empresa" tienen otros enlaces de empresa que no cuentan.
+    file: 'linkedin-signed-in',
+    host: 'www.linkedin.com',
+    portal: 'linkedin',
+    jsonLd: false,
+    full: {
+      title: TITLE,
+      company: COMPANY,
+      location: 'Villanueva del Ejemplo, Provincia Ficticia, España',
+      workMode: 'hibrido',
+      salary: '45 K € al año - 52 K € al año',
+      description: ABOUT,
+    },
+    dom: {},
+  },
 ];
 
 describe.each(CASES)('fixture $file', (c) => {
@@ -173,7 +190,7 @@ describe('fixtures', () => {
   });
 
   it('solo llevan datos ficticios: nada de las páginas reales de las que se tomó la estructura', () => {
-    const real = /palantir|anthropic|ottonova|elevator|infinitum|crit\b|servicenow|cloudflare|hugging|stripe|spotify|salesforce/i;
+    const real = /palantir|powens|anthropic|ottonova|elevator|infinitum|crit\b|servicenow|cloudflare|hugging|stripe|spotify|salesforce/i;
     for (const file of readdirSync('tests/fixtures')) {
       const html = readFileSync(`tests/fixtures/${file}`, 'utf8');
       expect(real.test(html), file).toBe(false);

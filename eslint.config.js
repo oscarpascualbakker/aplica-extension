@@ -3,7 +3,8 @@ import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
-  { ignores: ['dist/**', 'node_modules/**'] },
+  // fixtures-raw: capturas reales y herramientas locales, fuera de Git (ver README).
+  { ignores: ['dist/**', 'node_modules/**', 'fixtures-raw/**'] },
   js.configs.recommended,
   {
     files: ['src/**/*.ts', 'tests/**/*.ts'],

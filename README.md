@@ -60,7 +60,8 @@ When the panel opens (and each time you press the icon again) it reads the activ
 
 1. **JSON-LD** `schema.org/JobPosting` (all `application/ld+json` blocks, `@graph`, arrays).
 2. **Portal extractors** (by hostname) fill what the JSON-LD lacks. Portals with an own
-   extractor: LinkedIn (guest page), Infoempleo, Tecnoempleo, Greenhouse, Lever,
+   extractor: LinkedIn (guest page and signed-in layout, including the search view with an
+   offer open), Infoempleo, Tecnoempleo, Greenhouse, Lever,
    SmartRecruiters, Teamtailor, Personio and Factorial. Their selectors come from real pages,
    and the fixtures in `tests/fixtures` keep that structure with invented content.
    InfoJobs, Indeed, Glassdoor, Workday and Workable are recognised (`portal` key) but rely on
@@ -71,8 +72,9 @@ When the panel opens (and each time you press the icon again) it reads the activ
 The work mode (`presencial`, `hibrido`, `remoto`) is only taken from structured data or clear
 portal labels, never guessed from free text. The description is cut at 30000 characters
 (the panel says so) and the other fields at 255. The URL is the tab URL; on LinkedIn
-`/jobs/search` and `/jobs/collections` with `currentJobId` it becomes
-`https://www.linkedin.com/jobs/view/<id>/`. The server does the rest of the normalisation.
+`/jobs/search`, `/jobs/search-results` and `/jobs/collections` with `currentJobId` it becomes
+`https://www.linkedin.com/jobs/view/<id>/`. The server stores a clean link (no tracking
+parameters) and does the rest of the normalisation.
 
 The panel calls `GET /api/ext/v1/offers/match` before saving and `POST /api/ext/v1/offers` to
 save (candidate stage `guardada`, free). The panel language follows the `locale` returned by
@@ -121,8 +123,9 @@ removed from the production bundle by a build constant, and a test checks it.
 
 Portals that could not be downloaded without an account or a browser (InfoJobs and Indeed and
 Glassdoor behind a captcha or security check, Workday and Workable rendered by script) are
-waiting for a capture made this way. LinkedIn only has the guest page: the signed-in layout
-still needs a capture.
+waiting for a capture made this way. The LinkedIn signed-in extractor comes from a capture of
+`/jobs/view/<id>`; the search view (`/jobs/search-results`) shares its anchors but has not been
+captured yet.
 
 ### Load the unpacked extension
 
