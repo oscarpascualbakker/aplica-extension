@@ -2,7 +2,7 @@
 
 ## Reporting a vulnerability
 
-Please do not open a public issue for a security problem. Email **security@aplica.cv** with:
+Please do not open a public issue for a security problem. Email **oscar@aplica.cv** with:
 
 - what you found and where,
 - the steps to reproduce it,
