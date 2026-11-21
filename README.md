@@ -81,6 +81,11 @@ save (candidate stage `guardada`, free). The panel language follows the `locale`
 `/me` (`es` or `en`), loaded from `_locales/<locale>/messages.json` by `src/i18n.ts`. Without
 a connection, the browser language is used.
 
+The "✕" button at the top right closes the panel in every state (`src/panel/close.ts`):
+`sidePanel.close()` for the current window in Chrome and Edge, `sidebarAction.close()` in
+Firefox, and `window.close()` as a fallback. In Chrome and Edge the icon only opens the panel
+(and reads the page again if it is already open); in Firefox it toggles the sidebar.
+
 ## Development (Docker only)
 
 There is no Node on the host. Everything runs in the `node` service of `docker-compose.yml`

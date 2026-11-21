@@ -373,3 +373,36 @@ describe('panel: idioma de la cuenta y conexión', () => {
     expect(body()).toContain('no lo compartas fuera del proyecto');
   });
 });
+
+describe('panel: cerrar (CV-523)', () => {
+  const closeButton = (): HTMLButtonElement | null => document.querySelector('button.close');
+
+  it('el botón de cerrar está en todos los estados, con nombre accesible y en el idioma del panel', async () => {
+    setup({ replies: { 'GET /me': { status: 401 } } });
+    await openPanel();
+    await until(() => body().includes('nav:connectButton'));
+    expect(closeButton()?.getAttribute('aria-label')).toBe('nav:closeButton');
+
+    setup();
+    await openPanel();
+    await until(() => heading() === 'Guardar oferta');
+    expect(closeButton()?.getAttribute('aria-label')).toBe('Cerrar el panel');
+    expect(closeButton()?.title).toBe('Cerrar el panel');
+    // Va el último: el foco sigue empezando por el título.
+    expect(document.querySelector('#app')?.lastElementChild).toBe(closeButton());
+    expect(document.activeElement).toBe(document.querySelector('h1'));
+  });
+
+  it('en Chrome y Edge cierra el panel de la ventana actual', async () => {
+    setup();
+    const close = vi.fn(() => Promise.resolve());
+    const scope = globalThis as unknown as { chrome: Record<string, unknown> };
+    scope.chrome.sidePanel = { close };
+    scope.chrome.windows = { getCurrent: () => Promise.resolve({ id: 3 }) };
+    await openPanel();
+    await until(() => heading() === 'Guardar oferta');
+    closeButton()?.click();
+    await until(() => close.mock.calls.length > 0);
+    expect(close).toHaveBeenCalledWith({ windowId: 3 });
+  });
+});

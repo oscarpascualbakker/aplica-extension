@@ -14,6 +14,7 @@ import { MAX_DESCRIPTION, MAX_FIELD, type ExtractedOffer, type WorkMode } from '
 import { createSession, type FailureReason } from '../session';
 import type { Session } from '../session';
 import { createTokenStore } from '../token-store';
+import { closePanel } from './close';
 import { devExportSection } from './dev-export';
 import { readPage, type ReadOutcome } from './read-page';
 
@@ -53,10 +54,28 @@ function button(text: string, onClick: () => void, secondary = false): HTMLButto
   return node;
 }
 
+/**
+ * Botón para cerrar el panel (CV-523), en todos los estados. Se ve arriba a la derecha, pero va
+ * el último en el orden del documento: el foco y el tabulador empiezan por el contenido.
+ */
+function closeButton(): HTMLButtonElement {
+  const node = button(
+    '✕',
+    () => {
+      closePanel();
+    },
+    true,
+  );
+  node.classList.add('close');
+  node.setAttribute('aria-label', t('closeButton'));
+  node.title = t('closeButton');
+  return node;
+}
+
 /** Pinta el estado y lleva el foco al título (o al elemento indicado). */
 function render(nodes: HTMLElement[], focus?: HTMLElement): void {
   live.textContent = '';
-  root.replaceChildren(...nodes);
+  root.replaceChildren(...nodes, closeButton());
   const target = focus ?? root.querySelector('h1');
   if (target) {
     if (!target.hasAttribute('tabindex') && !(target instanceof HTMLInputElement)) target.tabIndex = -1;
