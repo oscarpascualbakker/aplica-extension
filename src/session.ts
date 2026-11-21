@@ -2,13 +2,13 @@
 // Flujo: PKCE S256 + state, launchWebAuthFlow, canje del código en /api/ext/v1/token.
 // Las dependencias entran por parámetro para poder probarlo sin navegador.
 
-import type { ApiClient, MeResponse } from './api';
+import type { AuthApi, MeResponse } from './api';
 import type { BrowserName } from './browser';
 import { codeChallenge, randomToken } from './pkce';
 import type { TokenStore } from './token-store';
 
 export type SessionDeps = {
-  api: ApiClient;
+  api: AuthApi;
   tokenStore: TokenStore;
   apiBase: string;
   browser: BrowserName;

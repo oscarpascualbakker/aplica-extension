@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import type { ApiClient, ApiResult, MeResponse, TokenResponse } from '../src/api';
+import type { ApiResult, AuthApi, MeResponse, TokenResponse } from '../src/api';
 import { createSession, type SessionDeps } from '../src/session';
 import type { TokenStore } from '../src/token-store';
 
@@ -26,9 +26,9 @@ function memoryStore(initial: string | null = null): TokenStore & { value: strin
   return store;
 }
 
-function setup(overrides: { api?: Partial<ApiClient>; launch?: SessionDeps['launchWebAuthFlow']; token?: string | null } = {}) {
+function setup(overrides: { api?: Partial<AuthApi>; launch?: SessionDeps['launchWebAuthFlow']; token?: string | null } = {}) {
   const tokenStore = memoryStore(overrides.token ?? null);
-  const api: ApiClient = {
+  const api: AuthApi = {
     exchangeToken: vi.fn((): Promise<ApiResult<TokenResponse>> =>
       Promise.resolve({ ok: true, data: { token: 'secret', token_type: 'Bearer', browser: BROWSER } })),
     getMe: vi.fn((): Promise<ApiResult<MeResponse>> =>

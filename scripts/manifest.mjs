@@ -1,6 +1,7 @@
 // Manifest por destino: una base común MV3 más las diferencias de cada navegador (CV-503).
-// Sin host_permissions, content_scripts ni externally_connectable: la extensión no lee
-// ninguna página en esta versión (CV-503). La API responde con CORS abierto y sin credenciales.
+// Sin host_permissions, content_scripts ni externally_connectable: la página solo se lee con
+// activeTab + scripting.executeScript en la pestaña activa, después de que la persona pulse el
+// icono (CV-504). La API responde con CORS abierto y sin credenciales.
 
 export const TARGETS = ['chrome', 'edge', 'firefox'];
 
@@ -50,7 +51,7 @@ export function buildManifest(target, { version, dev = false }) {
         default_panel: 'panel.html',
         default_icon: ICONS,
       },
-      permissions: ['activeTab', 'storage', 'identity'],
+      permissions: ['activeTab', 'scripting', 'storage', 'identity'],
       browser_specific_settings: {
         gecko: {
           id: 'extension@aplica.cv',
@@ -68,6 +69,6 @@ export function buildManifest(target, { version, dev = false }) {
     ...(dev ? { key: DEV_PUBLIC_KEY } : {}),
     background: { service_worker: 'background.js', type: 'module' },
     side_panel: { default_path: 'panel.html' },
-    permissions: ['activeTab', 'storage', 'sidePanel', 'identity'],
+    permissions: ['activeTab', 'scripting', 'storage', 'sidePanel', 'identity'],
   };
 }

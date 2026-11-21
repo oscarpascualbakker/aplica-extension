@@ -7,3 +7,6 @@ dist/
 .env
 .env.*
 coverage/
+# Páginas reales exportadas con el build de desarrollo (CV-504): llevan datos personales.
+# Nunca se suben: de ahí salen los fixtures con datos ficticios.
+fixtures-raw/

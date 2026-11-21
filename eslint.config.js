@@ -10,7 +10,7 @@ export default tseslint.config(
     extends: tseslint.configs.strictTypeChecked,
     languageOptions: {
       parserOptions: { projectService: true, tsconfigRootDir: import.meta.dirname },
-      globals: { ...globals.browser, __API_BASE__: 'readonly' },
+      globals: { ...globals.browser, __API_BASE__: 'readonly', __DEV_BUILD__: 'readonly' },
     },
   },
   {

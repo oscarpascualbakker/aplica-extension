@@ -19,5 +19,71 @@
   "errorInvalid": { "message": "No se ha podido completar la conexión. Inténtalo de nuevo." },
   "errorNetwork": { "message": "No se ha podido contactar con Aplica. Comprueba tu conexión e inténtalo de nuevo." },
   "errorRateLimited": { "message": "Demasiados intentos. Espera un minuto e inténtalo de nuevo." },
-  "errorServer": { "message": "Aplica no responde como se esperaba. Inténtalo más tarde." }
+  "errorServer": { "message": "Aplica no responde como se esperaba. Inténtalo más tarde." },
+  "readingPage": { "message": "Leyendo la oferta…" },
+  "previewTitle": { "message": "Guardar oferta" },
+  "previewIntro": { "message": "Revisa lo que Aplica ha leído de la página. Puedes corregirlo antes de guardar. Guardar es gratis." },
+  "fieldTitle": { "message": "Puesto" },
+  "fieldCompany": { "message": "Empresa" },
+  "fieldLocation": { "message": "Ubicación" },
+  "fieldWorkMode": { "message": "Modalidad" },
+  "workModeNone": { "message": "Sin indicar" },
+  "workModeOnsite": { "message": "Presencial" },
+  "workModeHybrid": { "message": "Híbrido" },
+  "workModeRemote": { "message": "Remoto" },
+  "fieldSalary": { "message": "Salario" },
+  "fieldDescription": { "message": "Descripción" },
+  "descriptionCount": {
+    "message": "$COUNT$ de $MAX$ caracteres",
+    "placeholders": {
+      "count": { "content": "$1", "example": "1200" },
+      "max": { "content": "$2", "example": "30000" }
+    }
+  },
+  "fieldLink": { "message": "Enlace" },
+  "fieldInvalid": { "message": "Este campo no es válido. Revísalo." },
+  "saveButton": { "message": "Guardar en Aplica" },
+  "saveAnywayButton": { "message": "Guardar igualmente" },
+  "saving": { "message": "Guardando…" },
+  "readAgainButton": { "message": "Leer la página de nuevo" },
+  "readSelectionButton": { "message": "Guardar" },
+  "needsSelection": { "message": "Selecciona el texto de la oferta y pulsa Guardar" },
+  "noAccess": { "message": "Pulsa el icono de Aplica en esta página para leer la oferta" },
+  "unsupportedPage": { "message": "Abre una oferta de empleo en una página web para guardarla." },
+  "readFailed": { "message": "No se ha podido leer la página. Inténtalo de nuevo." },
+  "noticeTruncated": {
+    "message": "La descripción era demasiado larga y se ha recortado a $MAX$ caracteres.",
+    "placeholders": { "max": { "content": "$1", "example": "30000" } }
+  },
+  "noticeFromSelection": { "message": "La descripción es el texto que tenías seleccionado en la página." },
+  "invalidFields": { "message": "Revisa los campos marcados." },
+  "errorScope": { "message": "Esta conexión no permite guardar ofertas. Desconecta y vuelve a conectar." },
+  "possibleDuplicate": {
+    "message": "Ya tienes una candidatura parecida: $TITLE$ en $COMPANY$. Puede ser la misma oferta con otro enlace.",
+    "placeholders": {
+      "title": { "content": "$1", "example": "Desarrolladora backend" },
+      "company": { "content": "$2", "example": "Empresa Ficticia S.L." }
+    }
+  },
+  "savedTitle": { "message": "Oferta guardada" },
+  "savedText": {
+    "message": "$TITLE$ en $COMPANY$ está en tu cuenta como candidatura guardada.",
+    "placeholders": {
+      "title": { "content": "$1", "example": "Desarrolladora backend" },
+      "company": { "content": "$2", "example": "Empresa Ficticia S.L." }
+    }
+  },
+  "duplicateTitle": { "message": "Ya tienes esta oferta en Aplica" },
+  "duplicateText": {
+    "message": "$TITLE$ en $COMPANY$",
+    "placeholders": {
+      "title": { "content": "$1", "example": "Desarrolladora backend" },
+      "company": { "content": "$2", "example": "Empresa Ficticia S.L." }
+    }
+  },
+  "openInAplica": { "message": "Abrir en Aplica" },
+  "devExportButton": { "message": "Exportar página" },
+  "devExportWarning": { "message": "Solo desarrollo. El fichero lleva datos personales y el contenido real de la página: no lo compartas fuera del proyecto." },
+  "devExportDone": { "message": "Fichero descargado. Guárdalo en fixtures-raw/." },
+  "devExportError": { "message": "No se ha podido exportar la página. Pulsa el icono de Aplica en ella y vuelve a intentarlo." }
 }
