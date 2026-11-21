@@ -1,0 +1,9 @@
+node_modules/
+dist/
+*.log
+.DS_Store
+# Clave privada del ID de desarrollo: nunca se sube (CV-503).
+*.pem
+.env
+.env.*
+coverage/

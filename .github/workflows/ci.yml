@@ -1,0 +1,52 @@
+# CI de la extensión (CV-503). Las acciones van fijadas por SHA, con la versión en comentario.
+# La firma de los paquetes y la subida a Chrome Web Store, Edge Add-ons y AMO llegan en CV-509,
+# cuando existan las cuentas de desarrollador. Aquí solo se construyen y se empaquetan.
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22.23.5
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+      - run: npm run package
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: aplica-extension-zips
+          path: dist/zip/*.zip
+          if-no-files-found: error
+
+  release:
+    # Solo en tags v*: publica los zips en un release de GitHub.
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: aplica-extension-zips
+          path: zips
+      - env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+          REPO: ${{ github.repository }}
+        run: gh release create "$TAG" zips/*.zip --repo "$REPO" --title "$TAG" --generate-notes

@@ -1,0 +1,40 @@
+:root {
+  color-scheme: light dark;
+  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-size: 14px;
+  line-height: 1.45;
+}
+body {
+  margin: 0;
+  padding: 16px;
+}
+h1 {
+  font-size: 18px;
+  margin: 0 0 12px;
+}
+p {
+  margin: 0 0 12px;
+}
+button {
+  font: inherit;
+  padding: 8px 14px;
+  border: 1px solid #1f4fd8;
+  border-radius: 6px;
+  background: #1f4fd8;
+  color: #fff;
+  cursor: pointer;
+}
+button.secondary {
+  background: transparent;
+  color: inherit;
+  border-color: currentColor;
+}
+button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+.notice {
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid currentColor;
+}

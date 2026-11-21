@@ -1,0 +1,23 @@
+{
+  "extName": { "message": "Aplica" },
+  "extDescription": { "message": "Tu acompañante de Aplica para preparar candidaturas. Gratis." },
+  "actionTitle": { "message": "Abrir Aplica" },
+  "panelTitle": { "message": "Aplica" },
+  "connectIntro": { "message": "Conecta este navegador con tu cuenta de Aplica. Aplica no lee ninguna página hasta que se lo pides." },
+  "connectButton": { "message": "Conectar con Aplica" },
+  "connecting": { "message": "Esperando a que apruebes la conexión…" },
+  "connectedAs": {
+    "message": "Conectado como $EMAIL$",
+    "placeholders": { "email": { "content": "$1", "example": "ana@example.com" } }
+  },
+  "disconnectButton": { "message": "Desconectar" },
+  "retryButton": { "message": "Reintentar" },
+  "loading": { "message": "Cargando…" },
+  "noticeRevoked": { "message": "La conexión se ha cerrado. Vuelve a conectar para seguir usando Aplica." },
+  "errorCancelled": { "message": "Se ha cancelado la conexión." },
+  "errorDenied": { "message": "No has permitido la conexión." },
+  "errorInvalid": { "message": "No se ha podido completar la conexión. Inténtalo de nuevo." },
+  "errorNetwork": { "message": "No se ha podido contactar con Aplica. Comprueba tu conexión e inténtalo de nuevo." },
+  "errorRateLimited": { "message": "Demasiados intentos. Espera un minuto e inténtalo de nuevo." },
+  "errorServer": { "message": "Aplica no responde como se esperaba. Inténtalo más tarde." }
+}
