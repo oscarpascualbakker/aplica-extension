@@ -529,7 +529,7 @@ function showDuplicate(session: Session, application: ApplicationRef): void {
 // no gasta créditos (D-204), así que, agotadas, el panel lleva a la candidatura en la web, donde se
 // confirma el precio. El informe completo es el que manda, y el panel lo dice.
 
-/** Bloque del encaje exprés en la web (D-209). */
+/** Bloque del encaje exprés en la web (D-211). */
 const QUICK_FIT_ANCHOR = '#encaje-expres';
 /** Bloque de preparar la candidatura en la web. */
 const PREPARE_ANCHOR = '#preparar';
