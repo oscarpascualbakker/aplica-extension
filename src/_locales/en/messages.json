@@ -83,6 +83,39 @@
     }
   },
   "openInAplica": { "message": "Open in Aplica" },
+  "quickFitTitle": { "message": "Quick fit" },
+  "quickFitIntro": { "message": "A quick reading of this job posting against your profile: the key requirements and a provisional verdict. The full fit report, prepared with your application, is the one that counts." },
+  "quickFitButton": { "message": "See fit" },
+  "quickFitRunning": { "message": "Checking the fit…" },
+  "quickFitFreeLeft": {
+    "message": "Free readings left today: $COUNT$.",
+    "placeholders": { "count": { "content": "$1", "example": "2" } }
+  },
+  "quickFitVerdict": {
+    "message": "Provisional verdict: $VERDICT$",
+    "placeholders": { "verdict": { "content": "$1", "example": "Apply with reservations" } }
+  },
+  "verdictApply": { "message": "Apply" },
+  "verdictCaveats": { "message": "Apply with reservations" },
+  "verdictDoNotApply": { "message": "Do not apply" },
+  "statusCovered": { "message": "Covered" },
+  "statusToConfirm": { "message": "To confirm" },
+  "statusMissing": { "message": "Missing" },
+  "quickFitDisclaimer": { "message": "This is a quick reading. The full fit report, prepared with your application, is the one that counts." },
+  "prepareFullButton": { "message": "Prepare full application" },
+  "quickFitCreditsRequired": {
+    "message": "You have already used today's free readings. In Aplica you can run this reading with credits (price in credits: $PRICE$), always with your confirmation.",
+    "placeholders": { "price": { "content": "$1", "example": "1" } }
+  },
+  "quickFitOpenWeb": { "message": "See fit in Aplica" },
+  "quickFitReportExists": { "message": "This application already has the full fit report, which is the one that counts." },
+  "quickFitNoPosting": { "message": "The job posting text is missing. Add it in Aplica to see the fit." },
+  "quickFitNoProfile": { "message": "To see the fit you need your career profile in Aplica." },
+  "quickFitBusy": { "message": "A reading is already in progress. Wait a few seconds and try again." },
+  "quickFitUnavailable": { "message": "Aplica could not check the fit right now. Please try again in a few minutes. You have not used any reading." },
+  "quickFitRefused": { "message": "This reading could not be done for this job posting. You have not used any reading." },
+  "quickFitFailed": { "message": "The reading could not be completed. Please try again. You have not used any reading." },
+  "errorScopeQuickFit": { "message": "This connection does not allow reading your career profile. Disconnect and connect again." },
   "devExportButton": { "message": "Export page" },
   "devExportWarning": { "message": "Development only. The file contains personal data and the page's real content: do not share it outside the project." },
   "devExportDone": { "message": "File downloaded. Save it in fixtures-raw/." },

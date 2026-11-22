@@ -1,9 +1,9 @@
 # Aplica browser extension
 
 Free companion extension for [Aplica](https://aplica.cv). It lets you save job offers to your
-Aplica account and, in future versions, will show how well they fit your profile and fill in
+Aplica account, see quickly how well they fit your profile and, in future versions, fill in
 application forms. This version contains the side panel, the secure pairing with your Aplica
-account and saving the offer you are looking at.
+account, saving the offer you are looking at and a quick fit check against your profile.
 
 Supported browsers: Chrome, Edge and Firefox, from a single Manifest V3 code base.
 
@@ -14,7 +14,8 @@ Supported browsers: Chrome, Edge and Firefox, from a single Manifest V3 code bas
 - What it reads (job title, company, location, work mode, salary and description) is shown to
   you, editable, in the panel. Nothing is sent to Aplica until you press "Save to Aplica".
 - It never submits an application for you.
-- It does not spend any credits. Saving an offer is free.
+- It does not spend any credits. Saving an offer is free, and the quick fit in the panel only
+  runs the free readings of the day; paid ones are confirmed on the Aplica website.
 - It stores two things in `storage.local` of your browser: the connection token and the
   language of your account (`es` or `en`). No profile data is kept.
 
@@ -80,6 +81,24 @@ The panel calls `GET /api/ext/v1/offers/match` before saving and `POST /api/ext/
 save (candidate stage `guardada`, free). The panel language follows the `locale` returned by
 `/me` (`es` or `en`), loaded from `_locales/<locale>/messages.json` by `src/i18n.ts`. Without
 a connection, the browser language is used.
+
+## Quick fit
+
+Once the offer is saved (or if it already was), the panel offers "See fit": a quick reading of
+the offer against your Aplica profile, with 3 to 5 key requirements (covered, to confirm or
+missing) and a provisional verdict. It only runs when you press the button, never on saving.
+The full fit report, made when you prepare the application in Aplica, is the one that counts,
+and the panel says so.
+
+- `GET /api/ext/v1/offers/<id>/quick-fit` (scope `tracker.read`) returns the last reading, the
+  free readings left today and the price; `404` means the feature is off, and the block is hidden.
+- `POST /api/ext/v1/offers/<id>/quick-fit` (scope `profile.read`) runs a new one. The extension
+  only runs the free readings of the day: the token never spends credits. When they are used up
+  (`402 credits_required`), the panel opens the application in Aplica, where you confirm the price.
+- Failures (`unavailable`, `failed`, `running`) do not use up a reading, and the button can be
+  pressed again. `report_exists` points to the full report; `no_posting` and `no_profile` explain
+  what is missing.
+- "Prepare full application" opens the application in Aplica with the prepare panel in view.
 
 The "✕" button at the top right closes the panel in every state (`src/panel/close.ts`):
 `sidePanel.close()` for the current window in Chrome and Edge, `sidebarAction.close()` in
@@ -162,16 +181,17 @@ uploading to the browser stores is not automated yet. Versioning follows semver.
 
 ## En español
 
-La extensión de Aplica es gratuita y sirve para guardar ofertas en tu cuenta y, en próximas
-versiones, ver el encaje y rellenar formularios. Esta versión incluye el panel lateral, el
-emparejamiento seguro con tu cuenta y guardar la oferta que estás viendo.
+La extensión de Aplica es gratuita y sirve para guardar ofertas en tu cuenta, ver rápido su
+encaje con tu perfil y, en próximas versiones, rellenar formularios. Esta versión incluye el panel lateral, el emparejamiento
+seguro con tu cuenta, guardar la oferta que estás viendo y un encaje exprés con tu perfil.
 
 - Solo lee una página cuando pulsas el icono de Aplica en ella, y solo esa pestaña. No puede
   leer páginas en segundo plano.
 - Lo que lee se te enseña, editable, en el panel. No se envía nada a Aplica hasta que pulsas
   «Guardar en Aplica».
 - Nunca envía candidaturas por ti.
-- No gasta créditos: guardar una oferta es gratis.
+- No gasta créditos: guardar una oferta es gratis, y el encaje exprés del panel solo hace las
+  lecturas gratis del día. Las de pago se confirman en la web de Aplica.
 - Guarda el token de conexión y el idioma de tu cuenta, en el almacenamiento local del navegador.
 
 Permisos: `activeTab` (acceso a la pestaña actual solo al pulsar el icono), `scripting` (leer
