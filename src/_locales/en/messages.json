@@ -1,0 +1,23 @@
+{
+  "extName": { "message": "Aplica" },
+  "extDescription": { "message": "Your Aplica companion for preparing job applications. Free." },
+  "actionTitle": { "message": "Open Aplica" },
+  "panelTitle": { "message": "Aplica" },
+  "connectIntro": { "message": "Connect this browser to your Aplica account. Aplica does not read any page until you ask it to." },
+  "connectButton": { "message": "Connect with Aplica" },
+  "connecting": { "message": "Waiting for you to approve the connection…" },
+  "connectedAs": {
+    "message": "Connected as $EMAIL$",
+    "placeholders": { "email": { "content": "$1", "example": "ana@example.com" } }
+  },
+  "disconnectButton": { "message": "Disconnect" },
+  "retryButton": { "message": "Try again" },
+  "loading": { "message": "Loading…" },
+  "noticeRevoked": { "message": "The connection has been closed. Connect again to keep using Aplica." },
+  "errorCancelled": { "message": "The connection was cancelled." },
+  "errorDenied": { "message": "You did not allow the connection." },
+  "errorInvalid": { "message": "The connection could not be completed. Please try again." },
+  "errorNetwork": { "message": "Could not reach Aplica. Check your connection and try again." },
+  "errorRateLimited": { "message": "Too many attempts. Wait a minute and try again." },
+  "errorServer": { "message": "Aplica is not responding as expected. Please try again later." }
+}
