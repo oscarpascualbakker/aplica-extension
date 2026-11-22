@@ -3,14 +3,15 @@ import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
-  { ignores: ['dist/**', 'node_modules/**'] },
+  // fixtures-raw: capturas reales y herramientas locales, fuera de Git (ver README).
+  { ignores: ['dist/**', 'node_modules/**', 'fixtures-raw/**'] },
   js.configs.recommended,
   {
     files: ['src/**/*.ts', 'tests/**/*.ts'],
     extends: tseslint.configs.strictTypeChecked,
     languageOptions: {
       parserOptions: { projectService: true, tsconfigRootDir: import.meta.dirname },
-      globals: { ...globals.browser, __API_BASE__: 'readonly' },
+      globals: { ...globals.browser, __API_BASE__: 'readonly', __DEV_BUILD__: 'readonly' },
     },
   },
   {

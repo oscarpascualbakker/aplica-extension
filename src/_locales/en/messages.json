@@ -19,5 +19,71 @@
   "errorInvalid": { "message": "The connection could not be completed. Please try again." },
   "errorNetwork": { "message": "Could not reach Aplica. Check your connection and try again." },
   "errorRateLimited": { "message": "Too many attempts. Wait a minute and try again." },
-  "errorServer": { "message": "Aplica is not responding as expected. Please try again later." }
+  "errorServer": { "message": "Aplica is not responding as expected. Please try again later." },
+  "readingPage": { "message": "Reading the job posting…" },
+  "previewTitle": { "message": "Save job posting" },
+  "previewIntro": { "message": "Check what Aplica has read from the page. You can correct it before you save. Saving is free." },
+  "fieldTitle": { "message": "Job title" },
+  "fieldCompany": { "message": "Company" },
+  "fieldLocation": { "message": "Location" },
+  "fieldWorkMode": { "message": "Work mode" },
+  "workModeNone": { "message": "Not specified" },
+  "workModeOnsite": { "message": "On-site" },
+  "workModeHybrid": { "message": "Hybrid" },
+  "workModeRemote": { "message": "Remote" },
+  "fieldSalary": { "message": "Salary" },
+  "fieldDescription": { "message": "Description" },
+  "descriptionCount": {
+    "message": "$COUNT$ of $MAX$ characters",
+    "placeholders": {
+      "count": { "content": "$1", "example": "1200" },
+      "max": { "content": "$2", "example": "30000" }
+    }
+  },
+  "fieldLink": { "message": "Link" },
+  "fieldInvalid": { "message": "This field is not valid. Check it." },
+  "saveButton": { "message": "Save to Aplica" },
+  "saveAnywayButton": { "message": "Save anyway" },
+  "saving": { "message": "Saving…" },
+  "readAgainButton": { "message": "Read the page again" },
+  "readSelectionButton": { "message": "Use the selected text" },
+  "needsSelection": { "message": "Select the job posting text on the page and press “Use the selected text”." },
+  "noAccess": { "message": "Click the Aplica icon on this page to read the job posting." },
+  "unsupportedPage": { "message": "Open a job posting on a web page to save it." },
+  "readFailed": { "message": "The page could not be read. Please try again." },
+  "noticeTruncated": {
+    "message": "The description was too long and has been shortened to $MAX$ characters.",
+    "placeholders": { "max": { "content": "$1", "example": "30000" } }
+  },
+  "noticeFromSelection": { "message": "The description is the text you had selected on the page." },
+  "invalidFields": { "message": "Check the highlighted fields." },
+  "errorScope": { "message": "This connection does not allow saving job postings. Disconnect and connect again." },
+  "possibleDuplicate": {
+    "message": "You already have a similar application: $TITLE$ at $COMPANY$. It may be the same job posting with a different link.",
+    "placeholders": {
+      "title": { "content": "$1", "example": "Desarrolladora backend" },
+      "company": { "content": "$2", "example": "Empresa Ficticia S.L." }
+    }
+  },
+  "savedTitle": { "message": "Job posting saved" },
+  "savedText": {
+    "message": "$TITLE$ at $COMPANY$ is in your account as a saved application.",
+    "placeholders": {
+      "title": { "content": "$1", "example": "Desarrolladora backend" },
+      "company": { "content": "$2", "example": "Empresa Ficticia S.L." }
+    }
+  },
+  "duplicateTitle": { "message": "You already have this job posting in Aplica" },
+  "duplicateText": {
+    "message": "$TITLE$ at $COMPANY$",
+    "placeholders": {
+      "title": { "content": "$1", "example": "Desarrolladora backend" },
+      "company": { "content": "$2", "example": "Empresa Ficticia S.L." }
+    }
+  },
+  "openInAplica": { "message": "Open in Aplica" },
+  "devExportButton": { "message": "Export page" },
+  "devExportWarning": { "message": "Development only. The file contains personal data and the page's real content: do not share it outside the project." },
+  "devExportDone": { "message": "File downloaded. Save it in fixtures-raw/." },
+  "devExportError": { "message": "The page could not be exported. Click the Aplica icon on it and try again." }
 }
