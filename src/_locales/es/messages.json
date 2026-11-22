@@ -3,6 +3,7 @@
   "extDescription": { "message": "Tu acompañante de Aplica para preparar candidaturas. Gratis." },
   "actionTitle": { "message": "Abrir Aplica" },
   "panelTitle": { "message": "Aplica" },
+  "closeButton": { "message": "Cerrar el panel" },
   "connectIntro": { "message": "Conecta este navegador con tu cuenta de Aplica. Aplica no lee ninguna página hasta que se lo pides." },
   "connectButton": { "message": "Conectar con Aplica" },
   "connecting": { "message": "Esperando a que apruebes la conexión…" },

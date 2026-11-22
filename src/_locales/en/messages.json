@@ -3,6 +3,7 @@
   "extDescription": { "message": "Your Aplica companion for preparing job applications. Free." },
   "actionTitle": { "message": "Open Aplica" },
   "panelTitle": { "message": "Aplica" },
+  "closeButton": { "message": "Close the panel" },
   "connectIntro": { "message": "Connect this browser to your Aplica account. Aplica does not read any page until you ask it to." },
   "connectButton": { "message": "Connect with Aplica" },
   "connecting": { "message": "Waiting for you to approve the connection…" },

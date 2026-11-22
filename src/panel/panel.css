@@ -8,9 +8,28 @@ body {
   margin: 0;
   padding: 16px;
 }
+#app {
+  position: relative;
+}
 h1 {
   font-size: 18px;
   margin: 0 0 12px;
+  /* Hueco para el botón de cerrar (CV-523). */
+  padding-right: 40px;
+}
+button.close {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border-color: transparent;
+  font-size: 16px;
+  line-height: 1;
+}
+button.close:hover {
+  border-color: currentColor;
 }
 p {
   margin: 0 0 12px;
