@@ -406,3 +406,126 @@ describe('panel: cerrar (CV-523)', () => {
     expect(close).toHaveBeenCalledWith({ windowId: 3 });
   });
 });
+
+describe('panel: encaje exprés (CV-505)', () => {
+  const ME = { status: 200, body: { email: 'ana@example.com', locale: 'es', browser: { id: 'b', label: 'Chrome', connected_at: 'x' } } };
+  const FIT = {
+    verdict: 'apply_with_caveats',
+    verdict_reason: 'Encaja en lo técnico; falta confirmar el inglés.',
+    requirements: [
+      { requirement: 'PHP y Laravel', status: 'covered', evidence_ids: ['EV-01'], note: '' },
+      { requirement: 'Inglés alto', status: 'to_confirm', evidence_ids: [], note: 'No aparece en tu perfil.' },
+      { requirement: 'Kubernetes', status: 'missing', evidence_ids: [], note: '' },
+    ],
+    created_at: '2026-11-22T10:00:00+01:00',
+    url: `${API}/app/candidaturas/a1#encaje-expres`,
+  };
+  const buttonNamed = (name: string): HTMLButtonElement | undefined =>
+    Array.from(document.querySelectorAll('button')).find((b) => b.textContent === name);
+  const section = (): HTMLElement | null => document.querySelector('section.quick-fit');
+
+  it('con la funcionalidad apagada (404) no sale el bloque', async () => {
+    setup();
+    await openPanel();
+    await until(() => heading() === 'Guardar oferta');
+    submit().click();
+    await until(() => heading() === 'Oferta guardada');
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(section()?.hidden).toBe(true);
+  });
+
+  it('guardada: "Ver encaje" no se lanza solo; al pulsarlo enseña requisitos, veredicto y "Preparar candidatura completa"', async () => {
+    const env = setup({
+      replies: {
+        'GET /me': ME,
+        'GET /offers/match': { status: 200, body: { match: null } },
+        'POST /offers': { status: 201, body: { application: APPLICATION } },
+        'GET /offers/a1/quick-fit': { status: 200, body: { quick_fit: null, free_left: 3, price: 1 } },
+        'POST /offers/a1/quick-fit': { status: 200, body: { quick_fit: FIT, free_left: 2 } },
+      },
+    });
+    await openPanel();
+    await until(() => heading() === 'Guardar oferta');
+    submit().click();
+    await until(() => heading() === 'Oferta guardada');
+    const run = await until(() => buttonNamed('Ver encaje'));
+    expect(body()).toContain('Lecturas gratis que te quedan hoy: 3.');
+    expect(body()).toContain('El informe completo, al preparar la candidatura, es el que manda');
+    // Guardar no gasta lectura: solo el botón la lanza.
+    expect(env.calls.some((c) => c.method === 'POST' && c.url.endsWith('/quick-fit'))).toBe(false);
+
+    run.click();
+    await until(() => body().includes('Veredicto provisional: Aplicar con reservas'));
+    const items = Array.from(document.querySelectorAll('.requirements li')).map((li) => li.textContent);
+    expect(items).toEqual(['Cubierto: PHP y Laravel', 'Por confirmar: Inglés altoNo aparece en tu perfil.', 'Falta: Kubernetes']);
+    expect(body()).toContain('Lecturas gratis que te quedan hoy: 2.');
+    expect(document.activeElement?.id).toBe('quick-fit-title');
+
+    buttonNamed('Preparar candidatura completa')?.click();
+    expect(env.created).toEqual([`${APPLICATION.url}#preparar`]);
+  });
+
+  it('duplicado con una lectura anterior: la enseña sin volver a leer', async () => {
+    const env = setup({
+      replies: {
+        'GET /me': ME,
+        'GET /offers/match': { status: 200, body: { match: 'url', application: APPLICATION } },
+        'GET /offers/a1/quick-fit': { status: 200, body: { quick_fit: { ...FIT, verdict: 'do_not_apply' }, free_left: 0, price: 1 } },
+      },
+    });
+    await openPanel();
+    await until(() => body().includes('Veredicto provisional: No aplicar'));
+    expect(buttonNamed('Ver encaje')).toBeUndefined();
+    expect(env.calls.some((c) => c.method === 'POST')).toBe(false);
+  });
+
+  it('sin lecturas gratis: lo dice y lleva a la web a confirmar, sin gastar créditos desde el panel', async () => {
+    const env = setup({
+      replies: {
+        'GET /me': ME,
+        'GET /offers/match': { status: 200, body: { match: 'url', application: APPLICATION } },
+        'GET /offers/a1/quick-fit': { status: 200, body: { quick_fit: null, free_left: 0, price: 1 } },
+      },
+    });
+    await openPanel();
+    await until(() => body().includes('Ya has usado las lecturas gratis de hoy'));
+    expect(buttonNamed('Ver encaje')).toBeUndefined();
+    buttonNamed('Ver encaje en Aplica')?.click();
+    expect(env.created).toEqual([`${APPLICATION.url}#encaje-expres`]);
+  });
+
+  it('la cuarta del día (402) y la negativa del modelo: aviso claro y sin lectura gastada', async () => {
+    const env = setup({
+      replies: {
+        'GET /me': ME,
+        'GET /offers/match': { status: 200, body: { match: 'url', application: APPLICATION } },
+        'GET /offers/a1/quick-fit': { status: 200, body: { quick_fit: null, free_left: 1, price: 1 } },
+        'POST /offers/a1/quick-fit': { status: 502, body: { error: 'failed', code: 'refused' } },
+      },
+    });
+    await openPanel();
+    (await until(() => buttonNamed('Ver encaje'))).click();
+    await until(() => body().includes('No se ha podido hacer esta lectura con esta oferta. No has gastado ninguna lectura.'));
+    expect(document.querySelector('.quick-fit [role="alert"]')).not.toBeNull();
+    // Se puede reintentar desde el mismo botón.
+    env.replies['POST /offers/a1/quick-fit'] = { status: 402, body: { error: 'credits_required', price: 1, url: `${API}/app/candidaturas/a1#encaje-expres` } };
+    (await until(() => buttonNamed('Ver encaje'))).click();
+    await until(() => body().includes('Ya has usado las lecturas gratis de hoy'));
+    buttonNamed('Ver encaje en Aplica')?.click();
+    expect(env.created).toEqual([`${API}/app/candidaturas/a1#encaje-expres`]);
+  });
+
+  it('con el informe completo ya hecho, remite a él', async () => {
+    setup({
+      replies: {
+        'GET /me': ME,
+        'GET /offers/match': { status: 200, body: { match: 'url', application: APPLICATION } },
+        'GET /offers/a1/quick-fit': { status: 200, body: { quick_fit: null, free_left: 3, price: 1 } },
+        'POST /offers/a1/quick-fit': { status: 409, body: { error: 'report_exists', url: APPLICATION.url } },
+      },
+    });
+    await openPanel();
+    (await until(() => buttonNamed('Ver encaje'))).click();
+    await until(() => body().includes('Esta candidatura ya tiene el informe completo'));
+  });
+});

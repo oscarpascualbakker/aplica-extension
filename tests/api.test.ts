@@ -187,3 +187,84 @@ describe('saveOffer (CV-504)', () => {
     expect(await client(() => Promise.resolve(json(500, {}))).api.saveOffer('tok', OFFER)).toEqual({ ok: false, kind: 'server' });
   });
 });
+
+describe('encaje exprés (CV-505)', () => {
+  const FIT = {
+    verdict: 'apply_with_caveats',
+    verdict_reason: 'Encaja en lo técnico; falta confirmar el inglés.',
+    requirements: [
+      { requirement: 'PHP y Laravel', status: 'covered', evidence_ids: ['EV-01'], note: '' },
+      { requirement: 'Inglés alto', status: 'to_confirm', evidence_ids: [], note: 'No aparece en tu perfil.' },
+      { requirement: 'Kubernetes', status: 'missing', evidence_ids: [], note: '' },
+    ],
+    created_at: '2026-11-22T10:00:00+01:00',
+    url: 'https://api.test/app/candidaturas/a1#encaje-expres',
+  };
+  const PARSED = {
+    verdict: 'apply_with_caveats',
+    verdictReason: 'Encaja en lo técnico; falta confirmar el inglés.',
+    requirements: [
+      { requirement: 'PHP y Laravel', status: 'covered', note: '' },
+      { requirement: 'Inglés alto', status: 'to_confirm', note: 'No aparece en tu perfil.' },
+      { requirement: 'Kubernetes', status: 'missing', note: '' },
+    ],
+    createdAt: '2026-11-22T10:00:00+01:00',
+    url: 'https://api.test/app/candidaturas/a1#encaje-expres',
+  };
+
+  it('GET: la última lectura, las gratis que quedan y el precio', async () => {
+    const { api, fetchMock } = client(() => Promise.resolve(json(200, { quick_fit: FIT, free_left: 2, price: 1 })));
+    expect(await api.getQuickFit('tok', 'a1')).toEqual({ ok: true, data: { quickFit: PARSED, freeLeft: 2, price: 1 } });
+    const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
+    expect(url).toBe('https://api.test/api/ext/v1/offers/a1/quick-fit');
+    expect(init.method).toBe('GET');
+    expect((init.headers as Record<string, string>).Authorization).toBe('Bearer tok');
+  });
+
+  it('GET sin lectura y GET 404 (apagada)', async () => {
+    expect(await client(() => Promise.resolve(json(200, { quick_fit: null, free_left: 3, price: 1 }))).api.getQuickFit('tok', 'a1')).toEqual({
+      ok: true,
+      data: { quickFit: null, freeLeft: 3, price: 1 },
+    });
+    expect(await client(() => Promise.resolve(json(404, { error: 'not_found' }))).api.getQuickFit('tok', 'a1')).toEqual({ ok: false, kind: 'not_found' });
+  });
+
+  it('POST 200: la lectura nueva; un veredicto o un estado desconocidos no se enseñan a medias', async () => {
+    const { api, fetchMock } = client(() => Promise.resolve(json(200, { quick_fit: FIT, free_left: 1 })));
+    expect(await api.runQuickFit('tok', 'a1')).toEqual({ ok: true, data: { quickFit: PARSED, freeLeft: 1 } });
+    expect((fetchMock.mock.calls[0] as unknown as [string, RequestInit])[1].method).toBe('POST');
+
+    const badVerdict = { ...FIT, verdict: 'maybe' };
+    expect(await client(() => Promise.resolve(json(200, { quick_fit: badVerdict, free_left: 1 }))).api.runQuickFit('tok', 'a1')).toEqual({ ok: false, kind: 'server' });
+    const badStatus = { ...FIT, requirements: [{ requirement: 'X', status: 'partial', note: '' }] };
+    expect(await client(() => Promise.resolve(json(200, { quick_fit: badStatus, free_left: 1 }))).api.runQuickFit('tok', 'a1')).toEqual({ ok: false, kind: 'server' });
+  });
+
+  it('una URL de otro origen no se abre', async () => {
+    const other = { ...FIT, url: 'https://evil.test/x' };
+    const result = await client(() => Promise.resolve(json(200, { quick_fit: other, free_left: 1 }))).api.runQuickFit('tok', 'a1');
+    expect(result.ok && result.data.quickFit.url).toBeNull();
+    const credits = await client(() => Promise.resolve(json(402, { error: 'credits_required', price: 1, url: 'https://evil.test/x' }))).api.runQuickFit('tok', 'a1');
+    expect(credits).toEqual({ ok: false, kind: 'credits_required', price: 1, url: null });
+  });
+
+  it('POST: cada error con su motivo', async () => {
+    const run = (status: number, body: unknown) => client(() => Promise.resolve(json(status, body))).api.runQuickFit('tok', 'a1');
+    expect(await run(402, { error: 'credits_required', price: 2, url: 'https://api.test/app/candidaturas/a1#encaje-expres' })).toEqual({
+      ok: false,
+      kind: 'credits_required',
+      price: 2,
+      url: 'https://api.test/app/candidaturas/a1#encaje-expres',
+    });
+    expect(await run(409, { error: 'report_exists', url: 'https://api.test/app/candidaturas/a1' })).toEqual({ ok: false, kind: 'report_exists', url: 'https://api.test/app/candidaturas/a1' });
+    expect(await run(409, { error: 'running' })).toEqual({ ok: false, kind: 'running' });
+    expect(await run(422, { error: 'no_posting' })).toEqual({ ok: false, kind: 'no_posting' });
+    expect(await run(422, { error: 'no_profile' })).toEqual({ ok: false, kind: 'no_profile' });
+    expect(await run(503, { error: 'unavailable' })).toEqual({ ok: false, kind: 'unavailable' });
+    expect(await run(502, { error: 'failed', code: 'refused' })).toEqual({ ok: false, kind: 'failed', code: 'refused' });
+    expect(await run(403, { error: 'insufficient_scope' })).toEqual({ ok: false, kind: 'insufficient_scope' });
+    expect(await run(401, { error: 'unauthenticated' })).toEqual({ ok: false, kind: 'unauthenticated' });
+    expect(await run(404, { error: 'not_found' })).toEqual({ ok: false, kind: 'not_found' });
+    expect(await run(500, {})).toEqual({ ok: false, kind: 'server' });
+  });
+});

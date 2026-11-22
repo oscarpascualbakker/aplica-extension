@@ -83,6 +83,39 @@
     }
   },
   "openInAplica": { "message": "Abrir en Aplica" },
+  "quickFitTitle": { "message": "Encaje exprés" },
+  "quickFitIntro": { "message": "Una lectura rápida de esta oferta con tu perfil: los requisitos clave y un veredicto provisional. El informe completo, al preparar la candidatura, es el que manda." },
+  "quickFitButton": { "message": "Ver encaje" },
+  "quickFitRunning": { "message": "Leyendo el encaje…" },
+  "quickFitFreeLeft": {
+    "message": "Lecturas gratis que te quedan hoy: $COUNT$.",
+    "placeholders": { "count": { "content": "$1", "example": "2" } }
+  },
+  "quickFitVerdict": {
+    "message": "Veredicto provisional: $VERDICT$",
+    "placeholders": { "verdict": { "content": "$1", "example": "Aplicar con reservas" } }
+  },
+  "verdictApply": { "message": "Aplicar" },
+  "verdictCaveats": { "message": "Aplicar con reservas" },
+  "verdictDoNotApply": { "message": "No aplicar" },
+  "statusCovered": { "message": "Cubierto" },
+  "statusToConfirm": { "message": "Por confirmar" },
+  "statusMissing": { "message": "Falta" },
+  "quickFitDisclaimer": { "message": "Es una lectura rápida. El informe completo, al preparar la candidatura, es el que manda." },
+  "prepareFullButton": { "message": "Preparar candidatura completa" },
+  "quickFitCreditsRequired": {
+    "message": "Ya has usado las lecturas gratis de hoy. En Aplica puedes hacer esta con créditos (precio en créditos: $PRICE$), siempre con tu confirmación.",
+    "placeholders": { "price": { "content": "$1", "example": "1" } }
+  },
+  "quickFitOpenWeb": { "message": "Ver encaje en Aplica" },
+  "quickFitReportExists": { "message": "Esta candidatura ya tiene el informe completo, que es el que manda." },
+  "quickFitNoPosting": { "message": "Falta el texto de la oferta. Añádelo en Aplica para ver el encaje." },
+  "quickFitNoProfile": { "message": "Para ver el encaje necesitas tu perfil en Aplica." },
+  "quickFitBusy": { "message": "Ya hay una lectura en curso. Espera unos segundos y vuelve a intentarlo." },
+  "quickFitUnavailable": { "message": "Aplica no ha podido leer el encaje ahora. Inténtalo en unos minutos. No has gastado ninguna lectura." },
+  "quickFitRefused": { "message": "No se ha podido hacer esta lectura con esta oferta. No has gastado ninguna lectura." },
+  "quickFitFailed": { "message": "No se ha podido completar la lectura. Inténtalo de nuevo. No has gastado ninguna lectura." },
+  "errorScopeQuickFit": { "message": "Esta conexión no permite leer tu perfil. Desconecta y vuelve a conectar." },
   "devExportButton": { "message": "Exportar página" },
   "devExportWarning": { "message": "Solo desarrollo. El fichero lleva datos personales y el contenido real de la página: no lo compartas fuera del proyecto." },
   "devExportDone": { "message": "Fichero descargado. Guárdalo en fixtures-raw/." },

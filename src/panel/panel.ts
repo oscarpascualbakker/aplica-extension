@@ -1,10 +1,18 @@
-// Panel lateral (CV-503, CV-504). DOM a mano, sin frameworks. Todo el texto va con
+// Panel lateral (CV-503, CV-504, CV-505). DOM a mano, sin frameworks. Todo el texto va con
 // textContent (nunca innerHTML) y por i18n.
 //
 // Estados (CV-504): no conectado, leyendo, vista previa (con aviso de posible duplicado),
 // guardando, guardada, duplicado y error. Cada cambio de estado mueve el foco al título.
+// Guardada y duplicado llevan el bloque del encaje exprés (CV-505).
 
-import { createApiClient, type ApplicationRef, type OfferPayload } from '../api';
+import {
+  createApiClient,
+  type ApplicationRef,
+  type OfferPayload,
+  type QuickFit,
+  type QuickFitStatus,
+  type QuickFitVerdict,
+} from '../api';
 import type { ApiClient } from '../api';
 import { detectBrowser, extensionApi } from '../browser';
 import { isLocale, loadLocale, resetLocale, t } from '../i18n';
@@ -496,6 +504,7 @@ function showSaved(session: Session, application: ApplicationRef): void {
   render([
     el('h1', t('savedTitle')),
     el('p', t('savedText', [application.title, application.company])),
+    quickFitSection(session, application),
     ...openInAplica(application),
     accountFooter(session),
   ]);
@@ -507,10 +516,185 @@ function showDuplicate(session: Session, application: ApplicationRef): void {
   render([
     el('h1', t('duplicateTitle')),
     el('p', t('duplicateText', [application.title, application.company])),
+    quickFitSection(session, application),
     ...openInAplica(application),
     readAgain(session),
     accountFooter(session),
   ]);
+}
+
+// ---------- Encaje exprés (CV-505) ----------
+//
+// Solo con el botón, nunca al guardar. Desde aquí solo se hacen las lecturas gratis del día: el token
+// no gasta créditos (D-204), así que, agotadas, el panel lleva a la candidatura en la web, donde se
+// confirma el precio. El informe completo es el que manda, y el panel lo dice.
+
+/** Bloque del encaje exprés en la web (D-208). */
+const QUICK_FIT_ANCHOR = '#encaje-expres';
+/** Bloque de preparar la candidatura en la web. */
+const PREPARE_ANCHOR = '#preparar';
+
+const VERDICT_KEYS: Record<QuickFitVerdict, string> = {
+  apply: 'verdictApply',
+  apply_with_caveats: 'verdictCaveats',
+  do_not_apply: 'verdictDoNotApply',
+};
+const STATUS_KEYS: Record<QuickFitStatus, string> = {
+  covered: 'statusCovered',
+  to_confirm: 'statusToConfirm',
+  missing: 'statusMissing',
+};
+
+function withAnchor(url: string, anchor: string): string {
+  return url.replace(/#.*$/, '') + anchor;
+}
+
+function openTab(text: string, url: string | null, secondary = false): HTMLElement[] {
+  if (!url) return [];
+  return [button(text, () => void extensionApi().tabs.create({ url }), secondary)];
+}
+
+/**
+ * El bloque empieza oculto: si la funcionalidad está apagada (404), no sale. Con la respuesta enseña la
+ * última lectura o el botón para hacer una.
+ */
+function quickFitSection(session: Session, application: ApplicationRef): HTMLElement {
+  const section = el('section', undefined, 'quick-fit');
+  const heading = el('h2', t('quickFitTitle'));
+  heading.id = 'quick-fit-title';
+  heading.tabIndex = -1;
+  section.setAttribute('aria-labelledby', heading.id);
+  const content = el('div');
+  section.append(heading, content);
+  section.hidden = true;
+  void loadQuickFit(session, application, section, content);
+  return section;
+}
+
+async function loadQuickFit(session: Session, application: ApplicationRef, section: HTMLElement, content: HTMLElement): Promise<void> {
+  const gen = generation;
+  const token = await tokens.get();
+  if (!token) return;
+  const result = await client.getQuickFit(token, application.id);
+  if (gen !== generation) return;
+  if (!result.ok) {
+    if (result.kind === 'not_found') return;
+    if (result.kind === 'unauthenticated') {
+      await expireSession(session);
+      return;
+    }
+    // Sin saber cuántas quedan, se ofrece igual: la lectura dice después lo que pase.
+    section.hidden = false;
+    quickFitIdle(session, application, content, null);
+    return;
+  }
+  section.hidden = false;
+  if (result.data.quickFit) {
+    quickFitShow(application, content, result.data.quickFit, null);
+  } else if (result.data.freeLeft === 0) {
+    quickFitNotice(content, { key: 'quickFitCreditsRequired', substitutions: [String(result.data.price)] }, [
+      ...openTab(t('quickFitOpenWeb'), application.url ? withAnchor(application.url, QUICK_FIT_ANCHOR) : null),
+    ]);
+  } else {
+    quickFitIdle(session, application, content, result.data.freeLeft);
+  }
+}
+
+function quickFitIdle(session: Session, application: ApplicationRef, content: HTMLElement, freeLeft: number | null, notice: Notice = null): void {
+  const run = button(t('quickFitButton'), () => void runQuickFit(session, application, content, run));
+  content.replaceChildren(
+    el('p', t('quickFitIntro')),
+    ...noticeNode(notice),
+    ...(freeLeft === null ? [] : [el('p', t('quickFitFreeLeft', [String(freeLeft)]), 'hint')]),
+    run,
+  );
+}
+
+function quickFitNotice(content: HTMLElement, notice: Notice, actions: HTMLElement[]): void {
+  content.replaceChildren(...noticeNode(notice), ...actions);
+}
+
+function quickFitShow(application: ApplicationRef, content: HTMLElement, fit: QuickFit, freeLeft: number | null): void {
+  const list = el('ul', undefined, 'requirements');
+  for (const item of fit.requirements) {
+    const row = el('li', undefined, `requirement ${item.status}`);
+    row.append(el('strong', `${t(STATUS_KEYS[item.status])}: `), document.createTextNode(item.requirement));
+    if (item.note) row.append(el('span', item.note, 'note'));
+    list.append(row);
+  }
+  content.replaceChildren(
+    el('p', t('quickFitVerdict', [t(VERDICT_KEYS[fit.verdict])]), `verdict ${fit.verdict}`),
+    el('p', fit.verdictReason),
+    list,
+    el('p', t('quickFitDisclaimer'), 'hint'),
+    ...(freeLeft === null ? [] : [el('p', t('quickFitFreeLeft', [String(freeLeft)]), 'hint')]),
+    ...openTab(t('prepareFullButton'), application.url ? withAnchor(application.url, PREPARE_ANCHOR) : null),
+  );
+}
+
+async function runQuickFit(session: Session, application: ApplicationRef, content: HTMLElement, run: HTMLButtonElement): Promise<void> {
+  const gen = generation;
+  run.disabled = true;
+  run.textContent = t('quickFitRunning');
+  content.setAttribute('aria-busy', 'true');
+  announce(t('quickFitRunning'));
+  const token = await tokens.get();
+  if (!token) {
+    await expireSession(session);
+    return;
+  }
+  const result = await client.runQuickFit(token, application.id);
+  content.removeAttribute('aria-busy');
+  if (gen !== generation) return;
+  const heading = root.querySelector<HTMLElement>('#quick-fit-title');
+
+  if (result.ok) {
+    quickFitShow(application, content, result.data.quickFit, result.data.freeLeft);
+    heading?.focus();
+    announce(t('quickFitVerdict', [t(VERDICT_KEYS[result.data.quickFit.verdict])]));
+    return;
+  }
+  const web = (anchor: string, url: string | null = null): string | null =>
+    url ?? (application.url ? withAnchor(application.url, anchor) : null);
+  switch (result.kind) {
+    case 'unauthenticated':
+      await expireSession(session);
+      return;
+    case 'credits_required':
+      quickFitNotice(content, { key: 'quickFitCreditsRequired', substitutions: [String(result.price)], alert: true }, [
+        ...openTab(t('quickFitOpenWeb'), web(QUICK_FIT_ANCHOR, result.url)),
+      ]);
+      break;
+    case 'report_exists':
+      quickFitNotice(content, { key: 'quickFitReportExists', alert: true }, [
+        ...openTab(t('openInAplica'), result.url ?? application.url),
+      ]);
+      break;
+    case 'no_posting':
+      quickFitNotice(content, { key: 'quickFitNoPosting', alert: true }, [...openTab(t('openInAplica'), application.url)]);
+      break;
+    case 'no_profile':
+      quickFitNotice(content, { key: 'quickFitNoProfile', alert: true }, [
+        ...openTab(t('openInAplica'), `${__API_BASE__}/app`),
+      ]);
+      break;
+    case 'not_found':
+      quickFitNotice(content, { key: 'errorServer', alert: true }, []);
+      break;
+    default: {
+      // Fallos que no gastan lectura: se puede volver a intentar desde el mismo botón.
+      const keys: Record<string, string> = {
+        running: 'quickFitBusy',
+        unavailable: 'quickFitUnavailable',
+        failed: result.kind === 'failed' && result.code === 'refused' ? 'quickFitRefused' : 'quickFitFailed',
+        insufficient_scope: 'errorScopeQuickFit',
+        network: 'errorNetwork',
+        rate_limited: 'errorRateLimited',
+      };
+      quickFitIdle(session, application, content, null, { key: keys[result.kind] ?? 'errorServer', alert: true });
+    }
+  }
+  heading?.focus();
 }
 
 // ---------- Arranque ----------
