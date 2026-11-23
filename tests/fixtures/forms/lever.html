@@ -1,0 +1,54 @@
+<!doctype html>
+<!-- Fixture de formulario de candidatura (CV-507). Estructura de Lever (jobs.lever.co/<empresa>/<id>/apply):
+     etiquetas que envuelven el campo (.application-label), name="name", "email", "phone", "org",
+     "location", "urls[...]", "resume" y preguntas cards[<id>][field0]. Contenido inventado. -->
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Empresa Ficticia S.L. - Desarrolladora backend</title>
+</head>
+<body class="application-page">
+<div class="main-header"><div class="main-header-logo"><img alt="Empresa Ficticia S.L. logo" src="https://example.com/logo.png"/></div></div>
+<div class="content-wrapper">
+<form id="application-form" method="POST" enctype="multipart/form-data" action="/empresaficticia/00000000-0000-0000-0000-000000000001/apply">
+<div class="section page-centered application-form">
+<h4>Submit your application</h4>
+<ul>
+<li class="application-question resume"><label><div class="application-label">Resume/CV<span class="required">✱</span></div><div class="application-field"><input type="file" name="resume" id="resume-upload-input" data-qa="resume-upload-input" accept=".pdf,.doc,.docx,.rtf,.txt"/></div></label></li>
+<li class="application-question name"><label><div class="application-label">Full name<span class="required">✱</span></div><div class="application-field"><input type="text" name="name" required=""/></div></label></li>
+<li class="application-question email"><label><div class="application-label">Email<span class="required">✱</span></div><div class="application-field"><input type="text" name="email" required=""/></div></label></li>
+<li class="application-question phone"><label><div class="application-label">Phone</div><div class="application-field"><input type="text" name="phone"/></div></label></li>
+<li class="application-question location"><label><div class="application-label">Current location</div><div class="application-field"><input type="text" name="location" id="location-input" class="location-input"/></div></label></li>
+<li class="application-question org"><label><div class="application-label">Current company</div><div class="application-field"><input type="text" name="org"/></div></label></li>
+</ul>
+</div>
+<div class="section page-centered application-form"><h4>Links</h4>
+<ul>
+<li class="application-question"><label><div class="application-label">LinkedIn URL</div><div class="application-field"><input type="text" name="urls[LinkedIn]"/></div></label></li>
+<li class="application-question"><label><div class="application-label">GitHub URL</div><div class="application-field"><input type="text" name="urls[GitHub]"/></div></label></li>
+<li class="application-question"><label><div class="application-label">Portfolio URL</div><div class="application-field"><input type="text" name="urls[Portfolio]"/></div></label></li>
+<li class="application-question"><label><div class="application-label">Other website</div><div class="application-field"><input type="text" name="urls[Other]"/></div></label></li>
+</ul>
+</div>
+<div class="section page-centered application-form"><h4>Additional information</h4>
+<ul>
+<li class="application-question custom-question"><label><div class="application-label">Why do you want to work at Empresa Ficticia S.L.?<span class="required">✱</span></div><div class="application-field"><textarea name="cards[00000000-0000-0000-0000-0000000000a1][field0]"></textarea></div></label></li>
+<li class="application-question custom-question"><label><div class="application-label">Describe a project you are proud of and what you learned from it</div><div class="application-field"><textarea name="cards[00000000-0000-0000-0000-0000000000a2][field0]"></textarea></div></label></li>
+<li class="application-question custom-question"><label><div class="application-label">What are your salary expectations?</div><div class="application-field"><textarea name="cards[00000000-0000-0000-0000-0000000000a3][field0]"></textarea></div></label></li>
+<li class="application-question custom-question"><div class="application-label">Are you legally authorized to work in Spain?<span class="required">✱</span></div><div class="application-field"><ul data-qa="multiple-choice"><li><label><input type="radio" name="cards[00000000-0000-0000-0000-0000000000a4][field0]" value="Yes"/><span class="application-answer-alternative">Yes</span></label></li><li><label><input type="radio" name="cards[00000000-0000-0000-0000-0000000000a4][field0]" value="No"/><span class="application-answer-alternative">No</span></label></li></ul></div></li>
+<li class="application-question custom-question"><label><div class="application-label">Will you need visa sponsorship?</div><div class="application-field"><select name="cards[00000000-0000-0000-0000-0000000000a5][field0]"><option value="">Select</option><option value="Yes">Yes</option><option value="No">No</option></select></div></label></li>
+<li class="application-question"><label><div class="application-label">Additional information</div><div class="application-field"><textarea name="comments" placeholder="Add a cover letter or anything else you want to share"></textarea></div></label></li>
+</ul>
+</div>
+<div class="section page-centered application-form"><h4>U.S. Equal Employment Opportunity information (optional)</h4>
+<ul>
+<li class="application-question"><label><div class="application-label">Gender</div><div class="application-field"><select name="eeo[gender]"><option value="">Select</option><option>Male</option><option>Female</option><option>Decline to self-identify</option></select></div></label></li>
+<li class="application-question"><label><div class="application-label">Race</div><div class="application-field"><select name="eeo[race]"><option value="">Select</option><option>Decline to self-identify</option></select></div></label></li>
+<li class="application-question"><label><div class="application-label">Veteran status</div><div class="application-field"><select name="eeo[veteran]"><option value="">Select</option><option>I am not a veteran</option></select></div></label></li>
+</ul>
+</div>
+<div class="section page-centered last-section-apply"><button id="btn-submit" class="postings-btn template-btn-submit hex-color" type="button" data-qa="btn-submit">Submit application</button></div>
+</form>
+</div>
+</body>
+</html>

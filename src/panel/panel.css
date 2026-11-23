@@ -118,17 +118,20 @@ input[readonly] {
   display: none;
 }
 /* Encaje exprés (CV-505): el estado va en texto; el borde solo lo refuerza. */
-.quick-fit {
+.quick-fit,
+.fill-form {
   margin: 16px 0;
   padding: 12px;
   border: 1px solid #76767666;
   border-radius: 6px;
 }
-.quick-fit h2 {
+.quick-fit h2,
+.fill-form h2 {
   font-size: 16px;
   margin: 0 0 8px;
 }
-.quick-fit h2:focus {
+.quick-fit h2:focus,
+.fill-form h2:focus {
   outline: none;
 }
 .verdict {
@@ -167,4 +170,23 @@ input[readonly] {
 }
 .dev-tools {
   margin-top: 16px;
+}
+.doc-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 8px 0;
+}
+.doc-block {
+  margin: 8px 0;
+}
+.doc-text {
+  display: block;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  margin: 8px 0;
+}
+.documents h3 {
+  font-size: 14px;
+  margin: 12px 0 8px;
 }

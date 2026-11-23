@@ -3,7 +3,8 @@
 
 export type BrowserInfo = { id: string; label: string; connected_at: string };
 export type TokenResponse = { token: string; token_type: 'Bearer'; browser: BrowserInfo };
-export type MeResponse = { email: string; locale: string; browser: BrowserInfo };
+/** `scopes` es opcional: un servidor anterior a CV-506 no lo envía (D-217). */
+export type MeResponse = { email: string; locale: string; browser: BrowserInfo; scopes?: string[] };
 export type TokenRequest = { code: string; code_verifier: string; redirect_uri: string };
 
 export type OfferPayload = {
@@ -18,8 +19,11 @@ export type OfferPayload = {
   force: boolean;
 };
 
-/** Candidatura de la cuenta tal como la devuelve la API. `url` es null si no es de Aplica. */
-export type ApplicationRef = { id: string; title: string; company: string; stage: string; url: string | null };
+/**
+ * Candidatura de la cuenta tal como la devuelve la API. `url` es null si no es de Aplica. `ready` es
+ * true si ya tiene los documentos preparados (CV-506, D-217).
+ */
+export type ApplicationRef = { id: string; title: string; company: string; stage: string; url: string | null; ready: boolean };
 export type MatchKind = 'url' | 'role_company';
 export type MatchResponse = { match: MatchKind; application: ApplicationRef } | null;
 
@@ -70,6 +74,49 @@ export type QuickFitResult =
   | { ok: true; data: { quickFit: QuickFit; freeLeft: number } }
   | ({ ok: false } & (ApiError | QuickFitError));
 
+/** Documentos de una candidatura preparada (CV-506, D-217). Los textos son tal cual, para copiar. */
+export type DocumentQuestionType = 'redactar' | 'contesta_tu';
+export type DocumentQuestionItem = { question: string; type: DocumentQuestionType; answer: string | null; note: string | null };
+export type DocumentQuestionSet = { generatedAt: string; truncated: boolean; items: DocumentQuestionItem[] };
+export type DocumentFormat = 'docx' | 'pdf';
+export type ApplicationDocuments = {
+  lang: string;
+  cv: { docx: boolean; pdf: boolean };
+  letter: string | null;
+  message: string | null;
+  questions: DocumentQuestionSet[];
+  /** La candidatura en la web. Null si no es de Aplica. */
+  url: string | null;
+};
+/** `not_ready`: la candidatura aún no tiene documentos. `not_found`: no existe (o ese formato no está). */
+export type DocumentsError = { kind: 'not_ready' } | { kind: 'not_found' };
+export type DocumentsResult = { ok: true; data: ApplicationDocuments } | ({ ok: false } & (ApiError | DocumentsError));
+export type DownloadLinkResult =
+  | { ok: true; data: { url: string; expiresAt: string } }
+  | ({ ok: false } & (ApiError | DocumentsError));
+/** El enlace es de un solo uso y caduca a los 5 minutos: `gone` es que ya no vale. */
+export type DownloadFileResult =
+  | { ok: true; data: { blob: Blob; filename: string } }
+  | ({ ok: false } & (ApiError | { kind: 'gone' } | { kind: 'not_found' }));
+
+/** Datos del perfil para rellenar formularios (CV-507, alcance `profile.read`). Cada texto puede faltar. */
+export type ProfileData = {
+  lang: 'es' | 'en';
+  name: string | null;
+  email: string | null;
+  phone: string | null;
+  location: string | null;
+  linkedin: string | null;
+  github: string | null;
+  websites: string[];
+  currentRole: { title: string | null; company: string | null } | null;
+  yearsExperience: number | null;
+  education: string[];
+  languages: string[];
+};
+/** `no_profile`: la cuenta aún no tiene perfil (409). */
+export type ProfileResult = { ok: true; data: ProfileData } | ({ ok: false } & (ApiError | { kind: 'no_profile' }));
+
 export type ApiClient = {
   exchangeToken(request: TokenRequest): Promise<ApiResult<TokenResponse>>;
   getMe(token: string): Promise<ApiResult<MeResponse>>;
@@ -82,9 +129,19 @@ export type ApiClient = {
   getQuickFit(token: string, applicationId: string): Promise<ApiResult<QuickFitState> | { ok: false; kind: 'not_found' }>;
   /** Una lectura exprés nueva, solo gratuita: el token no gasta créditos (D-204). */
   runQuickFit(token: string, applicationId: string): Promise<QuickFitResult>;
+  /** Los documentos de una candidatura preparada (CV-506, alcance `documents.read`). */
+  getDocuments(token: string, applicationId: string): Promise<DocumentsResult>;
+  /** Pide un enlace de descarga del CV, de un solo uso (CV-506). El token no gasta créditos (D-204). */
+  requestDownload(token: string, applicationId: string, format: DocumentFormat): Promise<DownloadLinkResult>;
+  /** Baja el fichero del enlace, sin Authorization: el secreto va en la URL (CV-506, D-217). */
+  downloadFile(url: string, format: DocumentFormat): Promise<DownloadFileResult>;
+  /** Los datos del perfil para rellenar formularios (CV-507, alcance `profile.read`). El panel no los guarda. */
+  getProfile(token: string): Promise<ProfileResult>;
 };
 
 const TIMEOUT_MS = 15_000;
+// Bajar un DOCX o un PDF puede tardar más que una consulta.
+const DOWNLOAD_TIMEOUT_MS = 60_000;
 // La lectura exprés es síncrona: la IA tarda unos segundos, y un reintento del servidor, otros tantos.
 const QUICK_FIT_TIMEOUT_MS = 90_000;
 
@@ -116,7 +173,10 @@ function parseMe(body: unknown): MeResponse | null {
     return null;
   }
   const browser = parseBrowser(body.browser);
-  return browser ? { email: body.email, locale: body.locale, browser } : null;
+  if (!browser) return null;
+  const me: MeResponse = { email: body.email, locale: body.locale, browser };
+  if (Array.isArray(body.scopes)) me.scopes = body.scopes.filter((s): s is string => typeof s === 'string');
+  return me;
 }
 
 /** La URL viene del servidor y se abre en una pestaña: solo si es del propio Aplica. */
@@ -134,7 +194,14 @@ function parseApplication(value: unknown, apiBase: string): ApplicationRef | nul
   const { id, title, company, stage, url } = value;
   const ref = typeof id === 'number' ? String(id) : id;
   if (typeof ref !== 'string' || ref === '' || typeof title !== 'string' || typeof company !== 'string') return null;
-  return { id: ref, title, company, stage: typeof stage === 'string' ? stage : '', url: sameOrigin(url, apiBase) };
+  return {
+    id: ref,
+    title,
+    company,
+    stage: typeof stage === 'string' ? stage : '',
+    url: sameOrigin(url, apiBase),
+    ready: value.ready === true,
+  };
 }
 
 function parseRequirement(value: unknown): QuickFitRequirement | null {
@@ -159,6 +226,97 @@ function parseQuickFit(value: unknown, apiBase: string): QuickFit | null {
     createdAt: typeof created_at === 'string' ? created_at : '',
     url: sameOrigin(url, apiBase),
   };
+}
+
+function nonEmptyText(value: unknown): string | null {
+  return typeof value === 'string' && value.trim() !== '' ? value : null;
+}
+
+function parseQuestionItem(value: unknown): DocumentQuestionItem | null {
+  if (!isObject(value)) return null;
+  const { question, type, answer, note } = value;
+  if (typeof question !== 'string' || (type !== 'redactar' && type !== 'contesta_tu')) return null;
+  return { question, type, answer: nonEmptyText(answer), note: nonEmptyText(note) };
+}
+
+function parseQuestionSet(value: unknown): DocumentQuestionSet | null {
+  if (!isObject(value) || !Array.isArray(value.items)) return null;
+  const items = value.items.map(parseQuestionItem).filter((i): i is DocumentQuestionItem => i !== null);
+  return {
+    generatedAt: typeof value.generated_at === 'string' ? value.generated_at : '',
+    truncated: value.truncated === true,
+    items,
+  };
+}
+
+/** Documentos que no se entienden enteros no se enseñan a medias (CV-506). */
+function parseDocuments(value: unknown, apiBase: string): ApplicationDocuments | null {
+  if (!isObject(value) || !isObject(value.cv)) return null;
+  const questions = Array.isArray(value.questions) ? value.questions.map(parseQuestionSet) : [];
+  return {
+    lang: typeof value.lang === 'string' ? value.lang : '',
+    cv: { docx: value.cv.docx === true, pdf: value.cv.pdf === true },
+    letter: nonEmptyText(value.letter),
+    message: nonEmptyText(value.message),
+    questions: questions.filter((q): q is DocumentQuestionSet => q !== null && q.items.length > 0),
+    url: sameOrigin(value.url, apiBase),
+  };
+}
+
+function textOrNull(value: unknown): string | null {
+  return typeof value === 'string' && value.trim() !== '' ? value.trim() : null;
+}
+
+function textList(value: unknown): string[] {
+  return Array.isArray(value) ? value.map(textOrNull).filter((v): v is string => v !== null) : [];
+}
+
+/** Perfil que no tiene la forma esperada: no se usa (CV-507). */
+function parseProfile(value: unknown): ProfileData | null {
+  if (!isObject(value)) return null;
+  const role = isObject(value.current_role) ? { title: textOrNull(value.current_role.title), company: textOrNull(value.current_role.company) } : null;
+  const years = value.years_experience;
+  return {
+    lang: value.lang === 'en' ? 'en' : 'es',
+    name: textOrNull(value.name),
+    email: textOrNull(value.email),
+    phone: textOrNull(value.phone),
+    location: textOrNull(value.location),
+    linkedin: textOrNull(value.linkedin),
+    github: textOrNull(value.github),
+    websites: textList(value.websites),
+    currentRole: role,
+    yearsExperience: typeof years === 'number' && Number.isInteger(years) && years >= 0 ? years : null,
+    education: textList(value.education),
+    languages: textList(value.languages),
+  };
+}
+
+/** Nombre del fichero de `Content-Disposition` (`filename*` antes que `filename`), sin rutas ni caracteres raros. */
+export function filenameFrom(header: string | null, fallback: string): string {
+  let name: string | null = null;
+  if (header) {
+    const encoded = /filename\*\s*=\s*(?:UTF-8|utf-8)''([^;]+)/i.exec(header);
+    if (encoded?.[1]) {
+      try {
+        name = decodeURIComponent(encoded[1].trim());
+      } catch {
+        name = null;
+      }
+    }
+    if (!name) {
+      const plain = /filename\s*=\s*(?:"([^"]*)"|([^;]+))/i.exec(header);
+      name = (plain?.[1] ?? plain?.[2] ?? '').trim() || null;
+    }
+  }
+  // Los caracteres de control se quitan a propósito del nombre del fichero.
+  const clean = (name ?? '')
+    // eslint-disable-next-line no-control-regex
+    .replace(/[\\/:*?"<>|\u0000-\u001f]/g, '_')
+    .replace(/^\.+/, '')
+    .trim()
+    .slice(0, 150);
+  return clean === '' ? fallback : clean;
 }
 
 function count(value: unknown): number {
@@ -220,6 +378,14 @@ export function createApiClient(apiBase: string, fetchImpl: typeof fetch = fetch
       return { kind: 'insufficient_scope' };
     }
     return { kind: 'server' };
+  }
+
+  async function documentsFailure(response: Response): Promise<{ ok: false } & (ApiError | DocumentsError)> {
+    if (response.status === 404) return { ok: false, kind: 'not_found' };
+    if (response.status === 409) {
+      return errorCode(await readJson(response)) === 'not_ready' ? { ok: false, kind: 'not_ready' } : { ok: false, kind: 'server' };
+    }
+    return { ok: false, ...(await failure(response)) };
   }
 
   return {
@@ -336,6 +502,69 @@ export function createApiClient(apiBase: string, fetchImpl: typeof fetch = fetch
       }
       if (response.status === 403 && code === 'insufficient_scope') return { ok: false, kind: 'insufficient_scope' };
       return { ok: false, kind: 'server' };
+    },
+
+    async getDocuments(token, applicationId) {
+      const result = await request(`/offers/${encodeURIComponent(applicationId)}/documents`, { method: 'GET', token });
+      if ('error' in result) return { ok: false, ...result.error };
+      const { response } = result;
+      if (response.status !== 200) return documentsFailure(response);
+      const body = await readJson(response);
+      const data = isObject(body) ? parseDocuments(body.documents, apiBase) : null;
+      return data ? { ok: true, data } : { ok: false, kind: 'server' };
+    },
+
+    async requestDownload(token, applicationId, format) {
+      const result = await request(`/offers/${encodeURIComponent(applicationId)}/downloads`, {
+        method: 'POST',
+        token,
+        json: { format },
+      });
+      if ('error' in result) return { ok: false, ...result.error };
+      const { response } = result;
+      if (response.status !== 201) return documentsFailure(response);
+      const body = await readJson(response);
+      const url = isObject(body) ? sameOrigin(body.url, apiBase) : null;
+      if (!url || !isObject(body)) return { ok: false, kind: 'server' };
+      return { ok: true, data: { url, expiresAt: typeof body.expires_at === 'string' ? body.expires_at : '' } };
+    },
+
+    async getProfile(token) {
+      const result = await request('/profile', { method: 'GET', token });
+      if ('error' in result) return { ok: false, ...result.error };
+      const { response } = result;
+      if (response.status === 409) {
+        return errorCode(await readJson(response)) === 'no_profile' ? { ok: false, kind: 'no_profile' } : { ok: false, kind: 'server' };
+      }
+      if (response.status !== 200) return { ok: false, ...(await failure(response)) };
+      const body = await readJson(response);
+      const data = isObject(body) ? parseProfile(body.profile) : null;
+      return data ? { ok: true, data } : { ok: false, kind: 'server' };
+    },
+
+    async downloadFile(url, format) {
+      // Sin Authorization: el secreto va en la URL. Y solo se pide si es del propio Aplica.
+      if (!sameOrigin(url, apiBase)) return { ok: false, kind: 'server' };
+      let response: Response;
+      try {
+        response = await fetchImpl(url, {
+          method: 'GET',
+          credentials: 'omit',
+          redirect: 'error',
+          signal: AbortSignal.timeout(DOWNLOAD_TIMEOUT_MS),
+        });
+      } catch {
+        return { ok: false, kind: 'network' };
+      }
+      if (response.status === 410) return { ok: false, kind: 'gone' };
+      if (response.status === 404) return { ok: false, kind: 'not_found' };
+      if (response.status !== 200) return { ok: false, ...(await failure(response)) };
+      try {
+        const blob = await response.blob();
+        return { ok: true, data: { blob, filename: filenameFrom(response.headers.get('Content-Disposition'), `CV.${format}`) } };
+      } catch {
+        return { ok: false, kind: 'network' };
+      }
     },
   };
 }

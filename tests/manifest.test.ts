@@ -1,8 +1,8 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { buildManifest, DEV_PUBLIC_KEY, TARGETS } from '../scripts/manifest.mjs';
+import { ATS_HOST_PATTERNS, buildManifest, DEV_PUBLIC_KEY, TARGETS } from '../scripts/manifest.mjs';
 
-const FORBIDDEN = ['host_permissions', 'optional_host_permissions', 'content_scripts', 'externally_connectable'];
+const FORBIDDEN = ['host_permissions', 'content_scripts', 'externally_connectable'];
 
 describe.each(TARGETS)('manifest %s', (target) => {
   for (const dev of [false, true]) {
@@ -11,7 +11,13 @@ describe.each(TARGETS)('manifest %s', (target) => {
       for (const key of FORBIDDEN) expect(manifest).not.toHaveProperty(key);
       // La página solo se lee con activeTab + scripting, tras pulsar el icono (CV-504).
       expect(manifest.permissions).toEqual(expect.arrayContaining(['activeTab', 'scripting']));
-      expect(JSON.stringify(manifest)).not.toMatch(/<all_urls>|https?:\/\/\*|\*:\/\//);
+      // Los únicos patrones de sitios son los permisos opcionales de los ATS (CV-507): nada
+      // obligatorio, nada de <all_urls> y nada en la parte que se concede al instalar.
+      const { optional_host_permissions: chromeOptional, optional_permissions: firefoxOptional, ...rest } = manifest;
+      expect(target === 'firefox' ? firefoxOptional : chromeOptional).toEqual(ATS_HOST_PATTERNS);
+      expect(target === 'firefox' ? chromeOptional : firefoxOptional).toBeUndefined();
+      expect(JSON.stringify(rest)).not.toMatch(/<all_urls>|https?:\/\/\*|\*:\/\//);
+      expect(ATS_HOST_PATTERNS.join(' ')).not.toContain('<all_urls>');
       expect(manifest.manifest_version).toBe(3);
       expect(manifest.version).toBe('0.1.0');
       expect(manifest.default_locale).toBe('en');
@@ -81,7 +87,7 @@ describe('textos', () => {
 
   it('las claves usadas en el código existen y no hay guiones largos', () => {
     const en = read('en');
-    const sources = ['src/panel/panel.ts', 'src/panel/dev-export.ts', 'src/background.ts'];
+    const sources = ['src/panel/panel.ts', 'src/panel/dev-export.ts', 'src/panel/fill-section.ts', 'src/background.ts'];
     const used = new Set<string>();
     for (const file of sources) {
       const code = readFileSync(file, 'utf8');
@@ -100,5 +106,29 @@ describe('textos', () => {
     for (const lang of readdirSync('src/_locales')) {
       expect(readFileSync(`src/_locales/${lang}/messages.json`, 'utf8')).not.toMatch(new RegExp(`[${String.fromCharCode(0x2014, 0x2013)}]`));
     }
+  });
+});
+
+describe('permisos de host opcionales (CV-507)', () => {
+  it('son solo los dominios de formulario de los siete ATS, y todos terminan en /*', () => {
+    const allowed =
+      /^\*:\/\/(\*\.)?(myworkdayjobs\.com|myworkdaysite\.com|boards\.greenhouse\.io|job-boards\.greenhouse\.io|job-boards\.eu\.greenhouse\.io|jobs\.lever\.co|jobs\.eu\.lever\.co|jobs\.smartrecruiters\.com|apply\.workable\.com|teamtailor\.com|jobs\.personio\.de|jobs\.personio\.com)\/\*$/;
+    expect(ATS_HOST_PATTERNS.length).toBeGreaterThan(0);
+    for (const pattern of ATS_HOST_PATTERNS) expect(pattern).toMatch(allowed);
+  });
+
+  it('se piden al activar el autorrelleno, nunca al instalar: no hay permisos de host obligatorios', () => {
+    for (const target of TARGETS) {
+      const manifest = buildManifest(target, { version: '0.1.0' });
+      expect(manifest).not.toHaveProperty('host_permissions');
+      expect(manifest).not.toHaveProperty('content_scripts');
+      expect((manifest.permissions as string[]).some((p) => p.includes('://') || p === '<all_urls>')).toBe(false);
+    }
+    // permissions.request solo se llama desde el rellenado, tras el clic de la persona.
+    const requests = ['src/panel/panel.ts', 'src/panel/fill-section.ts', 'src/panel/fill-run.ts', 'src/background.ts'].filter((file) =>
+      readFileSync(file, 'utf8').includes('permissions.request'),
+    );
+    expect(requests).toEqual([]);
+    expect(readFileSync('src/panel/fill-page.ts', 'utf8')).toContain('permissions.request({ origins })');
   });
 });

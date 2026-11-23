@@ -1,0 +1,35 @@
+<!doctype html>
+<!-- Fixture de formulario de candidatura (CV-507). Estructura de Teamtailor (<empresa>.teamtailor.com/jobs/<id>):
+     name="candidate[first_name]", "candidate[last_name]", "candidate[email]", "candidate[phone]",
+     "candidate[resume]" y preguntas answers[<id>][answer]. Contenido inventado. -->
+<html lang="es">
+<head>
+<meta charset="utf-8"/>
+<title>Desarrolladora backend - Empresa Ficticia S.L.</title>
+</head>
+<body>
+<main>
+<section id="apply" class="apply-section">
+<h2>Solicita este puesto</h2>
+<form class="new_candidate" id="new_candidate" action="/jobs/1234567-desarrolladora-backend/applications" accept-charset="UTF-8" method="post" enctype="multipart/form-data">
+<div class="form-group"><label for="candidate_first_name">Nombre *</label><input type="text" name="candidate[first_name]" id="candidate_first_name" required="required" autocomplete="given-name"/></div>
+<div class="form-group"><label for="candidate_last_name">Apellidos *</label><input type="text" name="candidate[last_name]" id="candidate_last_name" required="required" autocomplete="family-name"/></div>
+<div class="form-group"><label for="candidate_email">Correo electrónico *</label><input type="email" name="candidate[email]" id="candidate_email" required="required" autocomplete="email"/></div>
+<div class="form-group"><label for="candidate_phone">Teléfono</label><input type="tel" name="candidate[phone]" id="candidate_phone" autocomplete="tel"/></div>
+<div class="form-group"><label for="candidate_city">Ciudad</label><input type="text" name="candidate[city]" id="candidate_city"/></div>
+<div class="form-group"><label for="candidate_linkedin">Perfil de LinkedIn</label><input type="url" name="candidate[linkedin]" id="candidate_linkedin"/></div>
+<div class="form-group"><label for="candidate_website">Sitio web</label><input type="url" name="candidate[website]" id="candidate_website"/></div>
+<div class="form-group"><label for="candidate_resume">Currículum *</label><input type="file" name="candidate[resume]" id="candidate_resume" accept=".pdf,.doc,.docx,.rtf,.odt"/></div>
+<div class="form-group"><label for="answer_1">¿Por qué quieres trabajar en Empresa Ficticia S.L.?</label><textarea name="answers[1][answer]" id="answer_1"></textarea></div>
+<div class="form-group"><label for="answer_2">Cuéntanos un proyecto del que te sientas orgullosa y qué aprendiste</label><textarea name="answers[2][answer]" id="answer_2"></textarea></div>
+<div class="form-group"><label for="answer_3">¿Cuáles son tus pretensiones salariales?</label><input type="text" name="answers[3][answer]" id="answer_3"/></div>
+<div class="form-group"><label for="answer_4">¿Necesitas permiso de trabajo o visado para trabajar en España?</label><input type="text" name="answers[4][answer]" id="answer_4"/></div>
+<div class="form-group"><label for="answer_5">¿Cuándo podrías incorporarte?</label><input type="text" name="answers[5][answer]" id="answer_5"/></div>
+<fieldset class="form-group"><legend>Género</legend><label><input type="radio" name="answers[6][answer]" value="mujer"/> Mujer</label><label><input type="radio" name="answers[6][answer]" value="hombre"/> Hombre</label><label><input type="radio" name="answers[6][answer]" value="otro"/> Prefiero no decirlo</label></fieldset>
+<div class="form-group"><label><input type="checkbox" name="candidate[consent]" value="1"/> Acepto la política de privacidad</label></div>
+<button type="submit" class="button button-primary">Enviar solicitud</button>
+</form>
+</section>
+</main>
+</body>
+</html>

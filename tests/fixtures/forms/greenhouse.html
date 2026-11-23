@@ -1,0 +1,44 @@
+<!doctype html>
+<!-- Fixture de formulario de candidatura (CV-507). Estructura de Greenhouse (job-boards.greenhouse.io):
+     ids first_name, last_name, email, phone, resume y preguntas question_<id>, campos EEOC. Contenido
+     inventado. La ubicación es un combobox, como en la página real, y no se rellena. -->
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Job Application for Desarrolladora backend at Empresa Ficticia S.L.</title>
+</head>
+<body>
+<div id="app">
+<main>
+<div class="application--container">
+<h1>Apply for this job</h1>
+<form class="application--form" action="https://job-boards.greenhouse.io/empresaficticia/jobs/1234567" method="post" enctype="multipart/form-data" id="application-form">
+<div class="application--questions">
+<div class="text-input-wrapper"><label for="first_name" class="label">First Name<span class="required">*</span></label><input id="first_name" name="first_name" type="text" class="input input__single-line" aria-required="true" value=""/></div>
+<div class="text-input-wrapper"><label for="last_name" class="label">Last Name<span class="required">*</span></label><input id="last_name" name="last_name" type="text" class="input input__single-line" aria-required="true" value=""/></div>
+<div class="text-input-wrapper"><label for="email" class="label">Email<span class="required">*</span></label><input id="email" name="email" type="text" class="input input__single-line" aria-required="true" value=""/></div>
+<div class="phone-input-wrapper"><label for="phone" class="label">Phone<span class="required">*</span></label><input id="phone" name="phone" type="tel" class="input input__single-line" aria-required="true" value=""/></div>
+<div class="select__container"><label id="candidate-location-label" for="candidate-location" class="label">Location (City)<span class="required">*</span></label><input id="candidate-location" role="combobox" aria-autocomplete="list" aria-haspopup="listbox" type="text" class="select__input" value=""/></div>
+<div class="file-upload" data-field="resume"><label id="resume-label" for="resume" class="label">Resume/CV<span class="required">*</span></label><input id="resume" name="resume" type="file" accept=".pdf,.doc,.docx,.txt,.rtf"/></div>
+<div class="file-upload" data-field="cover_letter"><label id="cover_letter-label" for="cover_letter" class="label">Cover Letter</label><input id="cover_letter" name="cover_letter" type="file" accept=".pdf,.doc,.docx,.txt,.rtf"/></div>
+<div class="text-input-wrapper"><label for="question_100001" class="label">LinkedIn Profile</label><input id="question_100001" name="job_application[answers_attributes][0][text_value]" type="text" class="input input__single-line" value=""/></div>
+<div class="text-input-wrapper"><label for="question_100002" class="label">Website</label><input id="question_100002" name="job_application[answers_attributes][1][text_value]" type="text" class="input input__single-line" value=""/></div>
+<div class="text-input-wrapper"><label for="question_100003" class="label">Why do you want to work at Empresa Ficticia S.L.?<span class="required">*</span></label><textarea id="question_100003" name="job_application[answers_attributes][2][text_value]" class="input input__multi-line"></textarea></div>
+<div class="text-input-wrapper"><label for="question_100004" class="label">Describe a project you are proud of and what you learned from it</label><textarea id="question_100004" name="job_application[answers_attributes][3][text_value]" class="input input__multi-line"></textarea></div>
+<div class="select-wrapper"><label for="question_100005" class="label">Will you now or in the future require visa sponsorship?<span class="required">*</span></label><select id="question_100005" name="job_application[answers_attributes][4][boolean_value]"><option value="">Please select</option><option value="1">Yes</option><option value="0">No</option></select></div>
+<div class="text-input-wrapper"><label for="question_100006" class="label">What are your salary expectations?</label><input id="question_100006" name="job_application[answers_attributes][5][text_value]" type="text" class="input input__single-line" value=""/></div>
+<div class="text-input-wrapper"><label for="question_100007" class="label">What is your notice period?</label><input id="question_100007" name="job_application[answers_attributes][6][text_value]" type="text" class="input input__single-line" value=""/></div>
+</div>
+<div class="eeoc"><h2>Voluntary Self-Identification</h2>
+<div class="select-wrapper"><label for="gender" class="label">Gender</label><select id="gender" name="job_application[gender]"><option value="">Please select</option><option value="1">Male</option><option value="2">Female</option><option value="3">Decline To Self Identify</option></select></div>
+<div class="select-wrapper"><label for="race" class="label">Race</label><select id="race" name="job_application[race]"><option value="">Please select</option><option value="1">Two or More Races</option><option value="2">Decline To Self Identify</option></select></div>
+<div class="select-wrapper"><label for="veteran_status" class="label">Veteran Status</label><select id="veteran_status" name="job_application[veteran_status]"><option value="">Please select</option><option value="1">I am not a protected veteran</option></select></div>
+<div class="select-wrapper"><label for="disability_status" class="label">Disability Status</label><select id="disability_status" name="job_application[disability_status]"><option value="">Please select</option><option value="1">No, I do not have a disability</option></select></div>
+</div>
+<button type="submit" class="btn btn--pill">Submit application</button>
+</form>
+</div>
+</main>
+</div>
+</body>
+</html>

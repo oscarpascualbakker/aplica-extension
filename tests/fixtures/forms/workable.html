@@ -1,0 +1,34 @@
+<!doctype html>
+<!-- PROVISIONAL (CV-507). Fixture de formulario de candidatura de Workable construida con la estructura
+     conocida (atributos data-ui firstname, lastname, email, phone, address, resume y preguntas QA_<id>),
+     no con una página capturada. Contenido inventado. Se sustituirá cuando el titular capture la página
+     real con "Export page" (ver README). -->
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Desarrolladora backend - Empresa Ficticia S.L.</title>
+</head>
+<body>
+<div id="app">
+<form data-ui="application-form" action="/api/v1/jobs/ABC123/apply" method="post" enctype="multipart/form-data">
+<h2 data-ui="application-title">Submit your application</h2>
+<div><label for="firstname">First name</label><input id="firstname" name="firstname" type="text" data-ui="firstname" aria-required="true"/></div>
+<div><label for="lastname">Last name</label><input id="lastname" name="lastname" type="text" data-ui="lastname" aria-required="true"/></div>
+<div><label for="email">Email</label><input id="email" name="email" type="email" data-ui="email" aria-required="true"/></div>
+<div><label for="phone">Phone</label><input id="phone" name="phone" type="tel" data-ui="phone"/></div>
+<div><label for="address">Address</label><input id="address" name="address" type="text" data-ui="address"/></div>
+<div><label for="resume">Resume</label><input id="resume" name="resume" type="file" data-ui="resume" accept=".pdf,.doc,.docx,.rtf,.odt"/></div>
+<div><label for="cover_letter">Cover letter</label><textarea id="cover_letter" name="cover_letter" data-ui="cover_letter"></textarea></div>
+<div><label for="QA_100001">LinkedIn</label><input id="QA_100001" name="QA_100001" type="text"/></div>
+<div><label for="QA_100002">Website</label><input id="QA_100002" name="QA_100002" type="text"/></div>
+<div><label for="QA_100003">Why do you want to work at Empresa Ficticia S.L.?</label><textarea id="QA_100003" name="QA_100003" data-ui="QA_100003"></textarea></div>
+<div><label for="QA_100004">Describe a project you are proud of and what you learned from it</label><textarea id="QA_100004" name="QA_100004" data-ui="QA_100004"></textarea></div>
+<fieldset><legend>Do you require visa sponsorship?</legend><label><input type="radio" name="QA_100005" value="Yes"/> Yes</label><label><input type="radio" name="QA_100005" value="No"/> No</label></fieldset>
+<div><label for="QA_100006">What is your desired salary?</label><input id="QA_100006" name="QA_100006" type="text"/></div>
+<div><label for="QA_100007">When can you start?</label><input id="QA_100007" name="QA_100007" type="text"/></div>
+<div><label for="QA_100008">Gender</label><select id="QA_100008" name="QA_100008"><option value="">Choose</option><option value="f">Female</option><option value="m">Male</option></select></div>
+<button type="submit" data-ui="apply-button">Submit application</button>
+</form>
+</div>
+</body>
+</html>
