@@ -8,9 +8,28 @@ body {
   margin: 0;
   padding: 16px;
 }
+#app {
+  position: relative;
+}
 h1 {
   font-size: 18px;
   margin: 0 0 12px;
+  /* Hueco para el botón de cerrar (CV-523). */
+  padding-right: 40px;
+}
+button.close {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border-color: transparent;
+  font-size: 16px;
+  line-height: 1;
+}
+button.close:hover {
+  border-color: currentColor;
 }
 p {
   margin: 0 0 12px;
@@ -37,4 +56,115 @@ button:disabled {
   padding: 8px 10px;
   border-radius: 6px;
   border: 1px solid currentColor;
+}
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+:focus-visible {
+  outline: 2px solid #1f4fd8;
+  outline-offset: 2px;
+}
+h1:focus {
+  outline: none;
+}
+form {
+  display: grid;
+  gap: 12px;
+}
+.field {
+  display: grid;
+  gap: 4px;
+}
+label {
+  font-weight: 600;
+}
+input,
+select,
+textarea {
+  font: inherit;
+  padding: 6px 8px;
+  border: 1px solid #767676;
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+  width: 100%;
+  box-sizing: border-box;
+}
+textarea {
+  resize: vertical;
+}
+input[readonly] {
+  opacity: 0.8;
+}
+[aria-invalid='true'] {
+  border-color: #c4261d;
+  border-width: 2px;
+}
+.field-error {
+  margin: 0;
+  color: #c4261d;
+}
+.hint {
+  margin: -8px 0 0;
+  font-size: 12px;
+  opacity: 0.8;
+}
+.match-status:empty {
+  display: none;
+}
+/* Encaje exprés (CV-505): el estado va en texto; el borde solo lo refuerza. */
+.quick-fit {
+  margin: 16px 0;
+  padding: 12px;
+  border: 1px solid #76767666;
+  border-radius: 6px;
+}
+.quick-fit h2 {
+  font-size: 16px;
+  margin: 0 0 8px;
+}
+.quick-fit h2:focus {
+  outline: none;
+}
+.verdict {
+  font-weight: 600;
+}
+.requirements {
+  margin: 0 0 12px;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 8px;
+}
+.requirement {
+  padding-left: 8px;
+  border-left: 4px solid #767676;
+}
+.requirement.covered {
+  border-left-color: #1a7f37;
+}
+.requirement.to_confirm {
+  border-left-color: #9a6700;
+}
+.requirement.missing {
+  border-left-color: #c4261d;
+}
+.requirement .note {
+  display: block;
+  font-size: 12px;
+  opacity: 0.8;
+}
+.account {
+  margin-top: 24px;
+  padding-top: 12px;
+  border-top: 1px solid #76767666;
+  font-size: 12px;
+}
+.dev-tools {
+  margin-top: 16px;
 }

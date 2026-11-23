@@ -3,6 +3,7 @@
   "extDescription": { "message": "Your Aplica companion for preparing job applications. Free." },
   "actionTitle": { "message": "Open Aplica" },
   "panelTitle": { "message": "Aplica" },
+  "closeButton": { "message": "Close the panel" },
   "connectIntro": { "message": "Connect this browser to your Aplica account. Aplica does not read any page until you ask it to." },
   "connectButton": { "message": "Connect with Aplica" },
   "connecting": { "message": "Waiting for you to approve the connection…" },
@@ -19,5 +20,104 @@
   "errorInvalid": { "message": "The connection could not be completed. Please try again." },
   "errorNetwork": { "message": "Could not reach Aplica. Check your connection and try again." },
   "errorRateLimited": { "message": "Too many attempts. Wait a minute and try again." },
-  "errorServer": { "message": "Aplica is not responding as expected. Please try again later." }
+  "errorServer": { "message": "Aplica is not responding as expected. Please try again later." },
+  "readingPage": { "message": "Reading the job posting…" },
+  "previewTitle": { "message": "Save job posting" },
+  "previewIntro": { "message": "Check what Aplica has read from the page. You can correct it before you save. Saving is free." },
+  "fieldTitle": { "message": "Job title" },
+  "fieldCompany": { "message": "Company" },
+  "fieldLocation": { "message": "Location" },
+  "fieldWorkMode": { "message": "Work mode" },
+  "workModeNone": { "message": "Not specified" },
+  "workModeOnsite": { "message": "On-site" },
+  "workModeHybrid": { "message": "Hybrid" },
+  "workModeRemote": { "message": "Remote" },
+  "fieldSalary": { "message": "Salary" },
+  "fieldDescription": { "message": "Description" },
+  "descriptionCount": {
+    "message": "$COUNT$ of $MAX$ characters",
+    "placeholders": {
+      "count": { "content": "$1", "example": "1200" },
+      "max": { "content": "$2", "example": "30000" }
+    }
+  },
+  "fieldLink": { "message": "Link" },
+  "fieldInvalid": { "message": "This field is not valid. Check it." },
+  "saveButton": { "message": "Save to Aplica" },
+  "saveAnywayButton": { "message": "Save anyway" },
+  "saving": { "message": "Saving…" },
+  "readAgainButton": { "message": "Read the page again" },
+  "readSelectionButton": { "message": "Use the selected text" },
+  "needsSelection": { "message": "Select the job posting text on the page and press “Use the selected text”." },
+  "noAccess": { "message": "Click the Aplica icon on this page to read the job posting." },
+  "unsupportedPage": { "message": "Open a job posting on a web page to save it." },
+  "readFailed": { "message": "The page could not be read. Please try again." },
+  "noticeTruncated": {
+    "message": "The description was too long and has been shortened to $MAX$ characters.",
+    "placeholders": { "max": { "content": "$1", "example": "30000" } }
+  },
+  "noticeFromSelection": { "message": "The description is the text you had selected on the page." },
+  "invalidFields": { "message": "Check the highlighted fields." },
+  "errorScope": { "message": "This connection does not allow saving job postings. Disconnect and connect again." },
+  "possibleDuplicate": {
+    "message": "You already have a similar application: $TITLE$ at $COMPANY$. It may be the same job posting with a different link.",
+    "placeholders": {
+      "title": { "content": "$1", "example": "Desarrolladora backend" },
+      "company": { "content": "$2", "example": "Empresa Ficticia S.L." }
+    }
+  },
+  "savedTitle": { "message": "Job posting saved" },
+  "savedText": {
+    "message": "$TITLE$ at $COMPANY$ is in your account as a saved application.",
+    "placeholders": {
+      "title": { "content": "$1", "example": "Desarrolladora backend" },
+      "company": { "content": "$2", "example": "Empresa Ficticia S.L." }
+    }
+  },
+  "duplicateTitle": { "message": "You already have this job posting in Aplica" },
+  "duplicateText": {
+    "message": "$TITLE$ at $COMPANY$",
+    "placeholders": {
+      "title": { "content": "$1", "example": "Desarrolladora backend" },
+      "company": { "content": "$2", "example": "Empresa Ficticia S.L." }
+    }
+  },
+  "openInAplica": { "message": "Open in Aplica" },
+  "quickFitTitle": { "message": "Quick fit" },
+  "quickFitIntro": { "message": "A quick reading of this job posting against your profile: the key requirements and a provisional verdict. The full fit report, prepared with your application, is the one that counts." },
+  "quickFitButton": { "message": "See fit" },
+  "quickFitRunning": { "message": "Checking the fit…" },
+  "quickFitFreeLeft": {
+    "message": "Free readings left today: $COUNT$.",
+    "placeholders": { "count": { "content": "$1", "example": "2" } }
+  },
+  "quickFitVerdict": {
+    "message": "Provisional verdict: $VERDICT$",
+    "placeholders": { "verdict": { "content": "$1", "example": "Apply with reservations" } }
+  },
+  "verdictApply": { "message": "Apply" },
+  "verdictCaveats": { "message": "Apply with reservations" },
+  "verdictDoNotApply": { "message": "Do not apply" },
+  "statusCovered": { "message": "Covered" },
+  "statusToConfirm": { "message": "To confirm" },
+  "statusMissing": { "message": "Missing" },
+  "quickFitDisclaimer": { "message": "This is a quick reading. The full fit report, prepared with your application, is the one that counts." },
+  "prepareFullButton": { "message": "Prepare full application" },
+  "quickFitCreditsRequired": {
+    "message": "You have already used today's free readings. In Aplica you can run this reading with credits (price in credits: $PRICE$), always with your confirmation.",
+    "placeholders": { "price": { "content": "$1", "example": "1" } }
+  },
+  "quickFitOpenWeb": { "message": "See fit in Aplica" },
+  "quickFitReportExists": { "message": "This application already has the full fit report, which is the one that counts." },
+  "quickFitNoPosting": { "message": "The job posting text is missing. Add it in Aplica to see the fit." },
+  "quickFitNoProfile": { "message": "To see the fit you need your career profile in Aplica." },
+  "quickFitBusy": { "message": "A reading is already in progress. Wait a few seconds and try again." },
+  "quickFitUnavailable": { "message": "Aplica could not check the fit right now. Please try again in a few minutes. You have not used any reading." },
+  "quickFitRefused": { "message": "This reading could not be done for this job posting. You have not used any reading." },
+  "quickFitFailed": { "message": "The reading could not be completed. Please try again. You have not used any reading." },
+  "errorScopeQuickFit": { "message": "This connection does not allow reading your career profile. Disconnect and connect again." },
+  "devExportButton": { "message": "Export page" },
+  "devExportWarning": { "message": "Development only. The file contains personal data and the page's real content: do not share it outside the project." },
+  "devExportDone": { "message": "File downloaded. Save it in fixtures-raw/." },
+  "devExportError": { "message": "The page could not be exported. Click the Aplica icon on it and try again." }
 }
