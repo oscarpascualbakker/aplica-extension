@@ -220,5 +220,35 @@
   "fillMissingNotReady": { "message": "The application is not prepared yet, so only your contact details were filled in. Prepare it in Aplica to attach the CV and fill in the questions." },
   "fillMissingScope": { "message": "This connection does not allow reading the documents, so only your contact details were filled in. Connect this browser again." },
   "fillMissingDocuments": { "message": "The application documents could not be retrieved, so only your contact details were filled in. Please try again." },
-  "fillGenerateQuestions": { "message": "Some open questions have no prepared answer. Generate the answers to the Form questions in Aplica and fill in again." }
+  "fillGenerateQuestions": { "message": "Some open questions have no prepared answer. Generate the answers to the Form questions in Aplica and fill in again." },
+  "sentTitle": { "message": "Have you sent the application?" },
+  "sentQuestion": {
+    "message": "This page confirms that you have sent your application for $TITLE$ at $COMPANY$.",
+    "placeholders": {
+      "title": { "content": "$1", "example": "Backend developer" },
+      "company": { "content": "$2", "example": "Empresa Ficticia S.L." }
+    }
+  },
+  "sentQuestionUnnamed": { "message": "This page confirms that you have sent an application you have in Aplica." },
+  "sentQuestionNew": { "message": "This page confirms that you have sent an application that is not in Aplica yet. Check the job title and the company, and we will save it as sent." },
+  "sentButton": { "message": "Mark it as sent" },
+  "sentNotYetButton": { "message": "Not yet" },
+  "sentHint": { "message": "Nothing changes until you press the button. If it had no sent date, it will be today's date." },
+  "sentDoneTitle": { "message": "Marked as sent" },
+  "sentDoneText": {
+    "message": "$TITLE$ at $COMPANY$ is in your account as sent.",
+    "placeholders": {
+      "title": { "content": "$1", "example": "Backend developer" },
+      "company": { "content": "$2", "example": "Empresa Ficticia S.L." }
+    }
+  },
+  "sentDoneTextUnnamed": { "message": "The application is in your account as sent." },
+  "sentFollowUp": {
+    "message": "We will remind you on $DATE$. You can change the date in the Summary of the application, in Aplica.",
+    "placeholders": { "date": { "content": "$1", "example": "30 November 2026" } }
+  },
+  "sentLaterTitle": { "message": "Already further along" },
+  "sentLaterText": { "message": "In your tracker, this application has already moved past sent, so we have not changed it." },
+  "sentDismissedText": { "message": "Fine, we have not changed anything. If you send it later, you can mark it as sent in Aplica." },
+  "sentNotFound": { "message": "That application is no longer in your account." }
 }

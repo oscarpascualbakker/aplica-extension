@@ -1,9 +1,11 @@
 // Opciones de esbuild y utilidades compartidas entre el build y los tests (CV-503, CV-504).
 
 export const EXTRACT_GLOBAL = '__aplicaExtract';
+export const DETECT_GLOBAL = '__aplicaDetect';
 
 /**
- * Los cuatro bundles de un destino: segundo plano, panel, script de extracción y script de relleno.
+ * Los bundles de un destino: segundo plano, panel, script de extracción, script de relleno y detector de la
+ * página de confirmación (CV-508).
  * @param {{ target: 'chrome' | 'edge' | 'firefox', dev: boolean, apiBase: string, outdir?: string, write?: boolean }} options
  */
 export function bundleOptions({ target, dev, apiBase, outdir = 'dist', write = true }) {
@@ -47,6 +49,14 @@ export function bundleOptions({ target, dev, apiBase, outdir = 'dist', write = t
       format: 'iife',
       globalName: EXTRACT_GLOBAL,
       footer: { js: `${EXTRACT_GLOBAL}.result;` },
+    },
+    // CV-508: como extract, el resultado (la confirmación o null) es el valor de la última expresión.
+    detect: {
+      ...common,
+      entryPoints: { detect: 'src/sent/inject.ts' },
+      format: 'iife',
+      globalName: DETECT_GLOBAL,
+      footer: { js: `${DETECT_GLOBAL}.result;` },
     },
   };
 }

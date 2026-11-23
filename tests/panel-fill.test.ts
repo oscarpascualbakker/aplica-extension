@@ -135,6 +135,8 @@ function setup(overrides: Partial<Env> = {}): Env {
     },
     scripting: {
       executeScript: ({ files, args }: { files?: string[]; args?: [string, unknown] }) => {
+        // CV-508: el detector de la confirmación solo lee; aquí ninguna página es una confirmación.
+        if (files?.[0] === 'detect.js') return Promise.resolve([{ result: null }]);
         if (files?.[0] === 'extract.js') return Promise.resolve([{ result: EXTRACTED }]);
         if (files) {
           env.pageCalls.push({ files });

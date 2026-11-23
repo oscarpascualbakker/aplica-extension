@@ -13,7 +13,9 @@ Supported browsers: Chrome, Edge and Firefox, from a single Manifest V3 code bas
 
 - It reads a web page only when you press the Aplica icon on it, and only that tab. There are
   no content scripts and no host permission is granted on install, so it cannot read any page
-  in the background.
+  in the background. The one exception is "Marking an application as sent": while the panel is
+  open, it checks whether a page of the seven ATS you allowed for form filling is the "thank you"
+  page of an application.
 - What it reads (job title, company, location, work mode, salary and description) is shown to
   you, editable, in the panel. Nothing is sent to Aplica until you press "Save to Aplica".
 - It **never submits an application for you**: it never presses "Submit", never calls
@@ -30,7 +32,7 @@ Supported browsers: Chrome, Edge and Firefox, from a single Manifest V3 code bas
 | Permission | Why |
 | --- | --- |
 | `activeTab` | Pressing the Aplica icon grants access to the current tab, only for that page and only until you navigate away. This is what allows reading the offer. |
-| `scripting` | `scripting.executeScript` runs the packaged file `extract.js` in the active tab to read the offer. It returns a plain object to the panel and sends nothing anywhere. |
+| `scripting` | `scripting.executeScript` runs the packaged file `extract.js` in the active tab to read the offer, `fill.js` to fill in a form and `detect.js` to recognise the confirmation page of an ATS. Each returns a plain object to the panel and sends nothing anywhere. |
 | `storage` | Keeps the connection token and the account language in `storage.local`. |
 | `identity` | Opens the Aplica sign-in and approval page (`identity.launchWebAuthFlow`) to pair the browser. |
 | `sidePanel` (Chrome and Edge) | Shows the Aplica panel when you click the icon. Firefox uses `sidebar_action`, which needs no permission. |
@@ -233,6 +235,48 @@ against public application forms in November 2026 (contact fields, CV input, lin
 demographic questions); Teamtailor, Personio and the three provisional ones have not been checked
 against a live page yet, so their adapters may need adjusting when that happens.
 
+## Marking an application as sent
+
+When you finish an application form in one of the seven ATS and the company's site shows its
+"thank you" page, the panel asks: "Have you sent the application? This page confirms that you have
+sent your application for [job] at [company]", with "Mark it as sent" and "Not yet". **Nothing
+changes until you press.** One click moves the application to the "sent" stage in your Aplica
+tracker, with today's date if it had none, the extension as the source in its history and a
+follow-up reminder 7 days later (shown in the panel). If the offer was not in your account, the
+panel shows the job title and company it found, editable, and saves it straight away as sent.
+
+**When it looks.** Only while the panel is open, and only on the domains of the seven ATS (the
+same list as "Filling in forms"). When the active tab of the panel's window finishes loading one of
+those pages, or when you press the Aplica icon, the panel runs `detect.js` in that tab. Without the
+optional host access for that ATS the browser does not even tell the panel the tab's address, so
+nothing is read there (except the page where you press the icon, through `activeTab`). There is
+still no content script and nothing runs in the background service worker.
+
+**How it recognises the page.** `src/sent/detect.ts` has one rule per ATS: the path of its
+confirmation page (Greenhouse `/confirmation`, Lever `/thanks`, SmartRecruiters, Teamtailor), an
+element only its "submitted" notice has (Workday, Workable and Personio keep the same address), or a
+short heading that says the application was sent, in Spanish or English ("Gracias por tu
+candidatura", "Application submitted"; never "thank you for your interest", which offers use). A
+page that still has the form (an email or file field) is never the confirmation. The script only
+reads the DOM: no network, no extension APIs, no clicks (a static check on the bundle fails
+otherwise).
+
+**Which application.** First the one the panel already knew for that tab on the same ATS site (the
+offer it read, saved or found as a duplicate). Otherwise it asks Aplica (`offers/match`) with the
+offer link worked out from the confirmation address, or the job title and company. If the
+application is already sent or further along, there is no prompt: it never moves an application
+backwards. The API calls are `POST /api/ext/v1/offers/{id}/sent` and, for a new one,
+`POST /api/ext/v1/offers` with `sent: true`, both with the `offers.save` scope (no new scope, no
+need to reconnect).
+
+**What is not kept.** What the panel knows about each tab, and the prompts you dismissed, live in
+its memory while it is open; nothing is written to `storage.*`.
+
+The confirmation fixtures (`tests/fixtures/sent/<ats>.html`) have invented content and are
+**provisional for all seven ATS**: they follow the known structure of those pages, not a captured
+one. Capture the real "thank you" pages with "Export page" and adjust the rules in
+`src/sent/detect.ts` when that happens.
+
 ## Development (Docker only)
 
 There is no Node on the host. Everything runs in the `node` service of `docker-compose.yml`
@@ -256,9 +300,10 @@ Source layout: `src/api.ts` (API client), `src/session.ts` (pairing and session)
 `src/browser.ts` (browser adapter), `src/background.ts` (icon click), `src/extract/` (offer
 extraction: JSON-LD, portal extractors, text conversion; `inject.ts` is bundled apart as
 `extract.js`), `src/fill/` (form filling: sensitive-question detector, field detection, ATS
-adapters and domains; `inject.ts` is bundled apart as `fill.js`), `src/panel/` (side panel UI;
-`fill-section.ts`, `fill-run.ts` and `fill-page.ts` are the form filling help), `src/_locales/`
-(`en` and `es`).
+adapters and domains; `inject.ts` is bundled apart as `fill.js`), `src/sent/` (confirmation page
+detection; `inject.ts` is bundled apart as `detect.js`), `src/panel/` (side panel UI;
+`fill-section.ts`, `fill-run.ts` and `fill-page.ts` are the form filling help, `sent-run.ts` the
+"mark as sent" prompt), `src/_locales/` (`en` and `es`).
 
 ### Capturing a page to build a fixture
 
@@ -322,7 +367,13 @@ seguro con tu cuenta, guardar la oferta que estás viendo, un encaje exprés con
 documentos preparados y la ayuda para rellenar formularios.
 
 - Solo lee una página cuando pulsas el icono de Aplica en ella, y solo esa pestaña. No puede
-  leer páginas en segundo plano.
+  leer páginas en segundo plano. La excepción: con el panel abierto, en los siete ATS a los que
+  diste acceso para rellenar, mira si la página es la de «gracias por tu candidatura».
+- Al terminar el formulario de un ATS, si la página confirma el envío, el panel pregunta «¿Has
+  enviado la candidatura?» y con un clic la marca como enviada en tu seguimiento de Aplica, con la
+  fecha de hoy si no tenía y el recordatorio de seguimiento a los 7 días. Sin tu clic no cambia
+  nada, y nunca retrasa una candidatura que ya va más allá. Si la oferta no estaba en tu cuenta,
+  la guarda ya como enviada con el puesto y la empresa que revises.
 - Lo que lee se te enseña, editable, en el panel. No se envía nada a Aplica hasta que pulsas
   «Guardar en Aplica».
 - Nunca envía candidaturas por ti: no pulsa «Enviar», no llama a `submit()` ni a `requestSubmit()`,

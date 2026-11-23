@@ -146,7 +146,7 @@ describe('matchOffer (CV-504)', () => {
 describe('saveOffer (CV-504)', () => {
   it('201: envía el JSON del contrato con el token y devuelve la candidatura', async () => {
     const { api, fetchMock } = client(() => Promise.resolve(json(201, { application: APPLICATION })));
-    expect(await api.saveOffer('tok', OFFER)).toEqual({ ok: true, data: { application: APPLICATION } });
+    expect(await api.saveOffer('tok', OFFER)).toEqual({ ok: true, data: { application: APPLICATION, followUpAt: null } });
     const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
     expect(url).toBe('https://api.test/api/ext/v1/offers');
     expect(init.method).toBe('POST');
@@ -476,5 +476,51 @@ describe('perfil para rellenar formularios (CV-507)', () => {
     expect(await run(403, { error: 'insufficient_scope' })).toEqual({ ok: false, kind: 'insufficient_scope' });
     expect(await run(429, {}, { 'Retry-After': '30' })).toEqual({ ok: false, kind: 'rate_limited', retryAfter: 30 });
     expect(await client(() => Promise.reject(new TypeError('x'))).api.getProfile('tok')).toEqual({ ok: false, kind: 'network' });
+  });
+});
+
+describe('marcar como enviada (CV-508, D-220)', () => {
+  const SENT = { ...APPLICATION, stage: 'enviada', sent_at: '2026-11-23', follow_up_at: '2026-11-30' };
+
+  it('200: POST sin cuerpo a offers/{id}/sent, con la fecha de seguimiento y si cambió', async () => {
+    const { api, fetchMock } = client(() => Promise.resolve(json(200, { application: SENT, changed: true })));
+    expect(await api.markSent('tok', 'a1')).toEqual({
+      ok: true,
+      data: { application: { ...APPLICATION, stage: 'enviada' }, followUpAt: '2026-11-30', changed: true },
+    });
+    const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
+    expect(url).toBe('https://api.test/api/ext/v1/offers/a1/sent');
+    expect(init.method).toBe('POST');
+    expect(init.body).toBeUndefined();
+    expect((init.headers as Record<string, string>).Authorization).toBe('Bearer tok');
+  });
+
+  it('una fecha de seguimiento mal formada se ignora', async () => {
+    const { api } = client(() => Promise.resolve(json(200, { application: { ...SENT, follow_up_at: '30/11/2026' }, changed: false })));
+    expect(await api.markSent('tok', 'a1')).toMatchObject({ ok: true, data: { followUpAt: null, changed: false } });
+  });
+
+  it('409 stage: ya está más allá, con la candidatura', async () => {
+    const { api } = client(() => Promise.resolve(json(409, { error: 'stage', application: { ...APPLICATION, stage: 'entrevista' } })));
+    expect(await api.markSent('tok', 'a1')).toEqual({ ok: false, kind: 'stage', application: { ...APPLICATION, stage: 'entrevista' } });
+  });
+
+  it('404, 403 sin alcance, 401 y errores de red', async () => {
+    const run = (status: number, body: unknown) => client(() => Promise.resolve(json(status, body))).api.markSent('tok', 'a1');
+    expect(await run(404, { message: 'Not Found' })).toEqual({ ok: false, kind: 'not_found' });
+    expect(await run(403, { error: 'insufficient_scope' })).toEqual({ ok: false, kind: 'insufficient_scope' });
+    expect(await run(401, {})).toEqual({ ok: false, kind: 'unauthenticated' });
+    expect(await run(409, { error: 'otro' })).toEqual({ ok: false, kind: 'server' });
+    expect(await client(() => Promise.reject(new TypeError('x'))).api.markSent('tok', 'a1')).toEqual({ ok: false, kind: 'network' });
+  });
+
+  it('guardar con sent: true lo envía y devuelve la fecha de seguimiento', async () => {
+    const { api, fetchMock } = client(() => Promise.resolve(json(201, { application: SENT })));
+    expect(await api.saveOffer('tok', { ...OFFER, sent: true })).toEqual({
+      ok: true,
+      data: { application: { ...APPLICATION, stage: 'enviada' }, followUpAt: '2026-11-30' },
+    });
+    const [, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
+    expect(JSON.parse(init.body as string)).toMatchObject({ sent: true });
   });
 });

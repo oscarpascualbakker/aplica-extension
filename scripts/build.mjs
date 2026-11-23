@@ -21,6 +21,7 @@ for (const target of TARGETS) {
   await build(bundles.panel);
   await build(bundles.extract);
   await build(bundles.fill);
+  await build(bundles.detect);
 
   cpSync('src/panel/panel.html', `${out}/panel.html`);
   cpSync('src/panel/panel.css', `${out}/panel.css`);
