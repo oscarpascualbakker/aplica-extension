@@ -119,5 +119,36 @@
   "devExportButton": { "message": "Exportar página" },
   "devExportWarning": { "message": "Solo desarrollo. El fichero lleva datos personales y el contenido real de la página: no lo compartas fuera del proyecto." },
   "devExportDone": { "message": "Fichero descargado. Guárdalo en fixtures-raw/." },
-  "devExportError": { "message": "No se ha podido exportar la página. Pulsa el icono de Aplica en ella y vuelve a intentarlo." }
+  "devExportError": { "message": "No se ha podido exportar la página. Pulsa el icono de Aplica en ella y vuelve a intentarlo." },
+  "documentsTitle": { "message": "Esta candidatura ya está preparada" },
+  "documentsIntro": { "message": "Tienes los documentos de esta candidatura a un clic. Descárgalos o cópialos para usarlos en el formulario de la empresa." },
+  "documentsShowButton": { "message": "Ver los documentos preparados" },
+  "documentsDownloadDocx": { "message": "Descargar CV en Word" },
+  "documentsDownloadPdf": { "message": "Descargar CV en PDF" },
+  "documentsPreparing": { "message": "Preparando la descarga…" },
+  "documentsDownloaded": { "message": "Descarga lista." },
+  "documentsLetter": { "message": "Carta" },
+  "documentsMessage": { "message": "Mensaje al reclutador" },
+  "documentsCopyLetter": { "message": "Copiar la carta" },
+  "documentsCopyMessage": { "message": "Copiar el mensaje" },
+  "documentsQuestions": { "message": "Preguntas del formulario" },
+  "documentsQuestionsFrom": {
+    "message": "Respuestas del $DATE$",
+    "placeholders": { "date": { "content": "$1", "example": "12/11/2026" } }
+  },
+  "documentsQuestionsTruncated": { "message": "La oferta tenía más preguntas de las que se han podido responder. Revisa el formulario." },
+  "documentsCopyAnswer": { "message": "Copiar respuesta" },
+  "documentsCopyAnswerFor": {
+    "message": "Copiar la respuesta a: $QUESTION$",
+    "placeholders": { "question": { "content": "$1", "example": "¿Por qué quieres trabajar aquí?" } }
+  },
+  "documentsAnswerYourself": { "message": "Esta la contestas tú." },
+  "documentsCopied": { "message": "Copiado" },
+  "documentsCopyFailed": { "message": "No se ha podido copiar. Selecciona el texto y cópialo a mano." },
+  "documentsNotReady": { "message": "Esta candidatura aún no tiene los documentos preparados. Prepárala en Aplica." },
+  "documentsReconnectText": { "message": "Esta conexión se hizo antes de que el panel pudiera mostrar los documentos. Vuelve a conectar este navegador para verlos." },
+  "documentsReconnectButton": { "message": "Volver a conectar" },
+  "documentsScopeMissing": { "message": "Esta conexión no permite ver los documentos. Vuelve a conectar este navegador." },
+  "documentsFormatMissing": { "message": "Ese formato no está disponible para esta candidatura." },
+  "documentsDownloadFailed": { "message": "No se ha podido descargar el fichero. Inténtalo de nuevo." }
 }

@@ -119,5 +119,36 @@
   "devExportButton": { "message": "Export page" },
   "devExportWarning": { "message": "Development only. The file contains personal data and the page's real content: do not share it outside the project." },
   "devExportDone": { "message": "File downloaded. Save it in fixtures-raw/." },
-  "devExportError": { "message": "The page could not be exported. Click the Aplica icon on it and try again." }
+  "devExportError": { "message": "The page could not be exported. Click the Aplica icon on it and try again." },
+  "documentsTitle": { "message": "This application is already prepared" },
+  "documentsIntro": { "message": "Your documents for this application are one click away. Download or copy them to use in the company's form." },
+  "documentsShowButton": { "message": "Show the prepared documents" },
+  "documentsDownloadDocx": { "message": "Download CV (Word)" },
+  "documentsDownloadPdf": { "message": "Download CV (PDF)" },
+  "documentsPreparing": { "message": "Preparing the download…" },
+  "documentsDownloaded": { "message": "Download ready." },
+  "documentsLetter": { "message": "Cover letter" },
+  "documentsMessage": { "message": "Message to the recruiter" },
+  "documentsCopyLetter": { "message": "Copy the cover letter" },
+  "documentsCopyMessage": { "message": "Copy the message" },
+  "documentsQuestions": { "message": "Form questions" },
+  "documentsQuestionsFrom": {
+    "message": "Answers from $DATE$",
+    "placeholders": { "date": { "content": "$1", "example": "12/11/2026" } }
+  },
+  "documentsQuestionsTruncated": { "message": "The job posting had more questions than could be answered. Check the form." },
+  "documentsCopyAnswer": { "message": "Copy answer" },
+  "documentsCopyAnswerFor": {
+    "message": "Copy the answer to: $QUESTION$",
+    "placeholders": { "question": { "content": "$1", "example": "Why do you want to work here?" } }
+  },
+  "documentsAnswerYourself": { "message": "You answer this one yourself." },
+  "documentsCopied": { "message": "Copied" },
+  "documentsCopyFailed": { "message": "Could not copy. Select the text and copy it by hand." },
+  "documentsNotReady": { "message": "This application does not have its documents prepared yet. Prepare it in Aplica." },
+  "documentsReconnectText": { "message": "This connection was made before the panel could show documents. Connect this browser again to see them." },
+  "documentsReconnectButton": { "message": "Connect again" },
+  "documentsScopeMissing": { "message": "This connection does not allow viewing documents. Connect this browser again." },
+  "documentsFormatMissing": { "message": "That format is not available for this application." },
+  "documentsDownloadFailed": { "message": "Could not download the file. Please try again." }
 }

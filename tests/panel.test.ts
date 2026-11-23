@@ -18,12 +18,13 @@ const EXTRACTED = {
   descriptionTruncated: false,
 };
 
-type Reply = { status: number; body?: unknown };
+type Reply = { status: number; body?: unknown; raw?: string; headers?: Record<string, string> };
 type Env = {
   storage: Record<string, unknown>;
-  calls: { url: string; method: string; body: unknown }[];
+  calls: { url: string; method: string; body: unknown; authorization?: string }[];
   created: string[];
-  replies: Record<string, Reply>;
+  /** Una lista se va gastando en orden (la última se repite): para el 410 y el reintento. */
+  replies: Record<string, Reply | Reply[]>;
   extract: () => Promise<unknown>;
   tab: () => Promise<{ id?: number; url?: string }[]>;
   messageListeners: ((message: unknown) => void)[];
@@ -87,9 +88,17 @@ function setup(overrides: Partial<Env> = {}): Env {
       if (env.offline) return Promise.reject(new TypeError('Failed to fetch'));
       const url = new URL(input);
       const route = `${init?.method ?? 'GET'} ${url.pathname.replace('/api/ext/v1', '')}`;
-      env.calls.push({ url: input, method: init?.method ?? 'GET', body: init?.body ? JSON.parse(init.body as string) : undefined });
-      const reply = env.replies[route] ?? { status: 404 };
-      return Promise.resolve(new Response(reply.body === undefined ? null : JSON.stringify(reply.body), { status: reply.status }));
+      const headers = (init?.headers ?? {}) as Record<string, string>;
+      env.calls.push({
+        url: input,
+        method: init?.method ?? 'GET',
+        body: init?.body ? JSON.parse(init.body as string) : undefined,
+        authorization: headers.Authorization,
+      });
+      const queued = env.replies[route] ?? { status: 404 };
+      const reply: Reply = Array.isArray(queued) ? (queued.length > 1 ? (queued.shift() as Reply) : (queued[0] as Reply)) : queued;
+      const content = reply.raw ?? (reply.body === undefined ? null : JSON.stringify(reply.body));
+      return Promise.resolve(new Response(content, { status: reply.status, headers: reply.headers }));
     }),
   );
   document.body.innerHTML = '<main id="app"></main><div id="live" role="status" aria-live="polite"></div>';
@@ -527,5 +536,225 @@ describe('panel: encaje exprés (CV-505)', () => {
     await openPanel();
     (await until(() => buttonNamed('Ver encaje'))).click();
     await until(() => body().includes('Esta candidatura ya tiene el informe completo'));
+  });
+});
+
+describe('panel: documentos de la candidatura preparada (CV-506, D-217)', () => {
+  const ME = (scopes?: string[]) => ({
+    status: 200,
+    body: { email: 'ana@example.com', locale: 'es', browser: { id: 'b', label: 'Chrome', connected_at: 'x' }, ...(scopes ? { scopes } : {}) },
+  });
+  const READY = { ...APPLICATION, stage: 'ready', ready: true };
+  const DOCS = {
+    documents: {
+      lang: 'es',
+      cv: { docx: true, pdf: true },
+      letter: 'Carta ficticia para la empresa.',
+      message: 'Mensaje ficticio al reclutador.',
+      questions: [
+        {
+          generated_at: '2026-11-22T10:00:00+01:00',
+          truncated: false,
+          items: [
+            { question: '¿Por qué esta empresa?', type: 'redactar', answer: 'Porque encaja conmigo.', note: 'Revisa el tono.' },
+            { question: 'Pretensión salarial', type: 'contesta_tu', answer: null, note: 'La cifra la eliges tú.' },
+          ],
+        },
+      ],
+      url: READY.url,
+    },
+  };
+  const LINK = { status: 201, body: { url: `${API}/api/ext/v1/downloads/s3cret`, expires_at: '2026-11-23T10:05:00Z' } };
+  const FILE = { status: 200, raw: 'contenido', headers: { 'Content-Disposition': `attachment; filename*=UTF-8''CV%20Ana.docx` } };
+  const buttonNamed = (name: string): HTMLButtonElement | undefined =>
+    Array.from(document.querySelectorAll('button')).find((b) => b.textContent === name);
+  const live = (): string => document.querySelector('#live')?.textContent ?? '';
+
+  let clipboard: ReturnType<typeof vi.fn>;
+  let downloaded: { name: string; href: string }[];
+  let revoked: string[];
+  beforeEach(() => {
+    clipboard = vi.fn(() => Promise.resolve());
+    Object.defineProperty(navigator, 'clipboard', { value: { writeText: clipboard }, configurable: true });
+    downloaded = [];
+    revoked = [];
+    URL.createObjectURL = vi.fn(() => 'blob:aplica-test');
+    URL.revokeObjectURL = vi.fn((url: string) => void revoked.push(url));
+    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (this: HTMLAnchorElement) {
+      downloaded.push({ name: this.download, href: this.href });
+    });
+  });
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  async function openReady(replies: Record<string, Reply | Reply[]> = {}, scopes?: string[]): Promise<Env> {
+    const env = setup({
+      replies: {
+        'GET /me': ME(scopes),
+        'GET /offers/match': { status: 200, body: { match: 'url', application: READY } },
+        'GET /offers/a1/documents': { status: 200, body: DOCS },
+        'POST /offers/a1/downloads': LINK,
+        'GET /downloads/s3cret': FILE,
+        ...replies,
+      },
+    });
+    await openPanel();
+    await until(() => heading() === 'Ya tienes esta oferta en Aplica');
+    return env;
+  }
+
+  it('con ready: true enseña los documentos en lugar del encaje exprés, sin pedir el encaje', async () => {
+    const env = await openReady();
+    await until(() => buttonNamed('Descargar CV en Word'));
+    expect(buttonNamed('Descargar CV en PDF')).toBeDefined();
+    expect(body()).toContain('Esta candidatura ya está preparada');
+    expect(document.querySelector('section.documents')).not.toBeNull();
+    expect(document.querySelector('section.quick-fit:not(.documents)')).toBeNull();
+    expect(env.calls.some((c) => c.url.endsWith('/quick-fit'))).toBe(false);
+    expect(env.calls.find((c) => c.url.endsWith('/documents'))?.authorization).toBe('Bearer tok');
+  });
+
+  it('copia la carta, el mensaje y cada respuesta; la que contestas tú no tiene botón', async () => {
+    await openReady();
+    await until(() => buttonNamed('Copiar la carta'));
+    buttonNamed('Copiar la carta')?.click();
+    await until(() => live() === 'Copiado');
+    expect(clipboard).toHaveBeenLastCalledWith('Carta ficticia para la empresa.');
+    buttonNamed('Copiar el mensaje')?.click();
+    expect(clipboard).toHaveBeenLastCalledWith('Mensaje ficticio al reclutador.');
+    const answers = Array.from(document.querySelectorAll('button')).filter((b) => b.textContent === 'Copiar respuesta');
+    expect(answers).toHaveLength(1);
+    expect(answers[0]?.getAttribute('aria-label')).toBe('Copiar la respuesta a: ¿Por qué esta empresa?');
+    answers[0]?.click();
+    expect(clipboard).toHaveBeenLastCalledWith('Porque encaja conmigo.');
+    // La pregunta y su nota se ven aunque no haya nada que copiar.
+    expect(body()).toContain('Pretensión salarial');
+    expect(body()).toContain('La cifra la eliges tú.');
+    expect(body()).toContain('Esta la contestas tú.');
+  });
+
+  it('si el portapapeles falla, lo dice', async () => {
+    await openReady();
+    clipboard.mockImplementation(() => Promise.reject(new Error('denegado')) as never);
+    (await until(() => buttonNamed('Copiar la carta'))).click();
+    await until(() => live().startsWith('No se ha podido copiar'));
+  });
+
+  it('descarga el Word: pide el enlace, baja el fichero sin Authorization y lo guarda con su nombre', async () => {
+    const env = await openReady();
+    (await until(() => buttonNamed('Descargar CV en Word'))).click();
+    await until(() => downloaded.length === 1);
+    expect(downloaded[0]).toEqual({ name: 'CV Ana.docx', href: 'blob:aplica-test' });
+    const request = env.calls.find((c) => c.url.endsWith('/downloads'));
+    expect(request?.body).toEqual({ format: 'docx' });
+    expect(request?.authorization).toBe('Bearer tok');
+    expect(env.calls.find((c) => c.url.endsWith('/downloads/s3cret'))?.authorization).toBeUndefined();
+    await until(() => buttonNamed('Descargar CV en Word')?.disabled === false);
+  });
+
+  it('un 410 pide un enlace nuevo una sola vez y reintenta', async () => {
+    const env = await openReady({ 'GET /downloads/s3cret': [{ status: 410, body: { error: 'gone' } }, FILE] });
+    (await until(() => buttonNamed('Descargar CV en PDF'))).click();
+    await until(() => downloaded.length === 1);
+    expect(env.calls.filter((c) => c.method === 'POST' && c.url.endsWith('/downloads'))).toHaveLength(2);
+  });
+
+  it('si el 410 se repite, avisa del error y no pide más enlaces', async () => {
+    const env = await openReady({ 'GET /downloads/s3cret': { status: 410, body: { error: 'gone' } } });
+    (await until(() => buttonNamed('Descargar CV en Word'))).click();
+    await until(() => document.querySelector('.doc-notices [role="alert"]'));
+    expect(body()).toContain('No se ha podido descargar el fichero');
+    expect(downloaded).toHaveLength(0);
+    expect(env.calls.filter((c) => c.method === 'POST' && c.url.endsWith('/downloads'))).toHaveLength(2);
+  });
+
+  it('sin PDF, no hay botón de PDF; un formato que falta (404) se explica', async () => {
+    const docs = { documents: { ...DOCS.documents, cv: { docx: true, pdf: false } } };
+    await openReady({ 'GET /offers/a1/documents': { status: 200, body: docs }, 'POST /offers/a1/downloads': { status: 404, body: { error: 'not_found' } } });
+    await until(() => buttonNamed('Descargar CV en Word'));
+    expect(buttonNamed('Descargar CV en PDF')).toBeUndefined();
+    buttonNamed('Descargar CV en Word')?.click();
+    await until(() => body().includes('Ese formato no está disponible'));
+  });
+
+  it('si la candidatura ya no está lista (409), lo dice y no ofrece descargas', async () => {
+    await openReady({ 'GET /offers/a1/documents': { status: 409, body: { error: 'not_ready' } } });
+    await until(() => body().includes('aún no tiene los documentos preparados'));
+    expect(buttonNamed('Descargar CV en Word')).toBeUndefined();
+  });
+
+  it('403 insufficient_scope: explica que hay que volver a conectar, con el botón, y no borra el token', async () => {
+    const env = await openReady({ 'GET /offers/a1/documents': { status: 403, body: { error: 'insufficient_scope' } } });
+    await until(() => buttonNamed('Volver a conectar'));
+    expect(body()).toContain('Vuelve a conectar este navegador');
+    expect(env.storage['aplica.token']).toBe('tok');
+    expect(buttonNamed('Descargar CV en Word')).toBeUndefined();
+  });
+
+  it('si /me no trae documents.read, ni se piden los documentos', async () => {
+    const env = await openReady({}, ['tracker.read', 'profile.read']);
+    await until(() => buttonNamed('Volver a conectar'));
+    expect(env.calls.some((c) => c.url.endsWith('/documents'))).toBe(false);
+    expect(env.storage['aplica.token']).toBe('tok');
+  });
+
+  it('si /me trae documents.read, se piden', async () => {
+    await openReady({}, ['tracker.read', 'documents.read']);
+    await until(() => buttonNamed('Descargar CV en Word'));
+  });
+
+  it('401 al pedir los documentos: sesión caducada como en el resto del panel', async () => {
+    const env = setup({
+      replies: {
+        'GET /me': ME(),
+        'GET /offers/match': { status: 200, body: { match: 'url', application: READY } },
+        'GET /offers/a1/documents': { status: 401, body: { error: 'unauthenticated' } },
+      },
+    });
+    await openPanel();
+    // Sin sesión, el panel vuelve a Conectar (el idioma de la cuenta ya se ha olvidado).
+    await until(() => buttonNamed('nav:connectButton'));
+    expect(env.storage['aplica.token']).toBeUndefined();
+  });
+
+  it('con ready: false, el panel sigue como hoy: encaje exprés y sin documentos', async () => {
+    const env = await openReady({ 'GET /offers/match': { status: 200, body: { match: 'url', application: APPLICATION } } });
+    await until(() => document.querySelector('section.quick-fit'));
+    expect(document.querySelector('section.documents')).toBeNull();
+    expect(env.calls.some((c) => c.url.endsWith('/documents'))).toBe(false);
+  });
+
+  it('coincidencia de empresa y puesto con ready: true: los documentos se ven desde la vista previa sin perder lo editado', async () => {
+    setup({
+      replies: {
+        'GET /me': ME(),
+        'GET /offers/match': { status: 200, body: { match: 'role_company', application: READY } },
+        'GET /offers/a1/documents': { status: 200, body: DOCS },
+      },
+    });
+    await openPanel();
+    await until(() => heading() === 'Guardar oferta');
+    field('title').value = 'Título editado';
+    (await until(() => buttonNamed('Ver los documentos preparados'))).click();
+    await until(() => buttonNamed('Descargar CV en Word'));
+    expect(heading()).toBe('Guardar oferta');
+    expect(field('title').value).toBe('Título editado');
+  });
+
+  it('un 409 al guardar con ready: true lleva a los documentos', async () => {
+    setup({
+      replies: {
+        'GET /me': ME(),
+        'GET /offers/match': { status: 200, body: { match: null } },
+        'POST /offers': { status: 409, body: { error: 'duplicate', match: 'url', application: READY } },
+        'GET /offers/a1/documents': { status: 200, body: DOCS },
+      },
+    });
+    await openPanel();
+    await until(() => heading() === 'Guardar oferta');
+    submit().click();
+    await until(() => buttonNamed('Descargar CV en Word'));
+    expect(heading()).toBe('Ya tienes esta oferta en Aplica');
   });
 });
