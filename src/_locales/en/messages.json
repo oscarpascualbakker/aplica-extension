@@ -150,5 +150,75 @@
   "documentsReconnectButton": { "message": "Connect again" },
   "documentsScopeMissing": { "message": "This connection does not allow viewing documents. Connect this browser again." },
   "documentsFormatMissing": { "message": "That format is not available for this application." },
-  "documentsDownloadFailed": { "message": "Could not download the file. Please try again." }
+  "documentsDownloadFailed": { "message": "Could not download the file. Please try again." },
+  "fillTitle": { "message": "Fill in a form" },
+  "fillIntro": { "message": "Your Aplica details to copy into any form. On Workday, Greenhouse, Lever, SmartRecruiters, Workable, Teamtailor and Personio, the extension can also fill it in for you. You always submit it yourself." },
+  "fillShowButton": { "message": "Show my details" },
+  "fillNoData": { "message": "Your Aplica profile has no details to copy yet." },
+  "fillNoProfile": { "message": "To fill in forms you need a profile in Aplica." },
+  "fillScopeMissing": { "message": "This connection does not allow reading your profile. Connect this browser again." },
+  "fillLabelName": { "message": "Name" },
+  "fillLabelEmail": { "message": "Email" },
+  "fillLabelPhone": { "message": "Phone" },
+  "fillLabelCity": { "message": "City" },
+  "fillLabelLinkedin": { "message": "LinkedIn" },
+  "fillLabelGithub": { "message": "GitHub" },
+  "fillLabelWebsite": { "message": "Website" },
+  "fillLabelRole": { "message": "Current role" },
+  "fillLabelExperience": { "message": "Years of experience" },
+  "fillLabelEducation": { "message": "Education" },
+  "fillRoleAt": {
+    "message": "$TITLE$ at $COMPANY$",
+    "placeholders": {
+      "title": { "content": "$1", "example": "Backend developer" },
+      "company": { "content": "$2", "example": "Empresa Ficticia S.L." }
+    }
+  },
+  "fillCopy": { "message": "Copy" },
+  "fillCopyFor": {
+    "message": "Copy $LABEL$",
+    "placeholders": { "label": { "content": "$1", "example": "Phone" } }
+  },
+  "fillButton": { "message": "Fill in this form" },
+  "fillRunning": { "message": "Filling in…" },
+  "fillPermissionHint": { "message": "The browser will ask your permission for this site the first time. It is only asked when you press this button." },
+  "fillUnsupported": { "message": "This form is not filled in automatically: copy the details from the list." },
+  "fillPermissionDenied": { "message": "Without permission for this site it cannot be filled in. You can copy the details from the list." },
+  "fillNoAccess": { "message": "Press the Aplica icon on the form page and try again." },
+  "fillFailed": { "message": "This page could not be filled in. Please try again." },
+  "fillAskYouLabel": { "message": "Answer this yourself" },
+  "fillDone": { "message": "Form filled in. Check it before you continue." },
+  "fillResultFilled": {
+    "message": "Contact fields filled in: $COUNT$.",
+    "placeholders": { "count": { "content": "$1", "example": "5" } }
+  },
+  "fillResultQuestions": {
+    "message": "Open questions answered: $COUNT$.",
+    "placeholders": { "count": { "content": "$1", "example": "2" } }
+  },
+  "fillResultCvAttached": { "message": "CV attached." },
+  "fillResultCvHad": { "message": "The CV field already had a file and was left alone." },
+  "fillResultCvNoInput": { "message": "No place to attach the CV was found. Upload it yourself." },
+  "fillResultCvNotAccepted": { "message": "The CV field does not accept this format. Upload it yourself." },
+  "fillResultCvFailed": { "message": "The CV could not be attached. Upload it yourself." },
+  "fillResultCvDownload": { "message": "The CV could not be downloaded from Aplica. Please try again." },
+  "fillResultHadValue": {
+    "message": "Fields that already had a value and were left alone (in yellow): $COUNT$.",
+    "placeholders": { "count": { "content": "$1", "example": "1" } }
+  },
+  "fillResultAskYou": {
+    "message": "Fields you answer yourself, marked in red with “Answer this yourself”: $COUNT$. Visa, salary, gender and other sensitive questions are never filled in.",
+    "placeholders": { "count": { "content": "$1", "example": "3" } }
+  },
+  "fillResultUnanswered": {
+    "message": "Open questions with no prepared answer: $COUNT$.",
+    "placeholders": { "count": { "content": "$1", "example": "1" } }
+  },
+  "fillResultNothing": { "message": "Nothing to fill in was found on this page. Is it the application form?" },
+  "fillReviewNote": { "message": "Check what has been filled in, highlighted in green, before you continue. Aplica never submits the form: you do that." },
+  "fillMissingNoApplication": { "message": "This job posting has no application in Aplica, so only your contact details were filled in. Prepare the application to attach the CV and fill in the questions." },
+  "fillMissingNotReady": { "message": "The application is not prepared yet, so only your contact details were filled in. Prepare it in Aplica to attach the CV and fill in the questions." },
+  "fillMissingScope": { "message": "This connection does not allow reading the documents, so only your contact details were filled in. Connect this browser again." },
+  "fillMissingDocuments": { "message": "The application documents could not be retrieved, so only your contact details were filled in. Please try again." },
+  "fillGenerateQuestions": { "message": "Some open questions have no prepared answer. Generate the answers to the Form questions in Aplica and fill in again." }
 }

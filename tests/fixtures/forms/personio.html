@@ -1,0 +1,34 @@
+<!doctype html>
+<!-- Fixture de formulario de candidatura (CV-507). Estructura de Personio (<empresa>.jobs.personio.de/job/<id>):
+     campos first_name, last_name, email, phone, location, linkedin, salary_expectations y available_from,
+     y el campo de archivo del CV. Contenido inventado. -->
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Desarrolladora backend - Empresa Ficticia S.L. Jobs</title>
+</head>
+<body>
+<main>
+<form id="apply-form" class="application-form" action="/job/1234567/apply" method="post" enctype="multipart/form-data">
+<h2>Apply now</h2>
+<div class="form-group"><label for="first_name">First name *</label><input type="text" id="first_name" name="first_name" required="" autocomplete="given-name"/></div>
+<div class="form-group"><label for="last_name">Last name *</label><input type="text" id="last_name" name="last_name" required="" autocomplete="family-name"/></div>
+<div class="form-group"><label for="email">Email *</label><input type="email" id="email" name="email" required="" autocomplete="email"/></div>
+<div class="form-group"><label for="phone">Phone</label><input type="tel" id="phone" name="phone" autocomplete="tel"/></div>
+<div class="form-group"><label for="location">Location</label><input type="text" id="location" name="location"/></div>
+<div class="form-group"><label for="linkedin">LinkedIn profile</label><input type="text" id="linkedin" name="linkedin"/></div>
+<div class="form-group"><label for="website">Personal website</label><input type="text" id="website" name="website"/></div>
+<div class="form-group"><label for="available_from">Earliest starting date</label><input type="date" id="available_from" name="available_from"/></div>
+<div class="form-group"><label for="salary_expectations">Salary expectations (gross per year)</label><input type="text" id="salary_expectations" name="salary_expectations"/></div>
+<div class="form-group"><label for="cv">CV *</label><input type="file" id="cv" name="cv" accept=".pdf,.doc,.docx"/></div>
+<div class="form-group"><label for="cover_letter_file">Cover letter</label><input type="file" id="cover_letter_file" name="cover_letter_file" accept=".pdf,.doc,.docx"/></div>
+<div class="form-group"><label for="question_11">Why do you want to work at Empresa Ficticia S.L.?</label><textarea id="question_11" name="questions[11]"></textarea></div>
+<div class="form-group"><label for="question_12">Describe a project you are proud of and what you learned from it</label><textarea id="question_12" name="questions[12]"></textarea></div>
+<div class="form-group"><label for="question_13">Do you have a work permit for Spain, or do you need a visa?</label><input type="text" id="question_13" name="questions[13]"/></div>
+<div class="form-group"><label for="question_14">Date of birth</label><input type="text" id="question_14" name="questions[14]"/></div>
+<div class="form-group"><label><input type="checkbox" name="privacy_policy" value="1"/> I agree to the privacy policy</label></div>
+<button type="submit" class="btn btn-primary">Submit application</button>
+</form>
+</main>
+</body>
+</html>

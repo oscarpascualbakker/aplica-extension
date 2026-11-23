@@ -3,7 +3,7 @@
 export const EXTRACT_GLOBAL = '__aplicaExtract';
 
 /**
- * Los tres bundles de un destino: segundo plano, panel y script de extracción.
+ * Los cuatro bundles de un destino: segundo plano, panel, script de extracción y script de relleno.
  * @param {{ target: 'chrome' | 'edge' | 'firefox', dev: boolean, apiBase: string, outdir?: string, write?: boolean }} options
  */
 export function bundleOptions({ target, dev, apiBase, outdir = 'dist', write = true }) {
@@ -31,6 +31,12 @@ export function bundleOptions({ target, dev, apiBase, outdir = 'dist', write = t
     panel: {
       ...common,
       entryPoints: { panel: 'src/panel/panel.ts' },
+      format: 'iife',
+    },
+    // CV-507: el relleno solo deja `__aplicaFill` en la página; el panel lo llama después con executeScript({func}).
+    fill: {
+      ...common,
+      entryPoints: { fill: 'src/fill/inject.ts' },
       format: 'iife',
     },
     // executeScript devuelve el valor de la última expresión del script: el pie la deja

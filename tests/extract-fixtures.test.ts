@@ -184,6 +184,7 @@ describe.each(CASES)('fixture $file', (c) => {
 describe('fixtures', () => {
   it('cada portal con extractor propio tiene su fixture', () => {
     const files = readdirSync('tests/fixtures')
+      .filter((f) => f.endsWith('.html'))
       .map((f) => f.replace(/\.html$/, ''))
       .sort();
     expect(files).toEqual(CASES.map((c) => c.file).sort());
@@ -191,7 +192,9 @@ describe('fixtures', () => {
 
   it('solo llevan datos ficticios: nada de las páginas reales de las que se tomó la estructura', () => {
     const real = /palantir|powens|anthropic|ottonova|elevator|infinitum|crit\b|servicenow|cloudflare|hugging|stripe|spotify|salesforce/i;
-    for (const file of readdirSync('tests/fixtures')) {
+    // Las fixtures de ofertas y las de formularios de candidatura (CV-507).
+    const all = [...readdirSync('tests/fixtures').filter((f) => f.endsWith('.html')), ...readdirSync('tests/fixtures/forms').map((f) => `forms/${f}`)];
+    for (const file of all) {
       const html = readFileSync(`tests/fixtures/${file}`, 'utf8');
       expect(real.test(html), file).toBe(false);
       expect(html, file).not.toMatch(/[—–]/);

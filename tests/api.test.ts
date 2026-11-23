@@ -409,3 +409,72 @@ describe('documentos de una candidatura (CV-506, D-217)', () => {
     expect(await client(() => Promise.reject(new TypeError('x'))).api.downloadFile('https://api.test/d/1', 'pdf')).toEqual({ ok: false, kind: 'network' });
   });
 });
+
+describe('perfil para rellenar formularios (CV-507)', () => {
+  const PROFILE_BODY = {
+    profile: {
+      lang: 'es',
+      name: ' Ana Ejemplo Prueba ',
+      email: 'ana@example.com',
+      phone: null,
+      location: 'Villanueva del Ejemplo',
+      linkedin: 'https://www.linkedin.com/in/ana-ejemplo',
+      github: '',
+      websites: ['https://ana-ejemplo.example', '', 4],
+      current_role: { title: 'Desarrolladora backend', company: null },
+      years_experience: 6,
+      education: ['Grado en Informática'],
+      languages: ['Español', 'Inglés'],
+    },
+  };
+
+  it('200: pide GET /profile con Bearer y devuelve el perfil con los textos limpios', async () => {
+    const { api, fetchMock } = client(() => Promise.resolve(json(200, PROFILE_BODY)));
+    const result = await api.getProfile('tok');
+    expect(result).toEqual({
+      ok: true,
+      data: {
+        lang: 'es',
+        name: 'Ana Ejemplo Prueba',
+        email: 'ana@example.com',
+        phone: null,
+        location: 'Villanueva del Ejemplo',
+        linkedin: 'https://www.linkedin.com/in/ana-ejemplo',
+        github: null,
+        websites: ['https://ana-ejemplo.example'],
+        currentRole: { title: 'Desarrolladora backend', company: null },
+        yearsExperience: 6,
+        education: ['Grado en Informática'],
+        languages: ['Español', 'Inglés'],
+      },
+    });
+    const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
+    expect(url).toBe('https://api.test/api/ext/v1/profile');
+    expect(init.method).toBe('GET');
+    expect(init.credentials).toBe('omit');
+    expect((init.headers as Record<string, string>).Authorization).toBe('Bearer tok');
+  });
+
+  it('un perfil sin puesto ni años deja null, y un idioma desconocido pasa a español', async () => {
+    const body = { profile: { lang: 'fr', name: null, websites: [], current_role: null, years_experience: 2.5, education: [], languages: [] } };
+    const result = await client(() => Promise.resolve(json(200, body))).api.getProfile('tok');
+    expect(result).toMatchObject({ ok: true, data: { lang: 'es', currentRole: null, yearsExperience: null, name: null } });
+  });
+
+  it('409 no_profile es que falta el perfil; otro 409 o un cuerpo raro, error del servidor', async () => {
+    const run = (status: number, body: unknown) => client(() => Promise.resolve(json(status, body))).api.getProfile('tok');
+    expect(await run(409, { error: 'no_profile' })).toEqual({ ok: false, kind: 'no_profile' });
+    expect(await run(409, { error: 'otra' })).toEqual({ ok: false, kind: 'server' });
+    expect(await run(200, { profile: 'x' })).toEqual({ ok: false, kind: 'server' });
+    expect(await run(200, {})).toEqual({ ok: false, kind: 'server' });
+  });
+
+  it('401, 403 insufficient_scope, 429 y la red se tratan como en el resto de llamadas', async () => {
+    const run = (status: number, body: unknown, headers: Record<string, string> = {}) =>
+      client(() => Promise.resolve(json(status, body, headers))).api.getProfile('tok');
+    expect(await run(401, {})).toEqual({ ok: false, kind: 'unauthenticated' });
+    expect(await run(403, { error: 'insufficient_scope' })).toEqual({ ok: false, kind: 'insufficient_scope' });
+    expect(await run(429, {}, { 'Retry-After': '30' })).toEqual({ ok: false, kind: 'rate_limited', retryAfter: 30 });
+    expect(await client(() => Promise.reject(new TypeError('x'))).api.getProfile('tok')).toEqual({ ok: false, kind: 'network' });
+  });
+});

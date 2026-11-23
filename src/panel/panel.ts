@@ -27,6 +27,8 @@ import type { Session } from '../session';
 import { createTokenStore } from '../token-store';
 import { closePanel } from './close';
 import { devExportSection } from './dev-export';
+import { button, el } from './dom';
+import { fillSection } from './fill-section';
 import { readPage, type ReadOutcome } from './read-page';
 
 const root = document.getElementById('app') as HTMLElement;
@@ -47,24 +49,6 @@ let generation = 0;
 // Coincidencia de empresa y puesto detectada con la oferta de la vista previa actual: guardar
 // pasa a pedir confirmación (force).
 let similar: ApplicationRef | null = null;
-
-function el<K extends keyof HTMLElementTagNameMap>(
-  tag: K,
-  text?: string,
-  className?: string,
-): HTMLElementTagNameMap[K] {
-  const node = document.createElement(tag);
-  if (text !== undefined) node.textContent = text;
-  if (className) node.className = className;
-  return node;
-}
-
-function button(text: string, onClick: () => void, secondary = false): HTMLButtonElement {
-  const node = el('button', text, secondary ? 'secondary' : undefined);
-  node.type = 'button';
-  node.addEventListener('click', onClick);
-  return node;
-}
 
 /**
  * Botón para cerrar el panel (CV-523), en todos los estados. Se ve arriba a la derecha, pero va
@@ -233,6 +217,7 @@ function showReadOutcome(session: Session, outcome: ReadOutcome): void {
         el('h1', t('panelTitle')),
         ...noticeNode({ key: 'needsSelection' }),
         button(t('readSelectionButton'), () => void read(session)),
+        fillBlock(session, outcome.offer.url, () => null),
         accountFooter(session),
       ]);
       return;
@@ -247,6 +232,7 @@ function showReadOutcome(session: Session, outcome: ReadOutcome): void {
     el('h1', t('panelTitle')),
     ...noticeNode({ key, alert: true }),
     readAgain(session),
+    fillBlock(session, null, () => null),
     accountFooter(session),
   ]);
 }
@@ -379,6 +365,7 @@ function showPreview(session: Session, options: PreviewOptions = {}): void {
       ...notes.flatMap(noticeNode),
       matchStatus,
       form,
+      fillBlock(session, current.url, () => similar),
       accountFooter(session),
     ],
     firstInvalid ? (form.querySelector<HTMLElement>(`#f-${firstInvalid}`) ?? undefined) : undefined,
@@ -518,6 +505,7 @@ function showSaved(session: Session, application: ApplicationRef): void {
     el('p', t('savedText', [application.title, application.company])),
     applicationBlock(session, application),
     ...openInAplica(application),
+    fillBlock(session, draft?.url ?? null, () => application),
     accountFooter(session),
   ]);
 }
@@ -531,8 +519,35 @@ function showDuplicate(session: Session, application: ApplicationRef): void {
     applicationBlock(session, application),
     ...openInAplica(application),
     readAgain(session),
+    fillBlock(session, draft?.url ?? null, () => application),
     accountFooter(session),
   ]);
+}
+
+// ---------- Rellenar formularios (CV-507) ----------
+
+/** La sección de copiar datos y autorrelleno de los ATS (src/panel/fill-section.ts). */
+function fillBlock(session: Session, pageUrl: string | null, getApplication: () => ApplicationRef | null): HTMLElement {
+  return fillSection({
+    client,
+    pageUrl,
+    getApplication,
+    scopes: () => account?.scopes,
+    getToken: () => tokens.get(),
+    announce,
+    expire: () => expireSession(session),
+    connect: async () => {
+      const outcome = await session.connect();
+      if (outcome.status === 'connected') {
+        void start(session, null);
+        return null;
+      }
+      return failureKeys[outcome.reason];
+    },
+    generation: () => generation,
+    openTab: (url) => void extensionApi().tabs.create({ url }),
+    profileUrl: `${__API_BASE__}/app`,
+  });
 }
 
 // ---------- Encaje exprés (CV-505) ----------

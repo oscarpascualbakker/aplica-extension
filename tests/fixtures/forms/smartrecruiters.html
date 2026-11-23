@@ -1,0 +1,35 @@
+<!doctype html>
+<!-- PROVISIONAL (CV-507). Fixture de formulario de candidatura de SmartRecruiters construida con la
+     estructura conocida (name firstName, lastName, email, phoneNumber, city), no con una página
+     capturada. La página real usa componentes web con shadow DOM; aquí van como campos normales y el
+     recorrido de shadow roots abiertos se prueba aparte. Contenido inventado. Se sustituirá cuando el
+     titular capture la página real con "Export page" (ver README). -->
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Apply - Desarrolladora backend - Empresa Ficticia S.L.</title>
+</head>
+<body>
+<main>
+<form class="oneclick-form" action="/oneclick-ui/company/EmpresaFicticia/publication/00000000-0000-0000-0000-000000000001/apply" method="post">
+<h2>Apply for Desarrolladora backend</h2>
+<div class="field"><label for="first-name-input">First name</label><input id="first-name-input" name="firstName" type="text" autocomplete="given-name" aria-required="true"/></div>
+<div class="field"><label for="last-name-input">Last name</label><input id="last-name-input" name="lastName" type="text" autocomplete="family-name" aria-required="true"/></div>
+<div class="field"><label for="email-input">Email</label><input id="email-input" name="email" type="email" autocomplete="email" aria-required="true"/></div>
+<div class="field"><label for="confirm-email-input">Confirm your email</label><input id="confirm-email-input" name="confirmEmail" type="email" aria-required="true"/></div>
+<div class="field"><label for="phone-input">Phone number</label><input id="phone-input" name="phoneNumber" type="tel" autocomplete="tel"/></div>
+<div class="field"><label for="city-input">City</label><input id="city-input" name="city" type="text"/></div>
+<div class="field"><label for="linkedin-input">LinkedIn</label><input id="linkedin-input" name="linkedin" type="text"/></div>
+<div class="field"><label for="web-input">Website</label><input id="web-input" name="website" type="text"/></div>
+<div class="field"><label for="resume-input">Resume</label><input id="resume-input" name="resume" type="file" accept=".pdf,.doc,.docx,.rtf,.txt"/></div>
+<div class="field"><label for="q1">Why do you want to work at Empresa Ficticia S.L.?</label><textarea id="q1" name="question-1"></textarea></div>
+<div class="field"><label for="q2">Describe a project you are proud of and what you learned from it</label><textarea id="q2" name="question-2"></textarea></div>
+<fieldset class="field"><legend>Do you require visa sponsorship to work in Spain?</legend><label><input type="radio" name="question-3" value="yes"/> Yes</label><label><input type="radio" name="question-3" value="no"/> No</label></fieldset>
+<div class="field"><label for="q4">Expected annual salary</label><input id="q4" name="question-4" type="text"/></div>
+<div class="field"><label for="q5">Gender</label><select id="q5" name="question-5"><option value="">Select</option><option value="f">Female</option><option value="m">Male</option><option value="x">Prefer not to say</option></select></div>
+<div class="field"><label for="q6">Are you willing to relocate?</label><input id="q6" name="question-6" type="text"/></div>
+<button type="submit" class="btn">Submit application</button>
+</form>
+</main>
+</body>
+</html>

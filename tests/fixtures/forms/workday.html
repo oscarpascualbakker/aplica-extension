@@ -1,0 +1,40 @@
+<!doctype html>
+<!-- PROVISIONAL (CV-507). Fixture de formulario de candidatura de Workday construida con la estructura
+     conocida (atributos data-automation-id estables), no con una página capturada. Contenido inventado.
+     Se sustituirá cuando el titular capture la página real con "Export page" (ver README, "Capturing a
+     page to build a fixture"). -->
+<html lang="en-US">
+<head>
+<meta charset="utf-8"/>
+<title>Empresa Ficticia S.L. Careers</title>
+</head>
+<body>
+<div id="root">
+<div data-automation-id="applyFlowMyInfoPage">
+<h2 data-automation-id="pageHeaderTitle">My Information</h2>
+<form data-automation-id="applyFlowForm">
+<div data-automation-id="formField-sourcePrompt"><label for="input-source">How Did You Hear About Us?</label><input id="input-source" type="text" data-automation-id="sourcePrompt" value=""/></div>
+<div data-automation-id="formField-legalName--firstName"><label for="input-1">Given Name(s)<abbr title="required">*</abbr></label><input id="input-1" type="text" aria-required="true" data-automation-id="legalNameSection_firstName" value=""/></div>
+<div data-automation-id="formField-legalName--lastName"><label for="input-2">Family Name<abbr title="required">*</abbr></label><input id="input-2" type="text" aria-required="true" data-automation-id="legalNameSection_lastName" value=""/></div>
+<div data-automation-id="formField-email"><label for="input-3">Email Address<abbr title="required">*</abbr></label><input id="input-3" type="text" data-automation-id="email" value=""/></div>
+<div data-automation-id="formField-addressSection--city"><label for="input-4">City<abbr title="required">*</abbr></label><input id="input-4" type="text" data-automation-id="addressSection_city" value=""/></div>
+<div data-automation-id="formField-phone-number"><label for="input-5">Phone Number<abbr title="required">*</abbr></label><input id="input-5" type="text" data-automation-id="phone-number" value=""/></div>
+<div data-automation-id="formField-linkedin"><label for="input-6">LinkedIn Profile</label><input id="input-6" type="text" data-automation-id="linkedinQuestion" value=""/></div>
+<div data-automation-id="formField-website"><label for="input-7">Website</label><input id="input-7" type="text" data-automation-id="websiteInput" value=""/></div>
+<div data-automation-id="resumeSection"><label id="resume-label" for="input-8">Select files</label><input id="input-8" type="file" data-automation-id="file-upload-input-ref" accept=".pdf,.doc,.docx,.txt,.rtf"/></div>
+</form>
+</div>
+<div data-automation-id="applyFlowApplicationQuestionsPage">
+<h2>Application Questions</h2>
+<div data-automation-id="formField-q1"><label for="q-1">Why do you want to work at Empresa Ficticia S.L.?</label><textarea id="q-1" data-automation-id="textAreaInput"></textarea></div>
+<div data-automation-id="formField-q2"><label for="q-2">Describe a project you are proud of and what you learned from it</label><textarea id="q-2" data-automation-id="textAreaInput"></textarea></div>
+<div data-automation-id="formField-q3"><label for="q-3">Will you now or in the future require sponsorship for an employment visa?</label><input id="q-3" type="text" data-automation-id="textInputq3"/></div>
+<div data-automation-id="formField-q4"><label for="q-4">What are your compensation expectations?</label><input id="q-4" type="text" data-automation-id="textInputq4"/></div>
+<div data-automation-id="formField-q5"><label for="q-5">What is your nationality?</label><input id="q-5" type="text" data-automation-id="textInputq5"/></div>
+<div data-automation-id="formField-gender"><label for="q-6">Gender</label><select id="q-6" data-automation-id="gender"><option value="">Select One</option><option value="f">Female</option><option value="m">Male</option></select></div>
+<div data-automation-id="formField-disability"><label for="q-7">Disability Status</label><select id="q-7" data-automation-id="disabilityStatus"><option value="">Select One</option><option value="no">No, I do not have a disability</option></select></div>
+</div>
+<div data-automation-id="pageFooter"><button type="button" data-automation-id="pageFooterBackButton">Back</button><button type="button" data-automation-id="pageFooterNextButton">Submit</button></div>
+</div>
+</body>
+</html>

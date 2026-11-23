@@ -150,5 +150,75 @@
   "documentsReconnectButton": { "message": "Volver a conectar" },
   "documentsScopeMissing": { "message": "Esta conexión no permite ver los documentos. Vuelve a conectar este navegador." },
   "documentsFormatMissing": { "message": "Ese formato no está disponible para esta candidatura." },
-  "documentsDownloadFailed": { "message": "No se ha podido descargar el fichero. Inténtalo de nuevo." }
+  "documentsDownloadFailed": { "message": "No se ha podido descargar el fichero. Inténtalo de nuevo." },
+  "fillTitle": { "message": "Rellenar formulario" },
+  "fillIntro": { "message": "Tus datos de Aplica para copiar en cualquier formulario. En Workday, Greenhouse, Lever, SmartRecruiters, Workable, Teamtailor y Personio, la extensión también puede rellenarlo por ti. El envío lo haces siempre tú." },
+  "fillShowButton": { "message": "Ver mis datos" },
+  "fillNoData": { "message": "Tu perfil de Aplica no tiene todavía datos que copiar." },
+  "fillNoProfile": { "message": "Para rellenar formularios necesitas un perfil en Aplica." },
+  "fillScopeMissing": { "message": "Esta conexión no permite leer tu perfil. Vuelve a conectar este navegador." },
+  "fillLabelName": { "message": "Nombre" },
+  "fillLabelEmail": { "message": "Correo electrónico" },
+  "fillLabelPhone": { "message": "Teléfono" },
+  "fillLabelCity": { "message": "Ciudad" },
+  "fillLabelLinkedin": { "message": "LinkedIn" },
+  "fillLabelGithub": { "message": "GitHub" },
+  "fillLabelWebsite": { "message": "Web" },
+  "fillLabelRole": { "message": "Puesto actual" },
+  "fillLabelExperience": { "message": "Años de experiencia" },
+  "fillLabelEducation": { "message": "Formación" },
+  "fillRoleAt": {
+    "message": "$TITLE$ en $COMPANY$",
+    "placeholders": {
+      "title": { "content": "$1", "example": "Desarrolladora backend" },
+      "company": { "content": "$2", "example": "Empresa Ficticia S.L." }
+    }
+  },
+  "fillCopy": { "message": "Copiar" },
+  "fillCopyFor": {
+    "message": "Copiar $LABEL$",
+    "placeholders": { "label": { "content": "$1", "example": "Teléfono" } }
+  },
+  "fillButton": { "message": "Rellenar este formulario" },
+  "fillRunning": { "message": "Rellenando…" },
+  "fillPermissionHint": { "message": "El navegador te pedirá permiso para este sitio la primera vez. Solo se pide al pulsar este botón." },
+  "fillUnsupported": { "message": "Aquí no se rellena solo: copia los datos de la lista." },
+  "fillPermissionDenied": { "message": "Sin permiso para este sitio no se puede rellenar. Puedes copiar los datos de la lista." },
+  "fillNoAccess": { "message": "Pulsa el icono de Aplica en la página del formulario y vuelve a intentarlo." },
+  "fillFailed": { "message": "No se ha podido rellenar esta página. Inténtalo de nuevo." },
+  "fillAskYouLabel": { "message": "Contéstalo tú" },
+  "fillDone": { "message": "Formulario rellenado. Revísalo antes de continuar." },
+  "fillResultFilled": {
+    "message": "Datos de contacto rellenados: $COUNT$.",
+    "placeholders": { "count": { "content": "$1", "example": "5" } }
+  },
+  "fillResultQuestions": {
+    "message": "Preguntas abiertas respondidas: $COUNT$.",
+    "placeholders": { "count": { "content": "$1", "example": "2" } }
+  },
+  "fillResultCvAttached": { "message": "CV adjuntado." },
+  "fillResultCvHad": { "message": "El campo del CV ya tenía un fichero y no se ha tocado." },
+  "fillResultCvNoInput": { "message": "No se ha encontrado dónde adjuntar el CV. Súbelo tú." },
+  "fillResultCvNotAccepted": { "message": "El campo del CV no admite este formato. Súbelo tú." },
+  "fillResultCvFailed": { "message": "No se ha podido adjuntar el CV. Súbelo tú." },
+  "fillResultCvDownload": { "message": "No se ha podido descargar el CV de Aplica. Inténtalo de nuevo." },
+  "fillResultHadValue": {
+    "message": "Campos que ya tenían valor y no se han tocado (en amarillo): $COUNT$.",
+    "placeholders": { "count": { "content": "$1", "example": "1" } }
+  },
+  "fillResultAskYou": {
+    "message": "Campos que contestas tú, marcados en rojo con «Contéstalo tú»: $COUNT$. Visado, salario, género y otras preguntas sensibles no se rellenan nunca.",
+    "placeholders": { "count": { "content": "$1", "example": "3" } }
+  },
+  "fillResultUnanswered": {
+    "message": "Preguntas abiertas sin respuesta preparada: $COUNT$.",
+    "placeholders": { "count": { "content": "$1", "example": "1" } }
+  },
+  "fillResultNothing": { "message": "No se ha encontrado nada que rellenar en esta página. ¿Es el formulario de la candidatura?" },
+  "fillReviewNote": { "message": "Revisa lo rellenado, resaltado en verde, antes de continuar. Aplica nunca envía el formulario: el envío lo haces tú." },
+  "fillMissingNoApplication": { "message": "Esta oferta no tiene candidatura en Aplica, así que solo se ha rellenado el contacto. Prepara la candidatura para adjuntar el CV y rellenar las preguntas." },
+  "fillMissingNotReady": { "message": "La candidatura aún no está preparada, así que solo se ha rellenado el contacto. Prepárala en Aplica para adjuntar el CV y rellenar las preguntas." },
+  "fillMissingScope": { "message": "Esta conexión no permite leer los documentos, así que solo se ha rellenado el contacto. Vuelve a conectar este navegador." },
+  "fillMissingDocuments": { "message": "No se han podido obtener los documentos de la candidatura, así que solo se ha rellenado el contacto. Inténtalo de nuevo." },
+  "fillGenerateQuestions": { "message": "Hay preguntas abiertas sin respuesta preparada. Genera las respuestas de las Preguntas del formulario en Aplica y vuelve a rellenar." }
 }

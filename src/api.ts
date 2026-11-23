@@ -99,6 +99,24 @@ export type DownloadFileResult =
   | { ok: true; data: { blob: Blob; filename: string } }
   | ({ ok: false } & (ApiError | { kind: 'gone' } | { kind: 'not_found' }));
 
+/** Datos del perfil para rellenar formularios (CV-507, alcance `profile.read`). Cada texto puede faltar. */
+export type ProfileData = {
+  lang: 'es' | 'en';
+  name: string | null;
+  email: string | null;
+  phone: string | null;
+  location: string | null;
+  linkedin: string | null;
+  github: string | null;
+  websites: string[];
+  currentRole: { title: string | null; company: string | null } | null;
+  yearsExperience: number | null;
+  education: string[];
+  languages: string[];
+};
+/** `no_profile`: la cuenta aún no tiene perfil (409). */
+export type ProfileResult = { ok: true; data: ProfileData } | ({ ok: false } & (ApiError | { kind: 'no_profile' }));
+
 export type ApiClient = {
   exchangeToken(request: TokenRequest): Promise<ApiResult<TokenResponse>>;
   getMe(token: string): Promise<ApiResult<MeResponse>>;
@@ -117,6 +135,8 @@ export type ApiClient = {
   requestDownload(token: string, applicationId: string, format: DocumentFormat): Promise<DownloadLinkResult>;
   /** Baja el fichero del enlace, sin Authorization: el secreto va en la URL (CV-506, D-217). */
   downloadFile(url: string, format: DocumentFormat): Promise<DownloadFileResult>;
+  /** Los datos del perfil para rellenar formularios (CV-507, alcance `profile.read`). El panel no los guarda. */
+  getProfile(token: string): Promise<ProfileResult>;
 };
 
 const TIMEOUT_MS = 15_000;
@@ -240,6 +260,35 @@ function parseDocuments(value: unknown, apiBase: string): ApplicationDocuments |
     message: nonEmptyText(value.message),
     questions: questions.filter((q): q is DocumentQuestionSet => q !== null && q.items.length > 0),
     url: sameOrigin(value.url, apiBase),
+  };
+}
+
+function textOrNull(value: unknown): string | null {
+  return typeof value === 'string' && value.trim() !== '' ? value.trim() : null;
+}
+
+function textList(value: unknown): string[] {
+  return Array.isArray(value) ? value.map(textOrNull).filter((v): v is string => v !== null) : [];
+}
+
+/** Perfil que no tiene la forma esperada: no se usa (CV-507). */
+function parseProfile(value: unknown): ProfileData | null {
+  if (!isObject(value)) return null;
+  const role = isObject(value.current_role) ? { title: textOrNull(value.current_role.title), company: textOrNull(value.current_role.company) } : null;
+  const years = value.years_experience;
+  return {
+    lang: value.lang === 'en' ? 'en' : 'es',
+    name: textOrNull(value.name),
+    email: textOrNull(value.email),
+    phone: textOrNull(value.phone),
+    location: textOrNull(value.location),
+    linkedin: textOrNull(value.linkedin),
+    github: textOrNull(value.github),
+    websites: textList(value.websites),
+    currentRole: role,
+    yearsExperience: typeof years === 'number' && Number.isInteger(years) && years >= 0 ? years : null,
+    education: textList(value.education),
+    languages: textList(value.languages),
   };
 }
 
@@ -478,6 +527,19 @@ export function createApiClient(apiBase: string, fetchImpl: typeof fetch = fetch
       const url = isObject(body) ? sameOrigin(body.url, apiBase) : null;
       if (!url || !isObject(body)) return { ok: false, kind: 'server' };
       return { ok: true, data: { url, expiresAt: typeof body.expires_at === 'string' ? body.expires_at : '' } };
+    },
+
+    async getProfile(token) {
+      const result = await request('/profile', { method: 'GET', token });
+      if ('error' in result) return { ok: false, ...result.error };
+      const { response } = result;
+      if (response.status === 409) {
+        return errorCode(await readJson(response)) === 'no_profile' ? { ok: false, kind: 'no_profile' } : { ok: false, kind: 'server' };
+      }
+      if (response.status !== 200) return { ok: false, ...(await failure(response)) };
+      const body = await readJson(response);
+      const data = isObject(body) ? parseProfile(body.profile) : null;
+      return data ? { ok: true, data } : { ok: false, kind: 'server' };
     },
 
     async downloadFile(url, format) {
