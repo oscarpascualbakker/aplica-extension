@@ -245,6 +245,98 @@ const linkedinSignedIn: PortalExtractor = (doc) => {
   return fields;
 };
 
+/** Salario: una cifra con moneda en cualquier parte de la etiqueta ("De 24.000 € a 50.000 € al año"). */
+const SALARY_TEXT = /\d[\d.,]*\s*(?:[kK]\s*)?(?:€|\$|£|\b(?:EUR|USD|GBP)\b)|(?:€|\$|£)\s*\d/;
+
+/** Texto de las hojas (elementos sin hijos con texto) de un bloque, en orden. */
+function leafTexts(root: ParentNode | null | undefined): string[] {
+  if (!root) return [];
+  return Array.from(root.querySelectorAll('*'))
+    .filter((el) => el.children.length === 0)
+    .map((el) => inlineText(el.textContent))
+    .filter(Boolean);
+}
+
+// InfoJobs (CV-522, captura de nov. 2026). Cabecera con el puesto, la empresa y una lista de
+// datos (ubicación, modalidad, salario, experiencia, contrato) sin etiquetas: se reconoce cada
+// uno por su forma. El cuerpo son dos artículos, "Requisitos" y "Descripción"; el tercero
+// ("N inscritos...") no es de la oferta.
+const infojobs: PortalExtractor = (doc) => {
+  const items = Array.from(doc.querySelectorAll('.ij-OfferDetailHeader-detailsList-item')).map((item) => inlineText(item.textContent));
+  let workMode: WorkMode | null = null;
+  let salary = '';
+  for (const item of items) {
+    workMode ??= workModeFromLabel(item);
+    if (!salary && SALARY_TEXT.test(item)) salary = item;
+  }
+  const articles = Array.from(doc.querySelectorAll('.ij-OfferDetailPage-mainContent-container > article'))
+    .filter((article) => ['Descripción', 'Requisitos'].includes(textOf(article, 'h3')))
+    .map((article) => {
+      // Los conocimientos son etiquetas seguidas, sin separador: se pasan a "PHP, Python".
+      const clone = article.cloneNode(true) as Element;
+      clone.querySelectorAll('.ij-OfferDetailRequirements-requiredSkills').forEach((skills) => {
+        skills.textContent = Array.from(skills.querySelectorAll('.sui-AtomTag-label'))
+          .map((label) => inlineText(label.textContent))
+          .filter(Boolean)
+          .join(', ');
+      });
+      return clone;
+    });
+  // La descripción primero, como la lee la persona; los requisitos después.
+  articles.sort((a, b) => Number(textOf(b, 'h3') === 'Descripción') - Number(textOf(a, 'h3') === 'Descripción'));
+  const first = items[0] ?? '';
+  return {
+    title: textOf(doc, '.ij-OfferDetailHeader-title h1'),
+    company:
+      textOf(doc, '.ij-OfferDetailHeader-companyLogo-companyName') ||
+      attrOf(doc, '.ij-OfferDetailHeader-companyLogo img', 'alt').replace(/ - Ofertas de trabajo$/, ''),
+    location: first && !workModeFromLabel(first) && !SALARY_TEXT.test(first) ? first : '',
+    workMode,
+    salary,
+    description: blocksText(articles),
+  };
+};
+
+// Indeed (CV-522, capturas de nov. 2026 de `viewjob?jk=` y de la lista con la oferta abierta a
+// la derecha). Las clases son de React Native Web (`css-xxxx`) y cambian; las anclas estables son
+// los `data-testid` de la oferta abierta (`vj-*`, `company-info-metadata`,
+// `structured-job-summary`), que no llevan las tarjetas de la lista. En la cabecera, la empresa
+// es un enlace o `vj-company-name`, y luego vienen la nota ("·", "4.8") y la ubicación.
+const indeed: PortalExtractor = (doc) => {
+  const meta = doc.querySelector('[data-testid="company-info-metadata"]');
+  const company = textOf(doc, '[data-testid="vj-company-name"]') || inlineText(meta?.querySelector('a')?.textContent);
+  const location =
+    leafTexts(meta).find((text) => text !== company && text !== '·' && !/^\d(?:[.,]\d)?$/.test(text) && !SALARY_TEXT.test(text)) ?? '';
+  const summary = leafTexts(doc.querySelector('[data-testid="structured-job-summary"]'));
+  const description = doc.querySelector('.simple-job-description-html') ?? doc.querySelector('#jobDescriptionText');
+  return {
+    title: textOf(doc, '[data-testid="vj-job-title"]'),
+    company,
+    location,
+    workMode: summary.map(workModeFromLabel).find(Boolean) ?? null,
+    salary: summary.find((text) => SALARY_TEXT.test(text)) ?? '',
+    description: description ? elementToText(description) : '',
+  };
+};
+
+// Glassdoor (CV-522, capturas de nov. 2026). La oferta suelta (`/job-listing/`) trae JSON-LD
+// completo; la lista con la oferta abierta a la derecha, no. Las clases son de CSS Modules
+// (`JobDetails_jobDescription__<hash>`): se buscan por el prefijo. La cabecera de la oferta
+// abierta es `data-test="job-details-header"`; las tarjetas de la lista tienen sus propios
+// `job-title` y `emp-location`, que no cuentan.
+const glassdoor: PortalExtractor = (doc) => {
+  const header = doc.querySelector('[data-test="job-details-header"]');
+  if (!header) return {};
+  const description = doc.querySelector('[class*="JobDetails_jobDescription"]');
+  return {
+    title: textOf(header, 'h1[id^="jd-job-title"]') || textOf(header, 'h1'),
+    company: textOf(header, '[class*="EmployerProfile_employerNameHeading"]'),
+    location: textOf(header, '[data-test="location"]'),
+    salary: textOf(header, '[data-test="detailSalary"]').replace(/\s*\(.*\)$/, ''),
+    description: description ? elementToText(description) : '',
+  };
+};
+
 // LinkedIn: la página de invitado y, si no está, la de con sesión.
 const linkedin: PortalExtractor = (doc) => {
   const guest = linkedinGuest(doc);
@@ -260,5 +352,8 @@ export const EXTRACTORS: Partial<Record<PortalKey, PortalExtractor>> = {
   factorial,
   tecnoempleo,
   infoempleo,
+  infojobs,
+  indeed,
+  glassdoor,
   linkedin,
 };
