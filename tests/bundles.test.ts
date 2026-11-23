@@ -10,7 +10,7 @@ import { FILL_GLOBAL } from '../src/fill/inject';
 import { callInPage } from '../src/panel/fill-page';
 import { fixture, parseHtml } from './helpers/dom';
 
-type Bundles = { background: string; panel: string; extract: string; fill: string };
+type Bundles = { background: string; panel: string; extract: string; fill: string; detect: string };
 
 async function compile(dev: boolean, target: 'chrome' | 'firefox' = 'chrome'): Promise<Bundles> {
   const options = bundleOptions({ target, dev, apiBase: dev ? 'http://localhost:8000' : 'https://aplica.cv', write: false });
@@ -63,6 +63,36 @@ describe('extract.js inyectado', () => {
   it('el build de desarrollo funciona igual', () => {
     const result = run(development.extract, fixture('greenhouse'), 'https://job-boards.greenhouse.io/x/jobs/1');
     expect(result).toMatchObject({ portal: 'greenhouse', title: 'Desarrolladora backend' });
+  });
+});
+
+describe('detect.js inyectado (CV-508)', () => {
+  /** Como executeScript({files}): el resultado es el valor de la última expresión. */
+  function run(code: string, html: string, url: string): unknown {
+    // Como en una página: `URL` es global (el contexto de vm no lo trae).
+    const sandbox = { document: parseHtml(html, url), location: new URL(url), URL };
+    return vm.runInContext(code, vm.createContext(sandbox));
+  }
+
+  it('devuelve la confirmación como objeto serializable', () => {
+    const url = 'https://jobs.lever.co/empresaficticia/00000000-0000-0000-0000-000000000001/thanks';
+    const result = run(production.detect, readFileSync('tests/fixtures/sent/lever.html', 'utf8'), url);
+    expect(JSON.parse(JSON.stringify(result))).toEqual({
+      ats: 'lever',
+      offerUrl: 'https://jobs.lever.co/empresaficticia/00000000-0000-0000-0000-000000000001',
+      title: 'Desarrolladora backend',
+      company: 'Empresa Ficticia S.L.',
+    });
+  });
+
+  it('devuelve null en una página que no es la confirmación', () => {
+    expect(run(production.detect, fixture('lever'), 'https://jobs.lever.co/empresaficticia/1')).toBeNull();
+  });
+
+  it('solo lee: no envía nada, no toca las APIs de la extensión ni pulsa nada', () => {
+    for (const forbidden of ['fetch(', 'XMLHttpRequest', 'sendBeacon', 'WebSocket', 'chrome.', 'browser.', 'localStorage', 'eval(', '.click(', 'submit(', 'requestSubmit']) {
+      expect(production.detect, forbidden).not.toContain(forbidden);
+    }
   });
 });
 

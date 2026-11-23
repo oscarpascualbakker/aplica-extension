@@ -18,6 +18,7 @@ type Entry = { message: string; placeholders?: Record<string, { content: string 
 export type Dictionary = Record<string, Entry>;
 
 let dictionary: Dictionary | null = null;
+let current: Locale | null = null;
 
 /** Sustituye $NOMBRE$ por el contenido del placeholder ($1 a $9 son los argumentos) y $$ por $. */
 export function formatMessage(entry: Entry, substitutions?: string | string[]): string {
@@ -50,6 +51,7 @@ export async function loadLocale(
     const loaded = await fetchJson(`_locales/${locale}/messages.json`);
     if (!isDictionary(loaded)) return false;
     dictionary = loaded;
+    current = locale;
     return true;
   } catch {
     return false;
@@ -59,6 +61,18 @@ export async function loadLocale(
 /** Vuelve al idioma del navegador (sin sesión). */
 export function resetLocale(): void {
   dictionary = null;
+  current = null;
+}
+
+/**
+ * Una fecha `YYYY-MM-DD` escrita en el idioma de la cuenta (CV-508): "30 de noviembre de 2026" o
+ * "30 November 2026" (en-GB). Sin idioma cargado, el del navegador.
+ */
+export function formatDate(ymd: string): string {
+  const [year, month, day] = ymd.split('-').map(Number);
+  if (!year || !month || !day) return ymd;
+  const locale = current === 'en' ? 'en-GB' : current === 'es' ? 'es-ES' : undefined;
+  return new Date(year, month - 1, day).toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' });
 }
 
 export function t(key: string, substitutions?: string | string[]): string {

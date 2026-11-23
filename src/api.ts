@@ -17,6 +17,8 @@ export type OfferPayload = {
   description: string;
   portal: string;
   force: boolean;
+  /** CV-508, D-220: guardarla ya como `enviada` (la página del ATS confirmó el envío y la persona pulsó). */
+  sent?: boolean;
 };
 
 /**
@@ -42,8 +44,19 @@ export type AuthApi = Pick<ApiClient, 'exchangeToken' | 'getMe' | 'revokeToken'>
 
 /** Guardar oferta (CV-504): además de los errores comunes, duplicado y campos inválidos. */
 export type SaveResult =
-  | { ok: true; data: { application: ApplicationRef } }
+  | { ok: true; data: { application: ApplicationRef; followUpAt: string | null } }
   | ({ ok: false } & (ApiError | { kind: 'duplicate'; match: MatchKind; application: ApplicationRef } | { kind: 'invalid'; fields: string[] }));
+
+/** Etapas desde las que el panel propone marcar como enviada (CV-508): las anteriores al envío. */
+export const STAGES_BEFORE_SENT: readonly string[] = ['guardada', 'preparada'];
+/**
+ * Marcar como enviada (CV-508, D-220). `followUpAt` es la fecha de seguimiento (YYYY-MM-DD) que Aplica propone
+ * a los 7 días (D-214), o null. `changed` es false si ya estaba enviada. `stage`: ya está en una etapa
+ * posterior y no se cambia.
+ */
+export type SentResult =
+  | { ok: true; data: { application: ApplicationRef; followUpAt: string | null; changed: boolean } }
+  | ({ ok: false } & (ApiError | { kind: 'stage'; application: ApplicationRef } | { kind: 'not_found' }));
 
 /** Encaje exprés (CV-505): los mismos códigos de veredicto que el informe completo. */
 export type QuickFitVerdict = 'apply' | 'apply_with_caveats' | 'do_not_apply';
@@ -123,8 +136,10 @@ export type ApiClient = {
   revokeToken(token: string): Promise<ApiResult<null>>;
   /** ¿Ya está esta oferta en la cuenta? (CV-504) */
   matchOffer(token: string, query: { url: string; title: string; company: string }): Promise<ApiResult<MatchResponse>>;
-  /** Guarda la oferta como candidatura `guardada`, gratis (CV-504). */
+  /** Guarda la oferta como candidatura `guardada` (o `enviada`, con `sent`, CV-508), gratis (CV-504). */
   saveOffer(token: string, offer: OfferPayload): Promise<SaveResult>;
+  /** Marca como enviada una candidatura de la cuenta (CV-508, alcance `offers.save`). Nunca la retrasa. */
+  markSent(token: string, applicationId: string): Promise<SentResult>;
   /** La última lectura exprés de una candidatura y las gratis que quedan hoy (CV-505). `not_found` si está apagada. */
   getQuickFit(token: string, applicationId: string): Promise<ApiResult<QuickFitState> | { ok: false; kind: 'not_found' }>;
   /** Una lectura exprés nueva, solo gratuita: el token no gasta créditos (D-204). */
@@ -226,6 +241,11 @@ function parseQuickFit(value: unknown, apiBase: string): QuickFit | null {
     createdAt: typeof created_at === 'string' ? created_at : '',
     url: sameOrigin(url, apiBase),
   };
+}
+
+/** Una fecha `YYYY-MM-DD` del servidor (CV-508); cualquier otra cosa, null. */
+function dateOrNull(value: unknown): string | null {
+  return typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : null;
 }
 
 function nonEmptyText(value: unknown): string | null {
@@ -435,7 +455,8 @@ export function createApiClient(apiBase: string, fetchImpl: typeof fetch = fetch
       if (response.status === 201) {
         const body = await readJson(response);
         const application = isObject(body) ? parseApplication(body.application, apiBase) : null;
-        return application ? { ok: true, data: { application } } : { ok: false, kind: 'server' };
+        const followUpAt = isObject(body) && isObject(body.application) ? dateOrNull(body.application.follow_up_at) : null;
+        return application ? { ok: true, data: { application, followUpAt } } : { ok: false, kind: 'server' };
       }
       if (response.status === 409) {
         const body = await readJson(response);
@@ -450,6 +471,25 @@ export function createApiClient(apiBase: string, fetchImpl: typeof fetch = fetch
         const body = await readJson(response);
         const fields = isObject(body) && Array.isArray(body.fields) ? body.fields : [];
         return { ok: false, kind: 'invalid', fields: fields.filter((f): f is string => typeof f === 'string') };
+      }
+      return { ok: false, ...(await failure(response)) };
+    },
+
+    async markSent(token, applicationId) {
+      const result = await request(`/offers/${encodeURIComponent(applicationId)}/sent`, { method: 'POST', token });
+      if ('error' in result) return { ok: false, ...result.error };
+      const { response } = result;
+      if (response.status === 200) {
+        const body = await readJson(response);
+        const application = isObject(body) ? parseApplication(body.application, apiBase) : null;
+        if (!application || !isObject(body) || !isObject(body.application)) return { ok: false, kind: 'server' };
+        return { ok: true, data: { application, followUpAt: dateOrNull(body.application.follow_up_at), changed: body.changed === true } };
+      }
+      if (response.status === 404) return { ok: false, kind: 'not_found' };
+      if (response.status === 409) {
+        const body = await readJson(response);
+        const application = isObject(body) ? parseApplication(body.application, apiBase) : null;
+        return errorCode(body) === 'stage' && application ? { ok: false, kind: 'stage', application } : { ok: false, kind: 'server' };
       }
       return { ok: false, ...(await failure(response)) };
     },

@@ -87,7 +87,7 @@ describe('textos', () => {
 
   it('las claves usadas en el código existen y no hay guiones largos', () => {
     const en = read('en');
-    const sources = ['src/panel/panel.ts', 'src/panel/dev-export.ts', 'src/panel/fill-section.ts', 'src/background.ts'];
+    const sources = ['src/panel/panel.ts', 'src/panel/dev-export.ts', 'src/panel/fill-section.ts', 'src/panel/sent-run.ts', 'src/background.ts'];
     const used = new Set<string>();
     for (const file of sources) {
       const code = readFileSync(file, 'utf8');

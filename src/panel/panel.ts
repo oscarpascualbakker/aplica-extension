@@ -5,6 +5,8 @@
 // guardando, guardada, duplicado y error. Cada cambio de estado mueve el foco al título.
 // Guardada y duplicado llevan el bloque del encaje exprés (CV-505); si la candidatura ya tiene los
 // documentos preparados (`ready`), llevan en su lugar los documentos a un clic (CV-506, D-217).
+// CV-508 (D-220): con el panel abierto, en la página de confirmación de un ATS, el estado "enviada"
+// pregunta si se ha enviado la candidatura y la marca con un clic.
 
 import {
   createApiClient,
@@ -18,7 +20,8 @@ import {
 } from '../api';
 import type { ApiClient } from '../api';
 import { detectBrowser, extensionApi } from '../browser';
-import { isLocale, loadLocale, resetLocale, t } from '../i18n';
+import { atsFromUrl } from '../fill/ats';
+import { formatDate, isLocale, loadLocale, resetLocale, t } from '../i18n';
 import { createLocaleStore } from '../locale-store';
 import { ICON_CLICKED } from '../messages';
 import { MAX_DESCRIPTION, MAX_FIELD, type ExtractedOffer, type WorkMode } from '../extract/types';
@@ -29,14 +32,15 @@ import { closePanel } from './close';
 import { devExportSection } from './dev-export';
 import { button, el } from './dom';
 import { fillSection } from './fill-section';
-import { readPage, type ReadOutcome } from './read-page';
+import { readPage, type ReadOutcome, type TabInfo } from './read-page';
+import { confirmSent, findSentCandidate, type Remembered, type SentCandidate } from './sent-run';
 
 const root = document.getElementById('app') as HTMLElement;
 const live = document.getElementById('live') as HTMLElement;
 
 type Notice = { key: string; substitutions?: string[]; alert?: boolean } | null;
 type Draft = ExtractedOffer & { url: string };
-type View = 'idle' | 'reading' | 'preview' | 'saving' | 'saved' | 'duplicate' | 'error';
+type View = 'idle' | 'reading' | 'preview' | 'saving' | 'saved' | 'duplicate' | 'error' | 'sent';
 
 const FIELDS = ['url', 'title', 'company', 'location', 'work_mode', 'salary', 'description'] as const;
 
@@ -49,6 +53,11 @@ let generation = 0;
 // Coincidencia de empresa y puesto detectada con la oferta de la vista previa actual: guardar
 // pasa a pedir confirmación (force).
 let similar: ApplicationRef | null = null;
+// CV-508: la última pestaña leída, lo que el panel sabe de cada pestaña y los avisos de "enviada" que la
+// persona ha descartado. Solo en memoria mientras el panel está abierto; nunca en `storage.*`.
+let activeTab: TabInfo | undefined;
+const remembered = new Map<number, Remembered>();
+const dismissed = new Set<string>();
 
 /**
  * Botón para cerrar el panel (CV-523), en todos los estados. Se ve arriba a la derecha, pero va
@@ -185,6 +194,7 @@ async function start(session: Session, notice: Notice): Promise<void> {
 const readDeps = {
   async queryActiveTab() {
     const tabs = await extensionApi().tabs.query({ active: true, currentWindow: true });
+    activeTab = tabs[0];
     return tabs[0];
   },
   async runExtract(tabId: number) {
@@ -201,7 +211,23 @@ async function read(session: Session): Promise<void> {
   announce(t('readingPage'));
   const outcome = await readPage(readDeps);
   if (gen !== generation) return;
+  // CV-508: al pulsar el icono en la confirmación de un ATS (Workday la enseña sin cambiar de página), el
+  // aviso de "enviada" va antes que leerla como oferta.
+  const tab = activeTab;
+  if (tab?.id !== undefined && tab.url && (await checkSent(session, tab.id, tab.url))) return;
+  if (gen !== generation) return;
+  if (outcome.status === 'ok' && tab?.id !== undefined && outcome.offer.description) {
+    remembered.set(tab.id, { pageUrl: tab.url ?? outcome.offer.url, offer: outcome.offer, application: null });
+  }
   showReadOutcome(session, outcome);
+}
+
+/** La candidatura de la oferta de la pestaña activa, para el aviso de "enviada" de su confirmación (CV-508). */
+function rememberApplication(application: ApplicationRef): void {
+  const tab = activeTab;
+  if (tab?.id === undefined) return;
+  const known = remembered.get(tab.id);
+  remembered.set(tab.id, { pageUrl: known?.pageUrl ?? tab.url ?? draft?.url ?? '', offer: known?.offer ?? draft, application });
 }
 
 function readAgain(session: Session): HTMLButtonElement {
@@ -500,6 +526,7 @@ function openInAplica(application: ApplicationRef): HTMLElement[] {
 function showSaved(session: Session, application: ApplicationRef): void {
   view = 'saved';
   similar = null;
+  rememberApplication(application);
   render([
     el('h1', t('savedTitle')),
     el('p', t('savedText', [application.title, application.company])),
@@ -513,6 +540,7 @@ function showSaved(session: Session, application: ApplicationRef): void {
 function showDuplicate(session: Session, application: ApplicationRef): void {
   view = 'duplicate';
   similar = null;
+  rememberApplication(application);
   render([
     el('h1', t('duplicateTitle')),
     el('p', t('duplicateText', [application.title, application.company])),
@@ -522,6 +550,164 @@ function showDuplicate(session: Session, application: ApplicationRef): void {
     fillBlock(session, draft?.url ?? null, () => application),
     accountFooter(session),
   ]);
+}
+
+// ---------- Registrar la candidatura como enviada (CV-508, D-220) ----------
+//
+// Solo con el panel abierto. Al terminar de cargar una página de uno de los siete ATS en la pestaña activa
+// (o al pulsar el icono), el panel inyecta detect.js. Sin el permiso de host de ese ATS (CV-507) el navegador
+// ni siquiera da la URL de la pestaña, así que no se lee nada. Nada cambia sin el clic de la persona.
+
+const sentDeps = {
+  async detect(tabId: number) {
+    const [injected] = await extensionApi().scripting.executeScript({ target: { tabId }, files: ['detect.js'] });
+    return injected?.result;
+  },
+};
+
+const sentKey = (tabId: number, url: string): string => `${String(tabId)} ${url}`;
+
+/** ¿Es la pestaña la confirmación de un ATS con una candidatura que marcar? Si lo es, enseña el aviso. */
+async function checkSent(session: Session, tabId: number, tabUrl: string): Promise<boolean> {
+  if (!account || !atsFromUrl(tabUrl) || dismissed.has(sentKey(tabId, tabUrl))) return false;
+  const gen = generation;
+  const token = await tokens.get();
+  if (!token) return false;
+  const found = await findSentCandidate(tabId, tabUrl, remembered.get(tabId), token, client, sentDeps);
+  if (gen !== generation) return false;
+  if (found === 'unauthenticated') {
+    await expireSession(session);
+    return true;
+  }
+  if (!found) return false;
+  showSent(session, tabId, tabUrl, found);
+  return true;
+}
+
+function sentNames(candidate: SentCandidate): { title: string; company: string } {
+  return candidate.kind === 'existing'
+    ? { title: candidate.application.title, company: candidate.application.company }
+    : { title: candidate.offer.title, company: candidate.offer.company };
+}
+
+function showSent(session: Session, tabId: number, tabUrl: string, candidate: SentCandidate, notice: Notice = null, names = sentNames(candidate)): void {
+  generation++;
+  view = 'sent';
+  const nodes: HTMLElement[] = [el('h1', t('sentTitle'))];
+  let title: HTMLInputElement | null = null;
+  let company: HTMLInputElement | null = null;
+
+  if (candidate.kind === 'existing') {
+    nodes.push(el('p', names.title && names.company ? t('sentQuestion', [names.title, names.company]) : t('sentQuestionUnnamed')));
+  } else {
+    // No está en la cuenta: se guardará ya como enviada, con lo que la persona deje escrito.
+    title = textInput(names.title);
+    company = textInput(names.company);
+    nodes.push(el('p', t('sentQuestionNew')), labelled('title', t('fieldTitle'), title, false), labelled('company', t('fieldCompany'), company, false));
+  }
+  nodes.push(...noticeNode(notice));
+
+  const mark = button(t('sentButton'), () => {
+    const typed = { title: title ? title.value.trim() : names.title, company: company ? company.value.trim() : names.company };
+    void markAsSent(session, tabId, tabUrl, candidate, typed, mark);
+  });
+  const notYet = button(t('sentNotYetButton'), () => {
+    dismissed.add(sentKey(tabId, tabUrl));
+    showSentDismissed(session);
+  }, true);
+  const actions = el('div', undefined, 'doc-actions');
+  actions.append(mark, notYet);
+  nodes.push(actions, el('p', t('sentHint'), 'hint'), accountFooter(session));
+  render(nodes);
+  announce(t('sentTitle'));
+}
+
+async function markAsSent(
+  session: Session,
+  tabId: number,
+  tabUrl: string,
+  candidate: SentCandidate,
+  names: { title: string; company: string },
+  mark: HTMLButtonElement,
+): Promise<void> {
+  const gen = generation;
+  root.querySelectorAll('input, button').forEach((node) => {
+    (node as HTMLInputElement).disabled = true;
+  });
+  mark.textContent = t('saving');
+  root.setAttribute('aria-busy', 'true');
+  announce(t('saving'));
+  const token = await tokens.get();
+  if (!token) {
+    await expireSession(session);
+    return;
+  }
+  const outcome = await confirmSent(candidate, names, token, client);
+  root.removeAttribute('aria-busy');
+  if (gen !== generation) return;
+  switch (outcome.status) {
+    case 'done':
+    case 'later': {
+      dismissed.add(sentKey(tabId, tabUrl));
+      const known = remembered.get(tabId);
+      remembered.set(tabId, { pageUrl: known?.pageUrl ?? tabUrl, offer: known?.offer ?? null, application: outcome.application });
+      showSentDone(session, outcome.application, outcome.status === 'done' ? outcome.followUpAt : null, outcome.status === 'later');
+      return;
+    }
+    case 'unauthenticated':
+      await expireSession(session);
+      return;
+    default:
+      showSent(session, tabId, tabUrl, candidate, { key: outcome.key, alert: true }, names);
+  }
+}
+
+function showSentDone(session: Session, application: ApplicationRef, followUpAt: string | null, later: boolean): void {
+  generation++;
+  view = 'sent';
+  const named = application.title && application.company;
+  const nodes: HTMLElement[] = [el('h1', t(later ? 'sentLaterTitle' : 'sentDoneTitle'))];
+  if (later) {
+    nodes.push(el('p', t('sentLaterText')));
+  } else {
+    nodes.push(el('p', named ? t('sentDoneText', [application.title, application.company]) : t('sentDoneTextUnnamed')));
+    // D-214: al pasar a enviada, Aplica propone el seguimiento a los 7 días si no había fecha.
+    if (followUpAt) nodes.push(el('p', t('sentFollowUp', [formatDate(followUpAt)])));
+  }
+  nodes.push(...openInAplica(application), accountFooter(session));
+  render(nodes);
+  announce(t(later ? 'sentLaterTitle' : 'sentDoneTitle'));
+}
+
+function showSentDismissed(session: Session): void {
+  generation++;
+  view = 'idle';
+  render([el('h1', t('panelTitle')), el('p', t('sentDismissedText')), readAgain(session), accountFooter(session)]);
+}
+
+/** Escucha las páginas que termina de cargar la pestaña activa de esta ventana, mientras el panel está abierto. */
+async function watchTabs(session: Session): Promise<void> {
+  // Pueden faltar (un navegador sin ellas, las pruebas): entonces no hay aviso automático, solo al pulsar el icono.
+  const api = extensionApi() as { tabs: Partial<typeof chrome.tabs>; windows?: Partial<typeof chrome.windows> };
+  const { tabs } = api;
+  if (!tabs.onUpdated) return;
+  let windowId: number | undefined;
+  try {
+    windowId = (await api.windows?.getCurrent?.())?.id;
+  } catch {
+    windowId = undefined;
+  }
+  tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+    if (changeInfo.status !== 'complete' || !tab.active || !tab.url) return;
+    if (windowId !== undefined && tab.windowId !== windowId) return;
+    // Sin interrumpir un guardado o una marca a medias.
+    if (view === 'saving' || root.getAttribute('aria-busy') === 'true') return;
+    activeTab = { id: tabId, url: tab.url };
+    void checkSent(session, tabId, tab.url);
+  });
+  tabs.onRemoved?.addListener((tabId) => {
+    remembered.delete(tabId);
+  });
 }
 
 // ---------- Rellenar formularios (CV-507) ----------
@@ -986,6 +1172,9 @@ api.runtime.onMessage.addListener((message: unknown) => {
     if (outcome.status !== 'ok' || outcome.offer.url !== shown) void read(session);
   });
 });
+
+// CV-508: la confirmación de un ATS mientras el panel está abierto.
+void watchTabs(session);
 
 // El idioma de la cuenta de la última sesión, para que ni la primera pantalla parpadee.
 void localeStore
