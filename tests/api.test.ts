@@ -92,7 +92,7 @@ describe('revokeToken', () => {
   });
 });
 
-const APPLICATION = { id: 'a1', title: 'Desarrolladora backend', company: 'Empresa Ficticia S.L.', stage: 'saved', url: 'https://api.test/app/candidaturas/a1' };
+const APPLICATION = { id: 'a1', title: 'Desarrolladora backend', company: 'Empresa Ficticia S.L.', stage: 'saved', url: 'https://api.test/app/candidaturas/a1', ready: false };
 const OFFER = {
   url: 'https://jobs.example.com/o/1',
   title: 'Desarrolladora backend',
@@ -266,5 +266,146 @@ describe('encaje exprés (CV-505)', () => {
     expect(await run(401, { error: 'unauthenticated' })).toEqual({ ok: false, kind: 'unauthenticated' });
     expect(await run(404, { error: 'not_found' })).toEqual({ ok: false, kind: 'not_found' });
     expect(await run(500, {})).toEqual({ ok: false, kind: 'server' });
+  });
+});
+
+describe('documentos de una candidatura (CV-506, D-217)', () => {
+  const DOCS = {
+    lang: 'es',
+    cv: { docx: true, pdf: false },
+    letter: 'Carta de prueba.',
+    message: 'Mensaje de prueba.',
+    questions: [
+      {
+        generated_at: '2026-11-22T10:00:00+01:00',
+        truncated: true,
+        items: [
+          { question: '¿Por qué esta empresa?', type: 'redactar', answer: 'Porque sí.', note: null },
+          { question: 'Pretensión salarial', type: 'contesta_tu', answer: null, note: 'Elige tú la cifra.' },
+        ],
+      },
+    ],
+    url: 'https://api.test/app/candidaturas/a1',
+  };
+  const PARSED = {
+    lang: 'es',
+    cv: { docx: true, pdf: false },
+    letter: 'Carta de prueba.',
+    message: 'Mensaje de prueba.',
+    questions: [
+      {
+        generatedAt: '2026-11-22T10:00:00+01:00',
+        truncated: true,
+        items: [
+          { question: '¿Por qué esta empresa?', type: 'redactar', answer: 'Porque sí.', note: null },
+          { question: 'Pretensión salarial', type: 'contesta_tu', answer: null, note: 'Elige tú la cifra.' },
+        ],
+      },
+    ],
+    url: 'https://api.test/app/candidaturas/a1',
+  };
+
+  it('/me: scopes opcional (un servidor viejo no lo envía)', async () => {
+    const me = { email: 'ana@example.com', locale: 'es', browser: BROWSER };
+    expect(await client(() => Promise.resolve(json(200, { ...me, scopes: ['tracker.read', 7] }))).api.getMe('tok')).toEqual({
+      ok: true,
+      data: { ...me, scopes: ['tracker.read'] },
+    });
+    const old = await client(() => Promise.resolve(json(200, me))).api.getMe('tok');
+    expect(old.ok && old.data.scopes).toBeUndefined();
+  });
+
+  it('ready solo es true si la API lo dice con true', async () => {
+    const query = { url: 'u', title: 't', company: 'c' };
+    const ready = { match: 'url', application: { ...APPLICATION, ready: true } };
+    const result = await client(() => Promise.resolve(json(200, ready))).api.matchOffer('tok', query);
+    expect(result.ok && result.data?.application.ready).toBe(true);
+    const odd = { match: 'url', application: { ...APPLICATION, ready: 'yes' } };
+    const other = await client(() => Promise.resolve(json(200, odd))).api.matchOffer('tok', query);
+    expect(other.ok && other.data?.application.ready).toBe(false);
+  });
+
+  it('GET documents: parsea y envía el token', async () => {
+    const { api, fetchMock } = client(() => Promise.resolve(json(200, { documents: DOCS })));
+    expect(await api.getDocuments('tok', 'a1')).toEqual({ ok: true, data: PARSED });
+    const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
+    expect(url).toBe('https://api.test/api/ext/v1/offers/a1/documents');
+    expect((init.headers as Record<string, string>).Authorization).toBe('Bearer tok');
+  });
+
+  it('GET documents: textos vacíos son null, la URL de otro origen no vale, un cuerpo raro es server', async () => {
+    const odd = { ...DOCS, letter: '  ', message: null, questions: [], url: 'https://evil.test/x' };
+    const result = await client(() => Promise.resolve(json(200, { documents: odd }))).api.getDocuments('tok', 'a1');
+    expect(result.ok && [result.data.letter, result.data.message, result.data.questions, result.data.url]).toEqual([null, null, [], null]);
+    expect(await client(() => Promise.resolve(json(200, { documents: { lang: 'es' } }))).api.getDocuments('tok', 'a1')).toEqual({ ok: false, kind: 'server' });
+  });
+
+  it('GET documents: cada error con su motivo', async () => {
+    const run = (status: number, body: unknown) => client(() => Promise.resolve(json(status, body))).api.getDocuments('tok', 'a1');
+    expect(await run(409, { error: 'not_ready' })).toEqual({ ok: false, kind: 'not_ready' });
+    expect(await run(409, { error: 'otra' })).toEqual({ ok: false, kind: 'server' });
+    expect(await run(403, { error: 'insufficient_scope' })).toEqual({ ok: false, kind: 'insufficient_scope' });
+    expect(await run(404, { error: 'not_found' })).toEqual({ ok: false, kind: 'not_found' });
+    expect(await run(401, {})).toEqual({ ok: false, kind: 'unauthenticated' });
+    expect(await run(500, {})).toEqual({ ok: false, kind: 'server' });
+  });
+
+  it('POST downloads: envía el formato y solo acepta un enlace del propio Aplica', async () => {
+    const link = { url: 'https://api.test/api/ext/v1/downloads/s3cret', expires_at: '2026-11-23T10:05:00Z' };
+    const { api, fetchMock } = client(() => Promise.resolve(json(201, link)));
+    expect(await api.requestDownload('tok', 'a1', 'pdf')).toEqual({ ok: true, data: { url: link.url, expiresAt: link.expires_at } });
+    const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
+    expect(url).toBe('https://api.test/api/ext/v1/offers/a1/downloads');
+    expect(init.method).toBe('POST');
+    expect(JSON.parse(init.body as string)).toEqual({ format: 'pdf' });
+    const evil = await client(() => Promise.resolve(json(201, { ...link, url: 'https://evil.test/f' }))).api.requestDownload('tok', 'a1', 'docx');
+    expect(evil).toEqual({ ok: false, kind: 'server' });
+  });
+
+  it('POST downloads: errores', async () => {
+    const run = (status: number, body: unknown, headers: Record<string, string> = {}) =>
+      client(() => Promise.resolve(json(status, body, headers))).api.requestDownload('tok', 'a1', 'docx');
+    expect(await run(403, { error: 'insufficient_scope' })).toEqual({ ok: false, kind: 'insufficient_scope' });
+    expect(await run(404, { error: 'not_found' })).toEqual({ ok: false, kind: 'not_found' });
+    expect(await run(409, { error: 'not_ready' })).toEqual({ ok: false, kind: 'not_ready' });
+    expect(await run(429, {}, { 'Retry-After': '10' })).toEqual({ ok: false, kind: 'rate_limited', retryAfter: 10 });
+  });
+
+  it('downloadFile: sin Authorization, con el nombre de Content-Disposition', async () => {
+    const { api, fetchMock } = client(() =>
+      Promise.resolve(new Response('contenido', { status: 200, headers: { 'Content-Disposition': 'attachment; filename="CV Ana.docx"' } })),
+    );
+    const result = await api.downloadFile('https://api.test/api/ext/v1/downloads/s3cret', 'docx');
+    expect(result.ok && result.data.filename).toBe('CV Ana.docx');
+    expect(result.ok && (await result.data.blob.text())).toBe('contenido');
+    const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
+    expect(url).toBe('https://api.test/api/ext/v1/downloads/s3cret');
+    expect(init.headers).toBeUndefined();
+    expect(init.credentials).toBe('omit');
+  });
+
+  it('downloadFile: filename* gana, se limpia y hay nombre por defecto', async () => {
+    const name = async (header: string | null, format: 'docx' | 'pdf' = 'docx') => {
+      const headers: Record<string, string> = header === null ? {} : { 'Content-Disposition': header };
+      const r = await client(() => Promise.resolve(new Response('x', { status: 200, headers }))).api.downloadFile('https://api.test/d/1', format);
+      return r.ok ? r.data.filename : null;
+    };
+    expect(await name(`attachment; filename="viejo.docx"; filename*=UTF-8''CV%20Mar%C3%ADa.docx`)).toBe('CV María.docx');
+    expect(await name('attachment; filename=cv.pdf')).toBe('cv.pdf');
+    expect(await name('attachment; filename="../../etc/passwd"')).toBe('_.._etc_passwd');
+    expect(await name(null)).toBe('CV.docx');
+    expect(await name('attachment', 'pdf')).toBe('CV.pdf');
+    expect(await name(`attachment; filename*=UTF-8''%E0%A4%A`)).toBe('CV.docx');
+  });
+
+  it('downloadFile: otro origen no se pide; 410, 404 y red', async () => {
+    const { api, fetchMock } = client(() => Promise.resolve(new Response('x')));
+    expect(await api.downloadFile('https://evil.test/f', 'docx')).toEqual({ ok: false, kind: 'server' });
+    expect(fetchMock).not.toHaveBeenCalled();
+    const run = (status: number) => client(() => Promise.resolve(json(status, { error: 'gone' }))).api.downloadFile('https://api.test/d/1', 'docx');
+    expect(await run(410)).toEqual({ ok: false, kind: 'gone' });
+    expect(await run(404)).toEqual({ ok: false, kind: 'not_found' });
+    expect(await run(500)).toEqual({ ok: false, kind: 'server' });
+    expect(await client(() => Promise.reject(new TypeError('x'))).api.downloadFile('https://api.test/d/1', 'pdf')).toEqual({ ok: false, kind: 'network' });
   });
 });

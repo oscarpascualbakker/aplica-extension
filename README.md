@@ -100,6 +100,30 @@ and the panel says so.
   what is missing.
 - "Prepare full application" opens the application in Aplica with the prepare panel in view.
 
+## Prepared documents
+
+When the offer already has a prepared application in Aplica (`ready: true`), the panel shows
+its documents instead of the quick fit: download the CV in Word and, if it exists, in PDF; copy
+the letter; copy the direct message to the recruiter; and copy each answer of "Form questions"
+on its own. Questions of type `contesta_tu` have no answer: the panel shows the question and its
+note, without a copy button. If the application exists but is not prepared (`ready: false`), the
+panel stays as before (quick fit and the link to prepare it on the web). The token never starts
+an application and never spends credits.
+
+- `GET /api/ext/v1/offers/<id>/documents` (scope `documents.read`) returns the texts and which CV
+  formats exist. `409 not_ready` if it is not prepared; `403 insufficient_scope` for a token
+  issued before the scope existed (the panel also checks `scopes` from `/me`).
+- `POST /api/ext/v1/offers/<id>/downloads` with `{"format":"docx"|"pdf"}` returns a one-use link
+  valid for 5 minutes. The panel fetches it with no `Authorization` header (the secret is in the
+  URL, and only a URL on the same origin as the API is requested), builds a `Blob` and saves it
+  with `<a download>`, named after `Content-Disposition`. A `410` asks for one new link, once.
+- Copying uses `navigator.clipboard.writeText` from the click. No `downloads` or
+  `clipboardWrite` permission is added.
+- With a token without `documents.read`, the panel explains that this browser has to be
+  connected again, and offers to do it. It never deletes the token on its own.
+- When the match is by company and role (not by link) and that application is prepared, the
+  documents open inside the preview, so what you were editing is kept.
+
 The "✕" button at the top right closes the panel in every state (`src/panel/close.ts`):
 `sidePanel.close()` for the current window in Chrome and Edge, `sidebarAction.close()` in
 Firefox, and `window.close()` as a fallback. In Chrome and Edge the icon only opens the panel
@@ -190,6 +214,9 @@ seguro con tu cuenta, guardar la oferta que estás viendo y un encaje exprés co
 - Lo que lee se te enseña, editable, en el panel. No se envía nada a Aplica hasta que pulsas
   «Guardar en Aplica».
 - Nunca envía candidaturas por ti.
+- Si la oferta ya tiene la candidatura preparada en Aplica, el panel te da sus documentos a un
+  clic: CV en Word y PDF, carta, mensaje al reclutador y cada respuesta del formulario para
+  copiar. Los enlaces de descarga son de un solo uso y caducan a los 5 minutos.
 - No gasta créditos: guardar una oferta es gratis, y el encaje exprés del panel solo hace las
   lecturas gratis del día. Las de pago se confirman en la web de Aplica.
 - Guarda el token de conexión y el idioma de tu cuenta, en el almacenamiento local del navegador.
