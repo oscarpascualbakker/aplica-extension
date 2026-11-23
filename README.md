@@ -91,11 +91,13 @@ When the panel opens (and each time you press the icon again) it reads the activ
 1. **JSON-LD** `schema.org/JobPosting` (all `application/ld+json` blocks, `@graph`, arrays).
 2. **Portal extractors** (by hostname) fill what the JSON-LD lacks. Portals with an own
    extractor: LinkedIn (guest page and signed-in layout, including the search view with an
-   offer open), Infoempleo, Tecnoempleo, Greenhouse, Lever,
-   SmartRecruiters, Teamtailor, Personio and Factorial. Their selectors come from real pages,
-   and the fixtures in `tests/fixtures` keep that structure with invented content.
-   InfoJobs, Indeed, Glassdoor, Workday and Workable are recognised (`portal` key) but rely on
-   JSON-LD and on the selection until a real page is captured (see below).
+   offer open), InfoJobs, Indeed and Glassdoor (the single offer and the search list with an
+   offer open), Infoempleo, Tecnoempleo, Greenhouse, Lever, SmartRecruiters, Teamtailor,
+   Personio and Factorial. Their selectors come from real pages, and the fixtures in
+   `tests/fixtures` keep that structure with invented content. Glassdoor's single offer
+   (`/job-listing/`) is read from its JSON-LD; the extractor covers the search list.
+   Workday and Workable are recognised (`portal` key) but rely on JSON-LD and on the selection
+   until a real page is captured (see below).
 3. **Selection**: if there is still no description, the text you selected on the page. If
    there is none, the panel asks you to select the offer text and press the button again.
 
@@ -324,11 +326,10 @@ removed from the production bundle by a build constant, and a test checks it.
    `tests/fill-fixtures.test.ts`. Replace the provisional fixtures (Workday, Workable and
    SmartRecruiters) this way and remove the "provisional" comment.
 
-Portals that could not be downloaded without an account or a browser (InfoJobs and Indeed and
-Glassdoor behind a captcha or security check, Workday and Workable rendered by script) are
-waiting for a capture made this way. The LinkedIn signed-in extractor comes from a capture of
-`/jobs/view/<id>`; the search view (`/jobs/search-results`) shares its anchors but has not been
-captured yet.
+Workday and Workable (rendered by script) are waiting for a capture made this way. InfoJobs,
+Indeed and Glassdoor come from captures made this way in November 2026 (CV-522), and the
+LinkedIn signed-in extractor was checked against a capture of the search view
+(`/jobs/search-results/?currentJobId=`) as well as `/jobs/view/<id>`.
 
 ### Load the unpacked extension
 

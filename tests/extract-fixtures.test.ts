@@ -160,6 +160,71 @@ const CASES: Case[] = [
     },
     dom: {},
   },
+  {
+    // CV-522: sin JSON-LD. Datos de la cabecera reconocidos por su forma; la descripción antes
+    // que los requisitos y los conocimientos separados por comas.
+    file: 'infojobs',
+    host: 'www.infojobs.net',
+    portal: 'infojobs',
+    jsonLd: false,
+    full: {
+      title: TITLE,
+      company: COMPANY,
+      location: 'Villanueva del Ejemplo (Provincia Ficticia)',
+      workMode: 'hibrido',
+      salary: '38.000€ - 44.000€ Bruto/año',
+      description: `Descripción\n\n${INTRO}\n\n- Diseñar y mantener APIs REST en PHP y Python.\n- Escribir pruebas automáticas & revisar código.\n\nVacantes\n\n1\n\nRequisitos\n\nEstudios mínimos\n\nGrado\n\nConocimientos necesarios\nPHP, Python\nRequisitos mínimos\n\nDos años diseñando APIs REST.`,
+    },
+    dom: {},
+  },
+  {
+    // CV-522: oferta suelta (`viewjob?jk=`). El JSON-LD de la página es de tipo WebSite.
+    file: 'indeed',
+    host: 'es.indeed.com',
+    portal: 'indeed',
+    jsonLd: false,
+    full: {
+      title: TITLE,
+      company: COMPANY,
+      location: 'Villanueva del Ejemplo, Provincia Ficticia',
+      workMode: 'hibrido',
+      salary: 'De 40.000 € a 48.000 € al año',
+      description: ABOUT,
+    },
+    dom: {},
+  },
+  {
+    // CV-522: lista con la oferta abierta a la derecha. Las tarjetas de la lista no cuentan.
+    file: 'indeed-search',
+    host: 'es.indeed.com',
+    portal: 'indeed',
+    jsonLd: false,
+    full: {
+      title: TITLE,
+      company: COMPANY,
+      location: 'Villanueva del Ejemplo, Provincia Ficticia',
+      workMode: null,
+      salary: 'De 40.000 € a 48.000 € al año',
+      description: ABOUT,
+    },
+    dom: {},
+  },
+  {
+    // CV-522: lista con la oferta abierta a la derecha, sin JSON-LD (la oferta suelta sí lo
+    // trae). Las tarjetas de la lista no cuentan; el salario, sin la nota entre paréntesis.
+    file: 'glassdoor',
+    host: 'www.glassdoor.es',
+    portal: 'glassdoor',
+    jsonLd: false,
+    full: {
+      title: TITLE,
+      company: COMPANY,
+      location: 'Villanueva del Ejemplo',
+      salary: '40.000 € - 48.000 €',
+      description: ABOUT,
+    },
+    dom: {},
+  },
 ];
 
 describe.each(CASES)('fixture $file', (c) => {
@@ -191,7 +256,7 @@ describe('fixtures', () => {
   });
 
   it('solo llevan datos ficticios: nada de las páginas reales de las que se tomó la estructura', () => {
-    const real = /palantir|powens|anthropic|ottonova|elevator|infinitum|crit\b|servicenow|cloudflare|hugging|stripe|spotify|salesforce/i;
+    const real = /palantir|powens|anthropic|ottonova|elevator|infinitum|crit\b|servicenow|cloudflare|hugging|stripe|spotify|salesforce|helmeca|vistalid|anticuarios|bravo|sector alarm|axepta|docplanner|doctoralia|spendesk|vanderlande|biorce|papernest/i;
     // Las fixtures de ofertas y las de formularios de candidatura (CV-507).
     const all = [...readdirSync('tests/fixtures').filter((f) => f.endsWith('.html')), ...readdirSync('tests/fixtures/forms').map((f) => `forms/${f}`)];
     for (const file of all) {
