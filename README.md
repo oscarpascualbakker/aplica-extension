@@ -356,7 +356,8 @@ The private key behind the development `key` is not stored in this repository.
 ## Releases
 
 Pushing a tag `v*` makes the CI create a GitHub release with the three zips. Signing and
-uploading to the browser stores is not automated yet. Versioning follows semver.
+uploading to the browser stores is manual: see `store/README.md` (store listing, permission
+justifications and data use declaration). Versioning follows semver.
 
 ## En español
 

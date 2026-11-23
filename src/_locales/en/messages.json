@@ -1,6 +1,6 @@
 {
-  "extName": { "message": "Aplica" },
-  "extDescription": { "message": "Your Aplica companion for preparing job applications. Free." },
+  "extName": { "message": "Aplica: save job postings and see your fit" },
+  "extDescription": { "message": "Save job postings to your Aplica account in one click, check your fit and keep your CV and form answers at hand. Free." },
   "actionTitle": { "message": "Open Aplica" },
   "panelTitle": { "message": "Aplica" },
   "closeButton": { "message": "Close the panel" },

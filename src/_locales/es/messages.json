@@ -1,6 +1,6 @@
 {
-  "extName": { "message": "Aplica" },
-  "extDescription": { "message": "Tu acompañante de Aplica para preparar candidaturas. Gratis." },
+  "extName": { "message": "Aplica: guarda ofertas y ve tu encaje" },
+  "extDescription": { "message": "Guarda ofertas de empleo en tu cuenta de Aplica con un clic, mira si encajas y ten a mano tu CV y tus respuestas. Gratis." },
   "actionTitle": { "message": "Abrir Aplica" },
   "panelTitle": { "message": "Aplica" },
   "closeButton": { "message": "Cerrar el panel" },

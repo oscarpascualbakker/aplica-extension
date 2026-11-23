@@ -1,6 +1,6 @@
 #!/bin/sh
 # Empaqueta cada destino de dist/ en un zip con la versión de package.json (CV-503).
-# La firma y la subida a las tiendas llegan en CV-509.
+# La subida a las tiendas es manual: store/README.md (CV-509).
 set -eu
 version=$(node -p "require('./package.json').version")
 mkdir -p dist/zip
