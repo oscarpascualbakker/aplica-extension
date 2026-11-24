@@ -1,62 +1,168 @@
-:root {
-  color-scheme: light dark;
-  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
-  font-size: 14px;
-  line-height: 1.45;
+/* Panel de Aplica (CV-544). Los tokens son los de la web (public/css/app.css del repositorio de la web):
+   tema claro "papel", tinta índigo, acento violeta e Inter. Sin recursos de fuera: la fuente va en el
+   paquete (assets/, licencia OFL).
+
+   Jerarquía: una acción principal rellena por pantalla; el resto, con borde o como enlace. Los avisos
+   van sobre un fondo de color, sin borde; la cuenta y la desconexión, discretas al final. */
+
+@font-face {
+  font-family: 'Inter';
+  src: url('assets/inter-var.woff2') format('woff2');
+  font-weight: 400 600;
+  font-display: swap;
 }
+
+:root {
+  color-scheme: light;
+  --bg: #f5f4f0;
+  --surface: #ffffff;
+  --text: #211d4a;
+  --n-300: #4a4762;
+  --n-400: #5e5b74;
+  --n-500: #6b6880;
+  --n-600: #8f8c9c;
+  --n-800: #dcd8ce;
+  --n-850: #e8e5dd;
+  --a-100: #1e1b4b;
+  --a-300: #3a2d99;
+  --a-400: #4a3bb5;
+  --a-900: #ece9fd;
+  --accent: #6d5bd0;
+  --ok-fill: #e2f2e8;
+  --ok-text: #1d5a3a;
+  --ok-mark: #2f8a57;
+  --warn-fill: #f8eed6;
+  --warn-text: #6b4d0f;
+  --warn-mark: #b07c16;
+  --bad-fill: #f9e4e4;
+  --bad-text: #8a2a2a;
+  --bad-mark: #b03a3a;
+  --ghost-line: rgba(33, 29, 74, 0.18);
+  --ghost-hover: rgba(33, 29, 74, 0.05);
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --shadow-card: 0 0 0 1px var(--n-800), 0 4px 14px rgba(33, 29, 74, 0.06);
+
+  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 body {
   margin: 0;
-  padding: 16px;
+  padding: 0 16px 20px;
+  background: var(--bg);
 }
+
 #app {
   position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
 }
-h1 {
-  font-size: 18px;
-  margin: 0 0 12px;
-  /* Hueco para el botón de cerrar (CV-523). */
-  padding-right: 40px;
+
+/* ---------- Cabecera: la marca, y la ✕ arriba a la derecha (CV-523) ---------- */
+
+.bar {
+  display: flex;
+  align-items: center;
+  min-height: 52px;
+  margin: 0 -16px;
+  padding: 0 52px 0 12px;
+  border-bottom: 1px solid var(--n-850);
+  background: var(--surface);
 }
-button.close {
+
+.bar img {
+  display: block;
+  height: 30px;
+  width: auto;
+}
+
+button.close.secondary {
   position: absolute;
-  top: -6px;
+  top: 10px;
   right: -6px;
   width: 32px;
   height: 32px;
   padding: 0;
-  border-color: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--n-400);
   font-size: 16px;
   line-height: 1;
 }
-button.close:hover {
-  border-color: currentColor;
+
+button.close.secondary:hover {
+  background: var(--ghost-hover);
+  border-color: transparent;
+  color: var(--text);
 }
+
+/* ---------- Texto ---------- */
+
+h1,
+h2,
+h3 {
+  margin: 0;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  text-wrap: balance;
+}
+
+h1 {
+  font-size: 19px;
+}
+
+h2 {
+  font-size: 15px;
+}
+
+h3 {
+  font-size: 14px;
+  margin: 4px 0 0;
+}
+
+h1:focus,
+h2:focus {
+  outline: none;
+}
+
 p {
-  margin: 0 0 12px;
+  margin: 0;
+  text-wrap: pretty;
 }
-button {
-  font: inherit;
-  padding: 8px 14px;
-  border: 1px solid #1f4fd8;
-  border-radius: 6px;
-  background: #1f4fd8;
-  color: #fff;
-  cursor: pointer;
+
+.lead {
+  color: var(--n-300);
 }
-button.secondary {
-  background: transparent;
-  color: inherit;
-  border-color: currentColor;
+
+.hint {
+  font-size: 12px;
+  color: var(--n-500);
 }
-button:disabled {
-  opacity: 0.6;
-  cursor: default;
+
+.heading {
+  display: grid;
+  gap: 6px;
 }
-.notice {
-  padding: 8px 10px;
-  border-radius: 6px;
-  border: 1px solid currentColor;
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
+
 .visually-hidden {
   position: absolute;
   width: 1px;
@@ -65,128 +171,409 @@ button:disabled {
   clip-path: inset(50%);
   white-space: nowrap;
 }
-:focus-visible {
-  outline: 2px solid #1f4fd8;
-  outline-offset: 2px;
-}
-h1:focus {
-  outline: none;
-}
-form {
-  display: grid;
-  gap: 12px;
-}
-.field {
-  display: grid;
-  gap: 4px;
-}
-label {
-  font-weight: 600;
-}
-input,
-select,
-textarea {
+
+/* ---------- Botones ---------- */
+
+button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   font: inherit;
-  padding: 6px 8px;
-  border: 1px solid #767676;
-  border-radius: 6px;
-  background: transparent;
-  color: inherit;
-  width: 100%;
-  box-sizing: border-box;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.2;
+  padding: 10px 16px;
+  border: 1px solid var(--a-100);
+  border-radius: var(--radius-md);
+  background: var(--a-100);
+  color: #f5f4f0;
+  cursor: pointer;
 }
-textarea {
-  resize: vertical;
+
+button:hover {
+  background: var(--a-300);
+  border-color: var(--a-300);
 }
-input[readonly] {
-  opacity: 0.8;
+
+button.secondary {
+  background: var(--surface);
+  color: var(--text);
+  border-color: var(--ghost-line);
 }
-[aria-invalid='true'] {
-  border-color: #c4261d;
-  border-width: 2px;
+
+button.secondary:hover {
+  background: #f8f7f3;
+  border-color: var(--ghost-line);
 }
-.field-error {
-  margin: 0;
-  color: #c4261d;
+
+/* Acción terciaria: parece un enlace, pero es un botón. */
+button.link {
+  padding: 2px 0;
+  border: 0;
+  background: none;
+  color: var(--a-400);
+  font-weight: 500;
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
 }
-.hint {
-  margin: -8px 0 0;
-  font-size: 12px;
-  opacity: 0.8;
+
+button.link:hover {
+  color: var(--a-300);
+  background: none;
 }
-.match-status:empty {
-  display: none;
+
+button:disabled {
+  opacity: 0.5;
+  cursor: default;
 }
-/* Encaje exprés (CV-505): el estado va en texto; el borde solo lo refuerza. */
-.quick-fit,
-.fill-form {
-  margin: 16px 0;
-  padding: 12px;
-  border: 1px solid #76767666;
-  border-radius: 6px;
-}
-.quick-fit h2,
-.fill-form h2 {
-  font-size: 16px;
-  margin: 0 0 8px;
-}
-.quick-fit h2:focus,
-.fill-form h2:focus {
-  outline: none;
-}
-.verdict {
-  font-weight: 600;
-}
-.requirements {
-  margin: 0 0 12px;
-  padding: 0;
-  list-style: none;
+
+/* Las acciones de cada pantalla, apiladas y a todo el ancho: la principal, la primera. */
+.actions {
   display: grid;
   gap: 8px;
 }
-.requirement {
-  padding-left: 8px;
-  border-left: 4px solid #767676;
+
+.actions > button:not(.link) {
+  width: 100%;
 }
-.requirement.covered {
-  border-left-color: #1a7f37;
+
+.actions > .link {
+  justify-self: center;
 }
-.requirement.to_confirm {
-  border-left-color: #9a6700;
-}
-.requirement.missing {
-  border-left-color: #c4261d;
-}
-.requirement .note {
-  display: block;
-  font-size: 12px;
-  opacity: 0.8;
-}
-.account {
-  margin-top: 24px;
-  padding-top: 12px;
-  border-top: 1px solid #76767666;
-  font-size: 12px;
-}
-.dev-tools {
-  margin-top: 16px;
-}
+
 .doc-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin: 8px 0;
 }
+
+/* ---------- Avisos: fondo de color, sin borde ---------- */
+
+.notice {
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  background: var(--a-900);
+  color: var(--a-100);
+}
+
+.notice.alert {
+  background: var(--bad-fill);
+  color: var(--bad-text);
+}
+
+.notice-inline:empty {
+  display: none;
+}
+
+/* ---------- Tarjetas (encaje exprés, documentos, rellenar formulario) ---------- */
+
+.card,
+.quick-fit,
+.fill-form {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+}
+
+.card[hidden],
+.quick-fit[hidden] {
+  display: none;
+}
+
+.quick-fit > div,
+.fill-form > div,
+.fill-form .fill-body {
+  display: grid;
+  gap: 10px;
+}
+
+.quick-fit > div:empty,
+.fill-form div:empty {
+  display: none;
+}
+
+/* Rellenar formulario fuera de un ATS: plegado, para que no compita con la acción de la pantalla. */
+details.fill-form {
+  display: block;
+}
+
+details.fill-form > summary {
+  cursor: pointer;
+}
+
+details.fill-form > summary h2 {
+  display: inline;
+}
+
+details.fill-form[open] > summary {
+  margin-bottom: 10px;
+}
+
+/* ---------- Formulario de la vista previa ---------- */
+
+form {
+  display: grid;
+  gap: 12px;
+}
+
+.field {
+  display: grid;
+  gap: 5px;
+}
+
+label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--n-300);
+}
+
+input,
+select,
+textarea {
+  font: inherit;
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--n-600);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--text);
+}
+
+textarea {
+  resize: vertical;
+  font-size: 13px;
+}
+
+input[readonly] {
+  background: #f8f7f3;
+  color: var(--n-400);
+}
+
+[aria-invalid='true'] {
+  border-color: var(--bad-mark);
+  border-width: 2px;
+}
+
+.field-error {
+  color: var(--bad-mark);
+  font-size: 12px;
+}
+
+form .hint {
+  margin-top: -6px;
+}
+
+.match-status:empty {
+  display: none;
+}
+
+.match-status > div {
+  display: grid;
+  gap: 8px;
+}
+
+/* La acción principal de la vista previa se queda a la vista al bajar por el formulario. */
+.save-bar {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  margin: 0 -16px;
+  padding: 10px 16px 12px;
+  border-top: 1px solid var(--n-850);
+  background: rgba(245, 244, 240, 0.96);
+}
+
+/* ---------- Pantalla de conexión ---------- */
+
+.features {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.features li {
+  display: grid;
+  grid-template-columns: 22px 1fr;
+  gap: 10px;
+  align-items: start;
+}
+
+.features li::before {
+  content: '';
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--a-900)
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 22 22'%3E%3Cpath d='M6.5 11.5l3 3 6-6.5' fill='none' stroke='%234a3bb5' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
+    center / 22px no-repeat;
+}
+
+.privacy ul {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding-left: 18px;
+  color: var(--n-300);
+}
+
+/* ---------- Sin acceso a la pestaña: dónde está el icono ---------- */
+
+.toolbar-hint {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+}
+
+.toolbar-hint img {
+  width: 28px;
+  height: 28px;
+  flex: none;
+  padding: 4px;
+  border-radius: 6px;
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ---------- Encaje exprés ---------- */
+
+.verdict {
+  justify-self: start;
+  padding: 3px 10px;
+  border-radius: 6px;
+  font-weight: 600;
+  background: var(--a-900);
+  color: var(--a-100);
+}
+
+.verdict.apply {
+  background: var(--ok-fill);
+  color: var(--ok-text);
+}
+
+.verdict.apply_with_caveats {
+  background: var(--warn-fill);
+  color: var(--warn-text);
+}
+
+.verdict.do_not_apply {
+  background: var(--bad-fill);
+  color: var(--bad-text);
+}
+
+.requirements {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.requirement {
+  padding-left: 10px;
+  border-left: 3px solid var(--n-800);
+}
+
+.requirement.covered {
+  border-left-color: var(--ok-mark);
+}
+
+.requirement.to_confirm {
+  border-left-color: var(--warn-mark);
+}
+
+.requirement.missing {
+  border-left-color: var(--bad-mark);
+}
+
+.requirement .note {
+  display: block;
+  font-size: 12px;
+  color: var(--n-500);
+}
+
+.requirement .doc-text {
+  margin-top: 4px;
+}
+
+.requirement > button {
+  display: flex;
+  margin-top: 6px;
+  padding: 5px 10px;
+  font-size: 13px;
+}
+
+/* ---------- Documentos ---------- */
+
 .doc-block {
-  margin: 8px 0;
+  display: grid;
+  gap: 6px;
 }
+
+.doc-block > button {
+  justify-self: start;
+}
+
 .doc-text {
   display: block;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
-  margin: 8px 0;
 }
-.documents h3 {
-  font-size: 14px;
-  margin: 12px 0 8px;
+
+summary {
+  cursor: pointer;
+}
+
+/* ---------- Pie: la cuenta, discreta ---------- */
+
+.account {
+  display: grid;
+  gap: 6px;
+  margin-top: 8px;
+  padding-top: 14px;
+  border-top: 1px solid var(--n-800);
+  font-size: 12px;
+  color: var(--n-500);
+}
+
+.account .links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+}
+
+.account button.link {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--n-400);
+}
+
+.account button.link:hover {
+  color: var(--text);
+}
+
+.dev-tools {
+  display: grid;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 10px;
+  border: 1px dashed var(--n-600);
+  border-radius: var(--radius-md);
+}
+
+.dev-tools .notice {
+  font-size: 12px;
+}
+
+.dev-tools p:empty {
+  display: none;
 }

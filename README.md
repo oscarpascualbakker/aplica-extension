@@ -40,8 +40,13 @@ Supported browsers: Chrome, Edge and Firefox, from a single Manifest V3 code bas
 
 There is no `externally_connectable`, no mandatory `host_permissions` and no content scripts.
 Reading an offer never asks for host permission: if the page cannot be read (you moved to
-another offer in the same tab, or opened the panel another way) it asks you to press the Aplica
-icon on that page. API calls to Aplica work without host permission because the API answers
+another offer in the same tab, or opened the panel another way) the panel says so in its own
+screen: press the Aplica icon in the toolbar (also with the panel open), shows the icon and
+explains why (the browser only grants access to a page after you press the icon on it, and
+takes it away when you change page). That screen has no "Read the page again" button, because it
+could not work. Elsewhere, "Read the page again" checks access first: without it, it explains
+what to do in place, without losing what you were editing; with it, it reads the page and says
+so. "Export page" (development build only) does the same check. API calls to Aplica work without host permission because the API answers
 with `Access-Control-Allow-Origin: *` and the extension never sends cookies
 (`credentials: 'omit'`).
 
@@ -157,8 +162,22 @@ an application and never spends credits.
 
 The "✕" button at the top right closes the panel in every state (`src/panel/close.ts`):
 `sidePanel.close()` for the current window in Chrome and Edge, `sidebarAction.close()` in
-Firefox, and `window.close()` as a fallback. In Chrome and Edge the icon only opens the panel
-(and reads the page again if it is already open); in Firefox it toggles the sidebar.
+Firefox, and `window.close()` as a fallback. In all three browsers the icon only opens the panel
+and, if it is already open, reads the page again (in Firefox it used to toggle the sidebar; since
+CV-544 it opens it with `sidebarAction.open()`, so pressing the icon with the panel open gives
+access to the page, as the panel asks).
+
+The panel follows the look of the Aplica website (CV-544): the same colours, the Inter font
+(packaged in `src/panel/assets` with its OFL licence, nothing loaded from outside) and the brand
+logo at the top. Each screen has one main action; "Open in Aplica" and "Read the page again" are
+secondary, and the account, the help link (the extension page on aplica.cv) and "Disconnect" are
+small at the bottom. Outside the seven ATS, "Fill in a form" is folded.
+
+**Icons.** `src/icons/icon-16.png`, `icon-32.png` and `icon-48.png` are the brand isotype with no
+margin, like the icons of other extensions; `icon-16-negativo.png` and `icon-32-negativo.png` are
+the negative version that Firefox shows with a dark theme (`theme_icons`). They are generated with
+`docker compose run --rm node node scripts/make-icons.mjs` from the geometry of the brand favicon.
+`icon-128.png` is the store icon (96 px of drawing and 16 px of margin) and is not generated.
 
 ## Filling in forms
 

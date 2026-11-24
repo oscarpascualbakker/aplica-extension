@@ -15,7 +15,9 @@ async function exportPage(report: (text: string) => void): Promise<void> {
   try {
     const tab = await currentTab();
     if (tab?.id === undefined || tab.url === undefined) {
-      report(t('noAccess'));
+      // CV-544: sin acceso a la pestaña (se ha cambiado de página desde que se pulsó el icono), se dice qué
+      // hacer con el panel ya abierto y por qué, en lugar del aviso de leer la oferta.
+      report(t('devExportNoAccess'));
       return;
     }
     const [injected] = await extensionApi().scripting.executeScript({
