@@ -11,6 +11,7 @@ Firefox (addons.mozilla.org) no entra aquí.
 | `images/promo-marquee-1400x560.png` | Marquesina de la Chrome Web Store (opcional). |
 | `images/logo-300.png` | Logo de la ficha de Edge Add-ons (300 x 300). |
 | `src/icons/icon-128.png` | Icono de la tienda: 96 x 96 de dibujo con 16 px transparentes alrededor. |
+| `src/icons/icon-16.png`, `-32`, `-48` | Iconos de la barra: el isotipo sin margen (`scripts/make-icons.mjs`, CV-544). |
 
 Las capturas (1280 x 800) y el vídeo van en su propio ticket.
 

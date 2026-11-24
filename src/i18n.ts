@@ -58,6 +58,18 @@ export async function loadLocale(
   }
 }
 
+/**
+ * El idioma en el que se ve el panel (CV-544): el de la cuenta si hay uno cargado y, si no, el del
+ * navegador (español si empieza por `es`, inglés en el resto). Sirve para enlazar la página de Aplica
+ * en el mismo idioma.
+ */
+export function currentLocale(): Locale {
+  if (current) return current;
+  const api = extensionApi() as { i18n: { getUILanguage?: () => string } };
+  const ui = api.i18n.getUILanguage?.() ?? (typeof navigator === 'undefined' ? '' : navigator.language);
+  return ui.toLowerCase().startsWith('es') ? 'es' : 'en';
+}
+
 /** Vuelve al idioma del navegador (sin sesión). */
 export function resetLocale(): void {
   dictionary = null;

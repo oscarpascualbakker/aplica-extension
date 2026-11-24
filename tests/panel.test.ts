@@ -5,6 +5,7 @@ import { readFileSync } from 'node:fs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const API = 'https://api.test';
+const LINKEDIN = 'https://www.linkedin.com/jobs/view/1/';
 const APPLICATION = { id: 'a1', title: 'Desarrolladora backend', company: 'Empresa Ficticia S.L.', stage: 'saved', url: `${API}/app/candidaturas/a1` };
 const EXTRACTED = {
   title: 'Desarrolladora backend',
@@ -123,6 +124,8 @@ const heading = (): string | undefined => document.querySelector('h1')?.textCont
 const field = (name: string): HTMLInputElement => document.querySelector(`#f-${name}`) as HTMLInputElement;
 const submit = (): HTMLButtonElement => document.querySelector('button[type="submit"]') as HTMLButtonElement;
 const body = (): string => document.body.textContent;
+const buttonByText = (text: string): HTMLButtonElement | undefined =>
+  Array.from(document.querySelectorAll('button')).find((b) => b.textContent === text);
 /** El cuerpo del último POST /offers. */
 const postedOffer = (env: Env): Record<string, unknown> =>
   env.calls.filter((c) => c.method === 'POST' && c.url.endsWith('/offers')).at(-1)?.body as Record<string, unknown>;
@@ -285,11 +288,82 @@ describe('panel: guardar una oferta', () => {
 });
 
 describe('panel: lectura de la página', () => {
-  it('sin permiso de la pestaña dice que hay que pulsar el icono', async () => {
+  it('sin permiso de la pestaña dice que hay que pulsar el icono, dónde está y por qué', async () => {
     setup({ extract: () => Promise.reject(new Error('Cannot access contents of the page')) });
     await openPanel();
-    await until(() => body().includes('Pulsa el icono de Aplica en esta página para leer la oferta'));
+    await until(() => heading() === 'Pulsa el icono de Aplica');
     expect(document.activeElement?.tagName).toBe('H1');
+    expect(body()).toContain('Con el panel abierto también vale');
+    expect(body()).toContain('Por qué: por tu privacidad');
+    expect(document.querySelector('.toolbar-hint img')?.getAttribute('src')).toBe('icons/icon-32.png');
+    // CV-544: sin acceso, releer no puede funcionar, así que no hay botón que no haga nada.
+    expect(buttonByText('Leer la página de nuevo')).toBeUndefined();
+  });
+
+  it('sin permiso, al pulsar el icono con el panel abierto, lee la página sola', async () => {
+    let allowed = false;
+    const env = setup({
+      extract: () => (allowed ? Promise.resolve(EXTRACTED) : Promise.reject(new Error('Cannot access contents of the page'))),
+    });
+    await openPanel();
+    await until(() => heading() === 'Pulsa el icono de Aplica');
+    allowed = true;
+    for (const fn of env.messageListeners) fn({ type: 'aplica.icon-clicked' });
+    await until(() => heading() === 'Guardar oferta');
+  });
+
+  it('"Leer la página de nuevo" sin acceso lo explica ahí mismo y no pierde lo editado', async () => {
+    let reads = 0;
+    const env = setup({
+      // Fuera de un ATS, para contar solo las lecturas de la oferta (sin el detector de "enviada").
+      tab: () => Promise.resolve([{ id: 1, url: LINKEDIN }]),
+      extract: () => {
+        reads++;
+        return Promise.resolve(EXTRACTED);
+      },
+    });
+    await openPanel();
+    await until(() => heading() === 'Guardar oferta');
+    field('title').value = 'Editado';
+    // Se ha cambiado de página: el navegador ya no da la URL de la pestaña.
+    env.tab = () => Promise.resolve([{ id: 1 }]);
+    buttonByText('Leer la página de nuevo')?.click();
+    await until(() => document.querySelector('[role="alert"]')?.textContent.includes('la extensión ya no tiene acceso a esta página'));
+    expect(field('title').value).toBe('Editado');
+    expect(reads).toBe(1);
+  });
+
+  it('"Leer la página de nuevo" con acceso relee y dice que lo ha hecho', async () => {
+    let reads = 0;
+    setup({
+      tab: () => Promise.resolve([{ id: 1, url: LINKEDIN }]),
+      extract: () => {
+        reads++;
+        return Promise.resolve(EXTRACTED);
+      },
+    });
+    await openPanel();
+    await until(() => heading() === 'Guardar oferta');
+    buttonByText('Leer la página de nuevo')?.click();
+    await until(() => body().includes('Página leída de nuevo.'));
+    expect(reads).toBe(2);
+    expect(heading()).toBe('Guardar oferta');
+  });
+
+  it('"Usar el texto seleccionado" sin acceso lleva a la pantalla de pulsar el icono', async () => {
+    const env = setup({ extract: () => Promise.resolve({ ...EXTRACTED, description: '' }) });
+    await openPanel();
+    await until(() => heading() === 'Selecciona el texto de la oferta');
+    env.tab = () => Promise.resolve([{ id: 1 }]);
+    buttonByText('Usar el texto seleccionado')?.click();
+    await until(() => heading() === 'Pulsa el icono de Aplica');
+  });
+
+  it('en una página que no es web no ofrece releer', async () => {
+    setup({ tab: () => Promise.resolve([{ id: 1, url: 'chrome://newtab/' }]) });
+    await openPanel();
+    await until(() => heading() === 'Abre una oferta de empleo');
+    expect(buttonByText('Leer la página de nuevo')).toBeUndefined();
   });
 
   it('sin descripción pide seleccionar el texto y el botón vuelve a leer', async () => {
@@ -301,7 +375,7 @@ describe('panel: lectura de la página', () => {
       },
     });
     await openPanel();
-    await until(() => body().includes('Selecciona el texto de la oferta en la página y pulsa «Usar el texto seleccionado».'));
+    await until(() => body().includes('Selecciona su texto con el ratón y pulsa «Usar el texto seleccionado».'));
     (Array.from(document.querySelectorAll('button')).find((b) => b.textContent === 'Usar el texto seleccionado') as HTMLButtonElement).click();
     await until(() => heading() === 'Guardar oferta');
     expect((document.querySelector('#f-description') as HTMLTextAreaElement).value).toBe('Texto seleccionado');
@@ -348,6 +422,39 @@ describe('panel: idioma de la cuenta y conexión', () => {
     expect(Object.keys(env.storage).sort()).toEqual(['aplica.locale', 'aplica.token']);
   });
 
+  it('la pantalla de conexión dice qué hace y qué no, y enlaza la página de la extensión', async () => {
+    const env = setup({ storage: {} });
+    vi.stubGlobal('chrome', { ...chrome, i18n: { getMessage: (key: string) => `nav:${key}`, getUILanguage: () => 'es-ES' } });
+    await openPanel();
+    await until(() => heading() === 'nav:connectTitle');
+    for (const key of ['connectFeatureSave', 'connectFeatureFit', 'connectFeatureApply', 'connectPrivacyClick', 'connectPrivacyTabs', 'connectPrivacySubmit']) {
+      expect(body()).toContain(`nav:${key}`);
+    }
+    expect(document.querySelector('.bar img')?.getAttribute('src')).toBe('assets/logo.svg');
+    buttonByText('nav:helpButton')?.click();
+    expect(env.created).toEqual([`${API}/es/extension`]);
+  });
+
+  it('el pie enlaza la ayuda en el idioma de la cuenta y la desconexión va en pequeño', async () => {
+    const env = setup();
+    await openPanel();
+    await until(() => heading() === 'Guardar oferta');
+    expect(buttonByText('Desconectar')?.className).toBe('link');
+    buttonByText('Cómo funciona la extensión')?.click();
+    expect(env.created).toEqual([`${API}/es/extension`]);
+  });
+
+  it('fuera de un ATS, rellenar formulario va plegado; en un ATS, abierto', async () => {
+    setup({ tab: () => Promise.resolve([{ id: 1, url: 'https://www.linkedin.com/jobs/view/1/' }]) });
+    await openPanel();
+    await until(() => heading() === 'Guardar oferta');
+    expect(document.querySelector('.fill-form')?.tagName).toBe('DETAILS');
+    setup();
+    await openPanel();
+    await until(() => heading() === 'Guardar oferta');
+    expect(document.querySelector('.fill-form')?.tagName).toBe('SECTION');
+  });
+
   it('sin conectar, el idioma es el del navegador', async () => {
     setup({ storage: {} });
     await openPanel();
@@ -363,6 +470,17 @@ describe('panel: idioma de la cuenta y conexión', () => {
     await until(() => body().includes('nav:connectButton'));
     expect(env.storage['aplica.locale']).toBeUndefined();
     expect(env.storage['aplica.token']).toBeUndefined();
+  });
+
+  it('"Exportar página" sin acceso a la pestaña dice qué hacer con el panel abierto (CV-544)', async () => {
+    const env = setup();
+    vi.stubGlobal('__DEV_BUILD__', true);
+    await openPanel();
+    await until(() => heading() === 'Guardar oferta');
+    env.tab = () => Promise.resolve([{ id: 1 }]);
+    buttonByText('Exportar página')?.click();
+    await until(() => body().includes('con el panel abierto también vale'));
+    expect(body()).not.toContain('para leer la oferta');
   });
 
   it('el botón de exportar página no existe en el panel de producción', async () => {

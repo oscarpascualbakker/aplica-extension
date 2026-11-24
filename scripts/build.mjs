@@ -25,6 +25,8 @@ for (const target of TARGETS) {
 
   cpSync('src/panel/panel.html', `${out}/panel.html`);
   cpSync('src/panel/panel.css', `${out}/panel.css`);
+  // CV-544: logotipo de la marca y la fuente de la web (Inter, licencia OFL), sin cargar nada de fuera.
+  cpSync('src/panel/assets', `${out}/assets`, { recursive: true });
   cpSync('src/icons', `${out}/icons`, { recursive: true });
   for (const lang of readdirSync('src/_locales')) {
     mkdirSync(`${out}/_locales/${lang}`, { recursive: true });

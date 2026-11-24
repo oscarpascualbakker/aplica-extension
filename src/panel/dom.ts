@@ -17,3 +17,17 @@ export function button(text: string, onClick: () => void, secondary = false): HT
   node.addEventListener('click', onClick);
   return node;
 }
+
+/** Acción terciaria (CV-544): un botón con aspecto de enlace, para lo que no compite con la principal. */
+export function linkButton(text: string, onClick: () => void): HTMLButtonElement {
+  const node = button(text, onClick);
+  node.className = 'link';
+  return node;
+}
+
+/** Las acciones de una pantalla, apiladas y a todo el ancho (CV-544). La principal va la primera. */
+export function actions(...nodes: HTMLElement[]): HTMLElement {
+  const wrapper = el('div', undefined, 'actions');
+  wrapper.append(...nodes);
+  return wrapper;
+}

@@ -38,6 +38,15 @@ const ICONS = {
   128: 'icons/icon-128.png',
 };
 
+// Iconos de la barra (CV-544): 16, 32 y 48 son el isotipo sin margen (scripts/make-icons.mjs); 128 es el de
+// la tienda, con su margen. En Firefox, con un tema oscuro, va el isotipo en negativo (`light` es el icono
+// para barras oscuras).
+const THEME_ICONS = [16, 32].map((size) => ({
+  light: `icons/icon-${size}-negativo.png`,
+  dark: `icons/icon-${size}.png`,
+  size,
+}));
+
 function base(version) {
   return {
     manifest_version: 3,
@@ -66,6 +75,7 @@ export function buildManifest(target, { version, dev = false }) {
   if (target === 'firefox') {
     return {
       ...manifest,
+      action: { ...manifest.action, theme_icons: THEME_ICONS },
       background: { scripts: ['background.js'] },
       sidebar_action: {
         default_title: '__MSG_panelTitle__',

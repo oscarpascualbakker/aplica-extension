@@ -71,7 +71,10 @@ const MISSING_KEYS: Record<Exclude<Missing, null>, string> = {
 };
 
 export function fillSection(ctx: FillContext): HTMLElement {
-  const section = el('section', undefined, 'fill-form');
+  const ats = atsFromUrl(ctx.pageUrl);
+  // CV-544: fuera de los siete ATS solo se pueden copiar datos, así que la sección va plegada y no compite
+  // con la acción principal de la pantalla. En un ATS va abierta: rellenar es lo que toca.
+  const section = ats ? el('section', undefined, 'fill-form') : el('details', undefined, 'fill-form');
   const heading = el('h2', t('fillTitle'));
   heading.id = 'fill-title';
   heading.tabIndex = -1;
@@ -156,7 +159,6 @@ export function fillSection(ctx: FillContext): HTMLElement {
   }, true);
   actions.append(show);
 
-  const ats = atsFromUrl(ctx.pageUrl);
   if (ats) {
     const run = button(t('fillButton'), () => {
       run.disabled = true;
@@ -184,7 +186,8 @@ export function fillSection(ctx: FillContext): HTMLElement {
         await showOutcome(done);
       });
     });
-    actions.append(run);
+    // En un ATS, rellenar es la acción principal: va la primera.
+    actions.prepend(run);
   }
 
   const showOutcome = async (outcome: FillOutcome): Promise<void> => {
@@ -215,7 +218,15 @@ export function fillSection(ctx: FillContext): HTMLElement {
 
   const intro = el('p', t('fillIntro'));
   const hint = el('p', ats ? t('fillPermissionHint') : t('fillUnsupported'), 'hint');
-  section.append(heading, intro, actions, hint, notices, list, result);
+  const body = el('div', undefined, 'fill-body');
+  body.append(intro, actions, hint, notices, list, result);
+  if (ats) {
+    section.append(heading, body);
+  } else {
+    const summary = el('summary');
+    summary.append(heading);
+    section.append(summary, body);
+  }
   return section;
 }
 

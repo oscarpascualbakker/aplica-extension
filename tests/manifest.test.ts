@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { ATS_HOST_PATTERNS, buildManifest, DEV_PUBLIC_KEY, TARGETS } from '../scripts/manifest.mjs';
 
@@ -57,7 +57,35 @@ describe('diferencias por destino', () => {
   });
 });
 
+describe('iconos de la barra (CV-544)', () => {
+  it('Firefox pone el isotipo en negativo con un tema oscuro; Chrome y Edge, el de siempre', () => {
+    const firefox = buildManifest('firefox', { version: '0.1.0' });
+    const themeIcons = (firefox.action as { theme_icons: { light: string; dark: string; size: number }[] }).theme_icons;
+    expect(themeIcons.map((i) => i.size)).toEqual([16, 32]);
+    for (const icon of themeIcons) {
+      expect(existsSync(`src/${icon.light}`), icon.light).toBe(true);
+      expect(existsSync(`src/${icon.dark}`), icon.dark).toBe(true);
+    }
+    expect(buildManifest('chrome', { version: '0.1.0' }).action).not.toHaveProperty('theme_icons');
+  });
+
+  it('los iconos pequeños ocupan todo el alto (sin el margen del de la tienda)', () => {
+    for (const size of [16, 32, 48]) {
+      const png = readFileSync(`src/icons/icon-${String(size)}.png`);
+      expect(png.readUInt32BE(16), `ancho de ${String(size)}`).toBe(size);
+    }
+    // Generados por scripts/make-icons.mjs a partir de la geometría del favicon de la marca.
+    expect(readFileSync('scripts/make-icons.mjs', 'utf8')).toContain('icon-${size}.png');
+  });
+});
+
 describe('icono (CV-504)', () => {
+  it('en Firefox el icono abre la barra lateral, no la cierra (CV-544)', () => {
+    const code = readFileSync('src/background.ts', 'utf8');
+    expect(code).toContain('sidebar.open()');
+    expect(code).not.toContain('toggle()');
+  });
+
   it('el icono abre el panel desde action.onClicked, dentro del gesto, y no con setPanelBehavior', () => {
     const code = readFileSync('src/background.ts', 'utf8');
     expect(code).toContain('action.onClicked.addListener');

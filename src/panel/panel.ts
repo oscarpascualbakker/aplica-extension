@@ -21,7 +21,7 @@ import {
 import type { ApiClient } from '../api';
 import { detectBrowser, extensionApi } from '../browser';
 import { atsFromUrl } from '../fill/ats';
-import { formatDate, isLocale, loadLocale, resetLocale, t } from '../i18n';
+import { currentLocale, formatDate, isLocale, loadLocale, resetLocale, t } from '../i18n';
 import { createLocaleStore } from '../locale-store';
 import { ICON_CLICKED } from '../messages';
 import { MAX_DESCRIPTION, MAX_FIELD, type ExtractedOffer, type WorkMode } from '../extract/types';
@@ -30,7 +30,7 @@ import type { Session } from '../session';
 import { createTokenStore } from '../token-store';
 import { closePanel } from './close';
 import { devExportSection } from './dev-export';
-import { button, el } from './dom';
+import { actions, button, el, linkButton } from './dom';
 import { fillSection } from './fill-section';
 import { readPage, type ReadOutcome, type TabInfo } from './read-page';
 import { confirmSent, findSentCandidate, type Remembered, type SentCandidate } from './sent-run';
@@ -58,6 +58,50 @@ let similar: ApplicationRef | null = null;
 let activeTab: TabInfo | undefined;
 const remembered = new Map<number, Remembered>();
 const dismissed = new Set<string>();
+// CV-544: la lectura en curso la ha pedido "Leer la página de nuevo". La pantalla que la enseñe lo dice,
+// para que se note que el botón ha hecho algo aunque la oferta no haya cambiado.
+let rereadNotice = false;
+
+/** La página de la extensión en Aplica (D-225), que es también su ayuda, en el idioma del panel. */
+function helpUrl(): string {
+  return `${__API_BASE__}/${currentLocale()}/extension`;
+}
+
+function openHelp(): void {
+  void extensionApi().tabs.create({ url: helpUrl() });
+}
+
+/** Cabecera con la marca (CV-544). La ✕ se ve en ella, pero va la última en el orden del documento. */
+function header(): HTMLElement {
+  const bar = el('header', undefined, 'bar');
+  const logo = el('img');
+  logo.src = 'assets/logo.svg';
+  logo.alt = t('panelTitle');
+  bar.append(logo);
+  return bar;
+}
+
+/** Título y entradilla de una pantalla. */
+function heading(titleKey: string, lead?: string): HTMLElement {
+  const wrapper = el('div', undefined, 'heading');
+  wrapper.append(el('h1', t(titleKey)));
+  if (lead) wrapper.append(el('p', lead, 'lead'));
+  return wrapper;
+}
+
+/**
+ * ¿Tiene la extensión acceso a la pestaña activa? Sin activeTab (se ha cambiado de página desde que se
+ * pulsó el icono) el navegador no da su URL. CV-544: los botones que leen la página lo miran antes, para
+ * decir qué hacer en lugar de no hacer nada.
+ */
+async function hasTabAccess(): Promise<boolean> {
+  try {
+    const tab = await readDeps.queryActiveTab();
+    return tab?.id !== undefined && tab.url !== undefined;
+  } catch {
+    return false;
+  }
+}
 
 /**
  * Botón para cerrar el panel (CV-523), en todos los estados. Se ve arriba a la derecha, pero va
@@ -80,7 +124,7 @@ function closeButton(): HTMLButtonElement {
 /** Pinta el estado y lleva el foco al título (o al elemento indicado). */
 function render(nodes: HTMLElement[], focus?: HTMLElement): void {
   live.textContent = '';
-  root.replaceChildren(...nodes, closeButton());
+  root.replaceChildren(header(), ...nodes, closeButton());
   const target = focus ?? root.querySelector('h1');
   if (target) {
     if (!target.hasAttribute('tabindex') && !(target instanceof HTMLInputElement)) target.tabIndex = -1;
@@ -96,7 +140,7 @@ function announce(text: string): void {
 
 function noticeNode(notice: Notice): HTMLElement[] {
   if (!notice) return [];
-  const node = el('p', t(notice.key, notice.substitutions), 'notice');
+  const node = el('p', t(notice.key, notice.substitutions), notice.alert ? 'notice alert' : 'notice');
   node.setAttribute('role', notice.alert ? 'alert' : 'status');
   return [node];
 }
@@ -126,28 +170,48 @@ function showConnect(session: Session, notice: Notice): void {
       showConnect(session, { key: failureKeys[outcome.reason] });
     });
   });
-  render([el('h1', t('panelTitle')), el('p', t('connectIntro')), ...noticeNode(notice), connect]);
+  // CV-544: qué hace la extensión y qué no lee, antes de pedir la conexión. Una sola acción principal.
+  const features = el('ul', undefined, 'features');
+  for (const key of ['connectFeatureSave', 'connectFeatureFit', 'connectFeatureApply']) features.append(el('li', t(key)));
+  const privacy = el('section', undefined, 'card privacy');
+  const privacyTitle = el('h2', t('connectPrivacyTitle'));
+  privacyTitle.id = 'privacy-title';
+  privacy.setAttribute('aria-labelledby', privacyTitle.id);
+  const promises = el('ul');
+  for (const key of ['connectPrivacyClick', 'connectPrivacyTabs', 'connectPrivacySubmit']) promises.append(el('li', t(key)));
+  privacy.append(privacyTitle, promises);
+  render([
+    heading('connectTitle', t('connectIntro')),
+    features,
+    ...noticeNode(notice),
+    actions(connect, el('p', t('connectHint'), 'hint')),
+    privacy,
+    actions(linkButton(t('helpButton'), openHelp)),
+  ]);
 }
 
-/** Pie de los estados con sesión: quién está conectado y cómo desconectar. */
+/** Pie de los estados con sesión: quién está conectado, la ayuda y cómo desconectar, en pequeño. */
 function accountFooter(session: Session): HTMLElement {
   const footer = el('footer', undefined, 'account');
-  const disconnect = button(
-    t('disconnectButton'),
-    () => {
-      disconnect.disabled = true;
-      void session.disconnect().then(async (outcome) => {
-        if (outcome.status === 'disconnected') return start(session, null);
-        disconnect.disabled = false;
-        footer.querySelector('.notice')?.remove();
-        footer.prepend(...noticeNode({ key: failureKeys[outcome.reason], alert: true }));
-      });
-    },
-    true,
-  );
-  footer.append(el('p', t('connectedAs', account?.email ?? '')), disconnect);
+  const disconnect = linkButton(t('disconnectButton'), () => {
+    disconnect.disabled = true;
+    void session.disconnect().then(async (outcome) => {
+      if (outcome.status === 'disconnected') return start(session, null);
+      disconnect.disabled = false;
+      footer.querySelector('.notice')?.remove();
+      footer.prepend(...noticeNode({ key: failureKeys[outcome.reason], alert: true }));
+    });
+  });
+  const links = el('div', undefined, 'links');
+  links.append(linkButton(t('helpButton'), openHelp), disconnect);
+  footer.append(el('p', t('connectedAs', account?.email ?? '')), links);
   if (__DEV_BUILD__) footer.append(devExportSection());
   return footer;
+}
+
+/** Título solo para lectores de pantalla: la marca ya está en la cabecera. */
+function hiddenTitle(): HTMLElement {
+  return el('h1', t('panelTitle'), 'visually-hidden');
 }
 
 /** Sin sesión el idioma vuelve a ser el del navegador y no queda nada del perfil. */
@@ -159,7 +223,7 @@ async function forgetLocale(): Promise<void> {
 async function start(session: Session, notice: Notice): Promise<void> {
   generation++;
   view = 'idle';
-  render([el('h1', t('panelTitle')), el('p', t('loading'))]);
+  render([hiddenTitle(), el('p', t('loading'), 'lead')]);
   const outcome = await session.refresh();
   switch (outcome.status) {
     case 'disconnected':
@@ -181,10 +245,8 @@ async function start(session: Session, notice: Notice): Promise<void> {
       return;
     case 'error': {
       // Sin borrar el token: se avisa y se puede reintentar recargando el panel.
-      const retry = el('button', t('retryButton'), 'secondary');
-      retry.type = 'button';
-      retry.addEventListener('click', () => void start(session, null));
-      render([el('h1', t('panelTitle')), ...noticeNode({ key: failureKeys[outcome.reason], alert: true }), retry]);
+      const retry = button(t('retryButton'), () => void start(session, null));
+      render([hiddenTitle(), ...noticeNode({ key: failureKeys[outcome.reason], alert: true }), actions(retry)]);
     }
   }
 }
@@ -203,11 +265,12 @@ const readDeps = {
   },
 };
 
-async function read(session: Session): Promise<void> {
+async function read(session: Session, again = false): Promise<void> {
   const gen = ++generation;
   view = 'reading';
   similar = null;
-  render([el('h1', t('panelTitle')), el('p', t('readingPage')), accountFooter(session)]);
+  rereadNotice = again;
+  render([el('h1', t('readingPage')), accountFooter(session)]);
   announce(t('readingPage'));
   const outcome = await readPage(readDeps);
   if (gen !== generation) return;
@@ -230,8 +293,32 @@ function rememberApplication(application: ApplicationRef): void {
   remembered.set(tab.id, { pageUrl: known?.pageUrl ?? tab.url ?? draft?.url ?? '', offer: known?.offer ?? draft, application });
 }
 
-function readAgain(session: Session): HTMLButtonElement {
-  return button(t('readAgainButton'), () => void read(session), true);
+/** Lee la página si hay acceso; si no, enseña qué hacer (CV-544: ningún botón se queda sin efecto). */
+async function readIfAccess(session: Session, again: boolean, onNoAccess: () => void): Promise<void> {
+  if (await hasTabAccess()) {
+    void read(session, again);
+    return;
+  }
+  onNoAccess();
+}
+
+/**
+ * "Leer la página de nuevo" (CV-544). Antes, sin acceso a la pestaña, volvía a pintar el mismo aviso y
+ * parecía que no hacía nada. Ahora mira el acceso primero: si falta, lo explica ahí mismo, sin perder lo
+ * que se esté editando; si lo hay, relee y la pantalla siguiente dice que ha releído.
+ */
+function readAgain(session: Session): HTMLElement {
+  const wrapper = el('div', undefined, 'actions');
+  const status = el('p', undefined, 'notice-inline');
+  const node = linkButton(t('readAgainButton'), () => {
+    void readIfAccess(session, true, () => {
+      status.className = 'notice alert';
+      status.setAttribute('role', 'alert');
+      status.textContent = t('noAccessInline');
+    });
+  });
+  wrapper.append(node, status);
+  return wrapper;
 }
 
 function showReadOutcome(session: Session, outcome: ReadOutcome): void {
@@ -239,10 +326,15 @@ function showReadOutcome(session: Session, outcome: ReadOutcome): void {
     if (!outcome.offer.description) {
       // Ni datos estructurados ni extractor del portal: el texto seleccionado (CV-504).
       view = 'error';
+      rereadNotice = false;
+      const useSelection = button(t('readSelectionButton'), () => {
+        void readIfAccess(session, false, () => {
+          showNoAccess(session);
+        });
+      });
       render([
-        el('h1', t('panelTitle')),
-        ...noticeNode({ key: 'needsSelection' }),
-        button(t('readSelectionButton'), () => void read(session)),
+        heading('selectionTitle', t('needsSelection')),
+        actions(useSelection),
         fillBlock(session, outcome.offer.url, () => null),
         accountFooter(session),
       ]);
@@ -252,12 +344,43 @@ function showReadOutcome(session: Session, outcome: ReadOutcome): void {
     showPreview(session, { checkMatch: true });
     return;
   }
+  rereadNotice = false;
+  if (outcome.status === 'no_access') {
+    showNoAccess(session);
+    return;
+  }
   view = 'error';
-  const key = { no_access: 'noAccess', unsupported: 'unsupportedPage', failed: 'readFailed' }[outcome.status];
+  if (outcome.status === 'unsupported') {
+    // Una página que no es web (nueva pestaña, ajustes): releer no sirve, hay que ir a una oferta.
+    render([heading('unsupportedTitle', t('unsupportedPage')), fillBlock(session, null, () => null), accountFooter(session)]);
+    return;
+  }
   render([
-    el('h1', t('panelTitle')),
-    ...noticeNode({ key, alert: true }),
+    heading('readFailedTitle'),
+    ...noticeNode({ key: 'readFailed', alert: true }),
     readAgain(session),
+    fillBlock(session, null, () => null),
+    accountFooter(session),
+  ]);
+}
+
+/**
+ * Falta el permiso de la pestaña (CV-544). Por los permisos mínimos (D-204), la extensión solo lee una
+ * página después de que la persona pulse el icono en ella, y el permiso caduca al cambiar de página. El
+ * panel dice qué hacer, enseña el icono y explica por qué. Sin botón de releer: no podría funcionar. Al
+ * pulsar el icono, el segundo plano avisa al panel y este lee la página solo.
+ */
+function showNoAccess(session: Session): void {
+  view = 'error';
+  const hint = el('div', undefined, 'toolbar-hint');
+  const icon = el('img');
+  icon.src = 'icons/icon-32.png';
+  icon.alt = '';
+  hint.append(icon, el('p', t('noAccessWhere')));
+  render([
+    heading('noAccessTitle', t('noAccess')),
+    hint,
+    el('p', t('noAccessWhy'), 'hint'),
     fillBlock(session, null, () => null),
     accountFooter(session),
   ]);
@@ -331,7 +454,7 @@ function showPreview(session: Session, options: PreviewOptions = {}): void {
   workMode.value = current.workMode ?? '';
   const description = el('textarea');
   description.value = current.description;
-  description.rows = 10;
+  description.rows = 7;
   description.maxLength = MAX_DESCRIPTION;
   const count = el('p', undefined, 'hint');
   count.id = 'description-count';
@@ -363,9 +486,11 @@ function showPreview(session: Session, options: PreviewOptions = {}): void {
     labelled('description', t('fieldDescription'), description, invalid.has('description')),
     count,
     labelled('url', t('fieldLink'), link, invalid.has('url')),
-    submit,
-    readAgain(session),
   );
+  // CV-544: guardar se queda a la vista al bajar por el formulario; releer, debajo y en pequeño.
+  const bar = el('div', undefined, 'save-bar');
+  bar.append(actions(submit, readAgain(session)));
+  form.append(bar);
   form.addEventListener('submit', (event) => {
     event.preventDefault();
     // Lo editado se conserva aunque el guardado falle o pida confirmación.
@@ -378,7 +503,9 @@ function showPreview(session: Session, options: PreviewOptions = {}): void {
     void save(session);
   });
 
+  const reread = consumeRereadNotice();
   const notes: Notice[] = [
+    reread,
     options.notice ?? null,
     current.descriptionTruncated ? { key: 'noticeTruncated', substitutions: [String(MAX_DESCRIPTION)] } : null,
     current.descriptionFromSelection ? { key: 'noticeFromSelection' } : null,
@@ -386,8 +513,7 @@ function showPreview(session: Session, options: PreviewOptions = {}): void {
   const firstInvalid = FIELDS.find((name) => invalid.has(name));
   render(
     [
-      el('h1', t('previewTitle')),
-      el('p', t('previewIntro')),
+      heading('previewTitle', t('previewIntro')),
       ...notes.flatMap(noticeNode),
       matchStatus,
       form,
@@ -397,7 +523,14 @@ function showPreview(session: Session, options: PreviewOptions = {}): void {
     firstInvalid ? (form.querySelector<HTMLElement>(`#f-${firstInvalid}`) ?? undefined) : undefined,
   );
 
-  if (options.checkMatch) void checkMatch(session, current, matchStatus);
+  if (options.checkMatch) void checkMatch(session, current, matchStatus, reread);
+}
+
+/** El aviso de "página leída de nuevo", una sola vez, en la pantalla que sigue a releer (CV-544). */
+function consumeRereadNotice(): Notice {
+  if (!rereadNotice) return null;
+  rereadNotice = false;
+  return { key: 'noticeReadAgain' };
 }
 
 function similarNode(session: Session, application: ApplicationRef): HTMLElement {
@@ -414,7 +547,7 @@ function similarNode(session: Session, application: ApplicationRef): HTMLElement
   return wrapper;
 }
 
-async function checkMatch(session: Session, offer: Draft, status: HTMLElement): Promise<void> {
+async function checkMatch(session: Session, offer: Draft, status: HTMLElement, reread: Notice = null): Promise<void> {
   const gen = generation;
   const token = await tokens.get();
   if (!token) return;
@@ -428,7 +561,7 @@ async function checkMatch(session: Session, offer: Draft, status: HTMLElement): 
   }
   if (!result.data) return;
   if (result.data.match === 'url') {
-    showDuplicate(session, result.data.application);
+    showDuplicate(session, result.data.application, reread);
     return;
   }
   // Guardar pasa a pedir confirmación (force) sin tocar lo que la persona esté editando.
@@ -517,10 +650,11 @@ async function save(session: Session): Promise<void> {
   }
 }
 
-function openInAplica(application: ApplicationRef): HTMLElement[] {
+/** "Abrir en Aplica". Secundario cuando la pantalla ya tiene su acción principal (CV-544). */
+function openInAplica(application: ApplicationRef, secondary = false): HTMLElement[] {
   const url = application.url;
   if (!url) return [];
-  return [button(t('openInAplica'), () => void extensionApi().tabs.create({ url }))];
+  return [button(t('openInAplica'), () => void extensionApi().tabs.create({ url }), secondary)];
 }
 
 function showSaved(session: Session, application: ApplicationRef): void {
@@ -528,25 +662,23 @@ function showSaved(session: Session, application: ApplicationRef): void {
   similar = null;
   rememberApplication(application);
   render([
-    el('h1', t('savedTitle')),
-    el('p', t('savedText', [application.title, application.company])),
+    heading('savedTitle', t('savedText', [application.title, application.company])),
     applicationBlock(session, application),
-    ...openInAplica(application),
+    actions(...openInAplica(application, true)),
     fillBlock(session, draft?.url ?? null, () => application),
     accountFooter(session),
   ]);
 }
 
-function showDuplicate(session: Session, application: ApplicationRef): void {
+function showDuplicate(session: Session, application: ApplicationRef, notice: Notice = null): void {
   view = 'duplicate';
   similar = null;
   rememberApplication(application);
   render([
-    el('h1', t('duplicateTitle')),
-    el('p', t('duplicateText', [application.title, application.company])),
+    heading('duplicateTitle', t('duplicateText', [application.title, application.company])),
+    ...noticeNode(notice),
     applicationBlock(session, application),
-    ...openInAplica(application),
-    readAgain(session),
+    actions(...openInAplica(application, true), readAgain(session)),
     fillBlock(session, draft?.url ?? null, () => application),
     accountFooter(session),
   ]);
@@ -593,7 +725,7 @@ function sentNames(candidate: SentCandidate): { title: string; company: string }
 function showSent(session: Session, tabId: number, tabUrl: string, candidate: SentCandidate, notice: Notice = null, names = sentNames(candidate)): void {
   generation++;
   view = 'sent';
-  const nodes: HTMLElement[] = [el('h1', t('sentTitle'))];
+  const nodes: HTMLElement[] = [heading('sentTitle')];
   let title: HTMLInputElement | null = null;
   let company: HTMLInputElement | null = null;
 
@@ -615,9 +747,7 @@ function showSent(session: Session, tabId: number, tabUrl: string, candidate: Se
     dismissed.add(sentKey(tabId, tabUrl));
     showSentDismissed(session);
   }, true);
-  const actions = el('div', undefined, 'doc-actions');
-  actions.append(mark, notYet);
-  nodes.push(actions, el('p', t('sentHint'), 'hint'), accountFooter(session));
+  nodes.push(actions(mark, notYet, el('p', t('sentHint'), 'hint')), accountFooter(session));
   render(nodes);
   announce(t('sentTitle'));
 }
@@ -666,7 +796,7 @@ function showSentDone(session: Session, application: ApplicationRef, followUpAt:
   generation++;
   view = 'sent';
   const named = application.title && application.company;
-  const nodes: HTMLElement[] = [el('h1', t(later ? 'sentLaterTitle' : 'sentDoneTitle'))];
+  const nodes: HTMLElement[] = [heading(later ? 'sentLaterTitle' : 'sentDoneTitle')];
   if (later) {
     nodes.push(el('p', t('sentLaterText')));
   } else {
@@ -674,7 +804,7 @@ function showSentDone(session: Session, application: ApplicationRef, followUpAt:
     // D-214: al pasar a enviada, Aplica propone el seguimiento a los 7 días si no había fecha.
     if (followUpAt) nodes.push(el('p', t('sentFollowUp', [formatDate(followUpAt)])));
   }
-  nodes.push(...openInAplica(application), accountFooter(session));
+  nodes.push(actions(...openInAplica(application)), accountFooter(session));
   render(nodes);
   announce(t(later ? 'sentLaterTitle' : 'sentDoneTitle'));
 }
@@ -682,7 +812,7 @@ function showSentDone(session: Session, application: ApplicationRef, followUpAt:
 function showSentDismissed(session: Session): void {
   generation++;
   view = 'idle';
-  render([el('h1', t('panelTitle')), el('p', t('sentDismissedText')), readAgain(session), accountFooter(session)]);
+  render([heading('sentDismissedTitle', t('sentDismissedText')), readAgain(session), accountFooter(session)]);
 }
 
 /** Escucha las páginas que termina de cargar la pestaña activa de esta ventana, mientras el panel está abierto. */
