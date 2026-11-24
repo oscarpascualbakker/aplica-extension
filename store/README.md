@@ -3,6 +3,8 @@
 Todo lo que se sube a la Chrome Web Store y a Microsoft Edge Add-ons (CV-509, D-204, D-223).
 Firefox (addons.mozilla.org) no entra aquí.
 
+> **Edge Add-ons, aparcado (24 nov. 2026, CV-552).** Microsoft bloqueó el alta en el Partner Center. Los usuarios de Edge instalan la extensión desde la Chrome Web Store («Permitir extensiones de otras tiendas»). De momento solo se sube el paquete de Chrome.
+
 | Fichero | Qué es |
 | --- | --- |
 | `listing.es.md`, `listing.en.md` | Nombre, resumen y descripción de la ficha en los dos idiomas. |
@@ -12,8 +14,9 @@ Firefox (addons.mozilla.org) no entra aquí.
 | `images/logo-300.png` | Logo de la ficha de Edge Add-ons (300 x 300). |
 | `src/icons/icon-128.png` | Icono de la tienda: 96 x 96 de dibujo con 16 px transparentes alrededor. |
 | `src/icons/icon-16.png`, `-32`, `-48` | Iconos de la barra: el isotipo sin margen (`scripts/make-icons.mjs`, CV-544). |
+| `images/captura-<n>-<pantalla>-es.png`, `-en.png` | Las 5 capturas de la ficha (1280 x 800), una por idioma: guardar la oferta, encaje exprés, documentos, rellenar el formulario y marcar como enviada. Panel real con datos ficticios (CV-537). |
 
-Las capturas (1280 x 800) y el vídeo van en su propio ticket.
+El vídeo de la ficha (CV-537) está en YouTube, oculto: [español](https://youtu.be/XmuD7_MDDLc) e [inglés](https://youtu.be/mK0r9bcaY4I). El enlace se pega en la ficha de cada idioma de la Chrome Web Store.
 
 Los iconos y las imágenes salen del isotipo y del logotipo de la marca (`aplica-logo/png` del
 repositorio de la web): el isotipo en color para los iconos, y el logotipo en negativo sobre el
