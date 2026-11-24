@@ -1,5 +1,6 @@
+import { readFileSync } from 'node:fs';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { formatMessage, isLocale, loadLocale, resetLocale, t } from '../src/i18n';
+import { type Dictionary, formatMessage, isLocale, loadLocale, resetLocale, t } from '../src/i18n';
 import { createLocaleStore } from '../src/locale-store';
 
 afterEach(() => {
@@ -66,6 +67,47 @@ describe('loadLocale y t', () => {
     await loadLocale('es', () => Promise.resolve({ x: { message: 'propio' } }));
     resetLocale();
     expect(t('x')).toBe('navegador:x');
+  });
+
+  describe('empresa que acaba en punto (CV-551)', () => {
+    const locales = {
+      es: JSON.parse(readFileSync('src/_locales/es/messages.json', 'utf8')) as Dictionary,
+      en: JSON.parse(readFileSync('src/_locales/en/messages.json', 'utf8')) as Dictionary,
+    };
+
+    it.each([
+      ['es', 'Empresa Ficticia S.L.', 'Esta página confirma el envío de tu candidatura a Desarrolladora backend en Empresa Ficticia S.L.'],
+      ['es', 'Example Corp Ltd.', 'Esta página confirma el envío de tu candidatura a Desarrolladora backend en Example Corp Ltd.'],
+      ['en', 'Empresa Ficticia S.L.', 'This page confirms that you have sent your application for Desarrolladora backend at Empresa Ficticia S.L.'],
+      ['en', 'Example Corp Ltd.', 'This page confirms that you have sent your application for Desarrolladora backend at Example Corp Ltd.'],
+    ] as const)('%s, «%s»: un solo punto en el aviso de enviada', async (locale, company, expected) => {
+      stubBrowser(() => '');
+      await loadLocale(locale, () => Promise.resolve(locales[locale]));
+      expect(t('sentQuestion', ['Desarrolladora backend', company])).toBe(expected);
+    });
+
+    it('también a mitad de frase', async () => {
+      stubBrowser(() => '');
+      await loadLocale('es', () => Promise.resolve(locales.es));
+      expect(t('possibleDuplicate', ['Desarrolladora backend', 'Empresa Ficticia S.L.'])).toBe(
+        'Ya tienes una candidatura parecida: Desarrolladora backend en Empresa Ficticia S.L. Puede ser la misma oferta con otro enlace.',
+      );
+    });
+
+    it('sin punto al final, igual que antes', async () => {
+      stubBrowser(() => '');
+      await loadLocale('es', () => Promise.resolve(locales.es));
+      expect(t('sentQuestion', ['Desarrolladora backend', 'Empresa Ficticia'])).toBe(
+        'Esta página confirma el envío de tu candidatura a Desarrolladora backend en Empresa Ficticia.',
+      );
+    });
+
+    it('con i18n.getMessage (sin sesión) también', () => {
+      stubBrowser(() => 'Esta página confirma el envío de tu candidatura a Desarrolladora backend en Empresa Ficticia S.L..');
+      expect(t('sentQuestion', ['Desarrolladora backend', 'Empresa Ficticia S.L.'])).toBe(
+        'Esta página confirma el envío de tu candidatura a Desarrolladora backend en Empresa Ficticia S.L.',
+      );
+    });
   });
 
   it('solo es y en son idiomas válidos', () => {
