@@ -87,8 +87,20 @@ export function formatDate(ymd: string): string {
   return new Date(year, month - 1, day).toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' });
 }
 
+/**
+ * CV-551: si un texto sustituido ya acaba en punto («Empresa Ficticia S.L.», «Example Corp Ltd.») y el
+ * mensaje pone otro punto justo detrás, se queda uno solo. Se hace aquí y no en cada mensaje, y vale
+ * tanto para el diccionario propio como para i18n.getMessage.
+ */
+export function collapseTrailingDots(text: string, substitutions?: string | string[]): string {
+  const args = substitutions === undefined ? [] : Array.isArray(substitutions) ? substitutions : [substitutions];
+  return args
+    .filter((arg) => arg.endsWith('.'))
+    .reduce((result, arg) => result.split(`${arg}.`).join(arg), text);
+}
+
 export function t(key: string, substitutions?: string | string[]): string {
   const entry = dictionary?.[key];
-  if (entry) return formatMessage(entry, substitutions);
-  return extensionApi().i18n.getMessage(key, substitutions) || key;
+  const text = entry ? formatMessage(entry, substitutions) : extensionApi().i18n.getMessage(key, substitutions) || key;
+  return collapseTrailingDots(text, substitutions);
 }
