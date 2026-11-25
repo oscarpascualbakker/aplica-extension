@@ -5,6 +5,10 @@ nombre y el resumen salen del manifest (`src/_locales/es/messages.json`, `extNam
 `extDescription`); la descripción se pega en el panel de cada tienda. Las tiendas no
 interpretan Markdown: se pega el texto del bloque tal cual.
 
+Sin listas de nombres de portales o de gestores de candidaturas en la descripción: la Chrome Web Store
+las rechazó como spam de palabras clave (25 nov. 2026, referencia «Yellow Argon»). Como mucho, dos
+ejemplos. La lista completa está en la página de la extensión de la web.
+
 ## Nombre (máximo 75 caracteres)
 
 ```text
@@ -26,19 +30,19 @@ La extensión acompaña a Aplica (aplica.cv), donde preparas cada candidatura co
 
 QUÉ HACE
 
-Guardar la oferta. Lee los datos estructurados de la página y, en LinkedIn, Infoempleo, Tecnoempleo, Greenhouse, Lever, SmartRecruiters, Teamtailor, Personio y Factorial, la propia maqueta del portal. Si una página no se deja leer, seleccionas el texto de la oferta y la guarda igual. Si ya la tenías guardada, te lo dice.
+Guardar la oferta. Lee los datos estructurados de la página y, en los portales de empleo más usados y en las webs de empleo de muchas empresas, la propia maqueta de la página. Si una página no se deja leer, seleccionas el texto de la oferta y la guarda igual. Si ya la tenías guardada, te lo dice.
 
 Ver si encajas. El encaje exprés compara la oferta con tu perfil y te da de 3 a 5 requisitos clave (cubiertos, por confirmar o que te faltan) y un veredicto provisional, para decidir si merece la pena preparar la candidatura. Desde la extensión solo se usan las lecturas gratis del día.
 
 Tener los documentos a mano. Si ya preparaste la candidatura en Aplica, descargas el CV en Word o en PDF y copias la carta, el mensaje al recruiter y cada respuesta del formulario sin salir del portal.
 
-Rellenar el formulario. En Workday, Greenhouse, Lever, SmartRecruiters, Workable, Teamtailor y Personio escribe tus datos de contacto y tus respuestas en los campos. Las preguntas delicadas (salario, nacionalidad, permiso de trabajo, discapacidad y otras) las deja en blanco para que las contestes tú. Nunca envía el formulario: eso lo haces tú.
+Rellenar el formulario. En siete de los gestores de candidaturas más habituales, entre ellos Workday y Greenhouse, escribe tus datos de contacto y tus respuestas en los campos. Las preguntas delicadas (salario, nacionalidad, permiso de trabajo, discapacidad y otras) las deja en blanco para que las contestes tú. Nunca envía el formulario: eso lo haces tú.
 
 Marcar la candidatura como enviada. Cuando terminas el formulario y aparece la página de confirmación, te pregunta si quieres pasarla a "enviada" en tu seguimiento de Aplica. Si dices que sí, apunta la fecha y te recuerda hacer el seguimiento a los 7 días.
 
 LO QUE NO HACE
 
-No lee ninguna página hasta que pulsas su icono, y entonces solo esa pestaña. No pide acceso a ningún sitio al instalarla; el acceso a los formularios de esos siete sistemas lo pide solo si activas el autorrelleno, y lo puedes quitar cuando quieras.
+No lee ninguna página hasta que pulsas su icono, y entonces solo esa pestaña. No pide acceso a ningún sitio al instalarla; el acceso a los formularios de esos sistemas lo pide solo si activas el autorrelleno, y lo puedes quitar cuando quieras.
 No gasta créditos, no borra nada y no lanza candidaturas.
 No guarda nada en tu cuenta hasta que pulsas "Guardar en Aplica" o confirmas un cambio.
 No lleva analítica ni código de terceros. En tu navegador guarda solo la clave de la conexión y tu idioma.
