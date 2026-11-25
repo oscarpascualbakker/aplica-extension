@@ -2,6 +2,7 @@
 // hay descripción, el texto que la persona tenía seleccionado. Función pura sobre un Document
 // para poder probarla con fixtures; la carga en la página la hace inject.ts.
 
+import { atsFromDocument } from '../fill/ats';
 import { parseJsonLd } from './jsonld';
 import { EXTRACTORS, portalFromHost } from './portals';
 import { clip, inlineText } from './text';
@@ -10,7 +11,9 @@ import { MAX_DESCRIPTION, MAX_FIELD, type ExtractedOffer, type OfferFields } fro
 const TEXT_FIELDS = ['title', 'company', 'location', 'salary'] as const;
 
 export function extractOffer(doc: Document, hostname: string, selection: string): ExtractedOffer {
-  const portal = portalFromHost(hostname);
+  // Workable en el dominio propio de la empresa (CV-543): el host no lo dice, la estructura de la página sí.
+  const byHost = portalFromHost(hostname);
+  const portal = byHost === 'other' && atsFromDocument(doc) === 'workable' ? 'workable' : byHost;
   const fromLd = parseJsonLd(doc);
   const fields: OfferFields = {
     title: fromLd?.title ?? '',

@@ -59,10 +59,26 @@ function inputType(control: Control): string {
   return control.tagName === 'INPUT' ? ((control as HTMLInputElement).type || '').toLowerCase() : '';
 }
 
-function isUsable(control: Control): boolean {
+// Cebos para robots: un campo que una persona no debe rellenar. Workday lo marca con `beecatcher` y lo
+// dice en su etiqueta ("This input is for robots only, do not enter if you're human").
+const HONEYPOT = /robots? only|do not enter if you'?re human/i;
+
+function isUsable(control: Control, skip?: string): boolean {
   if (control.disabled || control.closest('[hidden]')) return false;
   if (control.tagName === 'INPUT' && SKIP_TYPES.has(inputType(control))) return false;
+  if (control.getAttribute('data-automation-id') === 'beecatcher') return false;
+  if (skip && control.matches(skip)) return false;
   return true;
+}
+
+/**
+ * Un campo de texto que nada identifica (sin id, sin name y sin etiqueta propia) es un auxiliar de la
+ * página, no algo que la persona rellene: Workday deja uno tras cada desplegable. Sin esto tomaría la
+ * etiqueta del grupo que lo contiene (el teléfono) y se rellenaría.
+ */
+function isAnonymous(control: Control): boolean {
+  if (control.tagName === 'INPUT' && inputType(control) !== '' && !TEXT_TYPES.has(inputType(control))) return false;
+  return !control.id && !control.getAttribute('name') && labelTexts(control).length === 0;
 }
 
 /** Texto de un nodo sin los campos que contiene (el valor de un textarea no es la etiqueta). */
@@ -359,7 +375,7 @@ function decodeBase64(view: View, base64: string): Uint8Array {
 
 // ---------- El campo del CV ----------
 
-const COVER_LETTER = /cover|letter|carta|motivation|motivacion|photo|foto|portfolio|transcript|certificate|certificado/;
+const COVER_LETTER = /cover|letter|carta|motivation|motivacion|photo|foto|image|imagen|avatar|portfolio|transcript|certificate|certificado/;
 const CV_WORDS = /resume|\bcv\b|curriculum|lebenslauf/;
 
 function fileFields(fields: Field[]): Field[] {
@@ -370,11 +386,23 @@ function otherDocument(field: Field): boolean {
   return COVER_LETTER.test(cleanLabel(`${field.label} ${field.attrs.join(' ')}`));
 }
 
+/** ¿El campo, o algún elemento que lo contiene (también a través de shadow roots), encaja con el selector? */
+function inScope(control: Element, selector: string): boolean {
+  for (let node: Element | null = control; node; ) {
+    if (node.matches(selector)) return true;
+    const root = node.getRootNode() as Document | ShadowRoot;
+    node = node.parentElement ?? ('host' in root ? root.host : null);
+  }
+  return false;
+}
+
 function findCvInput(fields: Field[], ats: AtsKey | null): HTMLInputElement | null {
   const files = fileFields(fields);
   if (ats) {
-    const hit = files.find((field) => field.control.matches(ADAPTERS[ats].cvSelector) && !otherDocument(field));
+    const adapter = ADAPTERS[ats];
+    const hit = files.find((field) => inScope(field.control, adapter.cvSelector) && !otherDocument(field));
     if (hit) return hit.control as HTMLInputElement;
+    if (adapter.strictCv) return null;
   }
   const named = files.find((field) => CV_WORDS.test(cleanLabel(`${field.label} ${field.attrs.join(' ')}`)) && !otherDocument(field));
   if (named) return named.control as HTMLInputElement;
@@ -382,16 +410,17 @@ function findCvInput(fields: Field[], ats: AtsKey | null): HTMLInputElement | nu
   return only.length === 1 ? (only[0]?.control as HTMLInputElement) : null;
 }
 
-function allFields(doc: Document): Field[] {
+function allFields(doc: Document, ats: AtsKey | null): Field[] {
   const controls: Control[] = [];
   collect(doc, controls);
-  const usable = controls.filter(isUsable);
-  return usable.map((control) => describe(control, usable));
+  const skip = ats ? ADAPTERS[ats].skip : undefined;
+  const usable = controls.filter((control) => isUsable(control, skip) && !isAnonymous(control));
+  return usable.map((control) => describe(control, usable)).filter((field) => !HONEYPOT.test(field.label));
 }
 
 /** Qué hay para adjuntar el CV: el panel lo mira antes de bajar el fichero (Word o PDF según `accept`). */
 export function scanForm(doc: Document, ats: AtsKey | null): ScanResult {
-  const input = findCvInput(allFields(doc), ats);
+  const input = findCvInput(allFields(doc, ats), ats);
   return { hasFileInput: input !== null, accept: input?.getAttribute('accept') ?? '' };
 }
 
@@ -440,7 +469,7 @@ function wordCount(label: string): number {
 export function fillForm(doc: Document, request: FillRequest): FillSummary {
   const view = viewOf(doc);
   const summary: FillSummary = { filled: [], questionsFilled: 0, hadValue: 0, askYou: 0, questionsUnanswered: 0, attachment: 'no_file' };
-  const fields = allFields(doc);
+  const fields = allFields(doc, request.ats);
 
   const ask = (anchor: Element, marked: Element[]): void => {
     for (const node of marked) paint(node, 'ask');
@@ -550,5 +579,8 @@ function textLike(control: Control): boolean {
   const role = control.getAttribute('role');
   // Los desplegables con búsqueda (combobox) no se rellenan a mano: no se elige una opción así.
   if (role === 'combobox' || control.getAttribute('aria-haspopup') === 'listbox') return false;
+  // Los de Workday no llevan role: se reconocen por su contenedor. Y los campos que la página oculta a los
+  // lectores (Workable guarda así la ciudad y el país que rellena su buscador) no son para escribir en ellos.
+  if (control.closest('[data-automation-id="multiSelectContainer"]') || control.getAttribute('aria-hidden') === 'true') return false;
   return TEXT_TYPES.has(inputType(control));
 }

@@ -109,7 +109,8 @@ function extraFields(): string {
 const TEMPTING: FillAnswer[] = LABELS.map((label) => ({ question: label, answer: 'Respuesta que no debe usarse', type: 'redactar' }));
 
 describe.each(ATS_KEYS)('formulario de %s con la batería de sensibles', (ats) => {
-  const html = formHtml(ats).replace('</form>', `${extraFields()}\n</form>`);
+  // Los pasos de Workday y SmartRecruiters no son un <form> del DOM normal: ahí se añade al final de <main>.
+  const html = formHtml(ats).replace(/<\/form>|<\/main>/, `${extraFields()}\n$&`);
 
   it('ninguna etiqueta sensible se rellena y todas quedan marcadas', () => {
     const doc = formDocument(html, FORM_URLS[ats]);

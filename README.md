@@ -63,6 +63,11 @@ and `src/fill/ats.ts`, and a test checks they match). Outside them there is no a
 | Teamtailor | `*://*.teamtailor.com/*` |
 | Personio | `*://*.jobs.personio.de/*`, `*://*.jobs.personio.com/*` |
 
+Workable also runs on domains of the companies themselves (`careers.<company>/_/j/<code>/apply/`).
+The manifest cannot list domains it does not know, so there is no optional permission to ask for
+there: autofill and the "sent" notice work only with the access the browser gives when you press
+the Aplica icon on that page (`activeTab`), and the panel explains what to do when it is missing.
+
 Why optional host access when `activeTab` exists: a form is often several pages (Workday) or a
 page you reach after pressing the icon on the offer, and `activeTab` only lasts until you
 navigate away. The permission is requested for the one ATS you are on, can be revoked from the
@@ -101,8 +106,9 @@ When the panel opens (and each time you press the icon again) it reads the activ
    Personio and Factorial. Their selectors come from real pages, and the fixtures in
    `tests/fixtures` keep that structure with invented content. Glassdoor's single offer
    (`/job-listing/`) is read from its JSON-LD; the extractor covers the search list.
-   Workday and Workable are recognised (`portal` key) but rely on JSON-LD and on the selection
-   until a real page is captured (see below).
+   Workday and Workable are recognised (`portal` key) but rely on JSON-LD and on the selection.
+   Workable pages on the company's own domain (`/_/j/<code>/`) are recognised by the structure
+   of the page (`data-ui="careers-page-content"`), since the host does not say it is Workable.
 3. **Selection**: if there is still no description, the text you selected on the page. If
    there is none, the panel asks you to select the offer text and press the button again.
 
@@ -216,8 +222,14 @@ What the script does, in order, for every field:
   marks more rather than less.
 - **Contact fields.** Detected from the associated `<label>`, `aria-label`, `aria-labelledby`,
   `placeholder`, `name`, `id` and `autocomplete`, plus a small adapter per ATS for what those do
-  not resolve (Workday `data-automation-id`, Lever `name="org"` and `urls[...]`, Workable
-  `data-ui`, Teamtailor `candidate[...]`, and so on). Name and surname fields are split by taking
+  not resolve (Workday `name="legalName--firstName"`, Lever `name="org"` and `urls[...]`, Workable
+  `data-ui`, SmartRecruiters `id`, Teamtailor `candidate[...]`, and so on). The adapters also list
+  what must be left alone (Workday's work history and education, which would otherwise take your
+  current role), and the CV field of each ATS: SmartRecruiters has three file fields (profile
+  photo, "autofill with a resume", which parses the file and rewrites the form, and the real
+  "Resume") and only the last one gets the CV. Fields hidden from screen readers (Workable keeps
+  city and country that way), unnamed helper inputs and "for robots only" honeypots are never
+  filled. Name and surname fields are split by taking
   the first word as the name and the rest as the surname, always highlighted so you review them.
   A field that already has a value is never overwritten (yellow outline, "already had a value").
 - **Open questions.** Filled with the answers of "Form questions" (`type: "redactar"` with an
@@ -247,14 +259,16 @@ panel reminds you to review what was filled and that sending it is up to you.
 the list is shown, and in the arguments of the one `executeScript` call. Nothing is written to
 `storage.*` (a test checks it), and the data goes nowhere except into the form you are looking at.
 
-The form fixtures (`tests/fixtures/forms/<ats>.html`) have invented content. Greenhouse, Lever,
-Teamtailor and Personio follow the known public structure of their forms. **Workday, Workable and
-SmartRecruiters are provisional**: built from the known stable attributes (`data-automation-id`,
-`data-ui`, `name`), not from a captured page, until the owner captures the real one with "Export
-page" (see "Capturing a page to build a fixture"). The Greenhouse and Lever adapters were checked
-against public application forms in November 2026 (contact fields, CV input, links, pronouns and
-demographic questions); Teamtailor, Personio and the three provisional ones have not been checked
-against a live page yet, so their adapters may need adjusting when that happens.
+The form fixtures (`tests/fixtures/forms/<ats>.html`) have invented content. Greenhouse and Lever
+follow the known public structure of their forms and were checked against public application
+forms in November 2026. Workday, Workable, SmartRecruiters, Teamtailor and Personio come from
+pages captured with "Export page" in November 2026 (CV-543): the structure is the real one
+(labels, `data-automation-id`, `data-ui`, `name`, `autocomplete`, ids, shadow roots as
+`<template shadowrootmode="open">`), with invented content. Workday is one fixture per step
+(`workday.html` is "My Information", plus `workday-experience.html` and `workday-account.html`),
+and SmartRecruiters has `smartrecruiters-screening.html` for the questions step. happy-dom does
+not turn those templates into shadow roots, so the tests do it
+(`attachDeclarativeShadowRoots` in `tests/helpers/fill.ts`).
 
 ## Marking an application as sent
 
@@ -275,7 +289,7 @@ still no content script and nothing runs in the background service worker.
 
 **How it recognises the page.** `src/sent/detect.ts` has one rule per ATS: the path of its
 confirmation page (Greenhouse `/confirmation`, Lever `/thanks`, SmartRecruiters, Teamtailor), an
-element only its "submitted" notice has (Workday, Workable and Personio keep the same address), or a
+element only its "submitted" notice has (Workable and Personio keep the same address), or a
 short heading that says the application was sent, in Spanish or English ("Gracias por tu
 candidatura", "Application submitted"; never "thank you for your interest", which offers use). A
 page that still has the form (an email or file field) is never the confirmation. The script only
@@ -293,10 +307,17 @@ need to reconnect).
 **What is not kept.** What the panel knows about each tab, and the prompts you dismissed, live in
 its memory while it is open; nothing is written to `storage.*`.
 
-The confirmation fixtures (`tests/fixtures/sent/<ats>.html`) have invented content and are
-**provisional for all seven ATS**: they follow the known structure of those pages, not a captured
-one. Capture the real "thank you" pages with "Export page" and adjust the rules in
-`src/sent/detect.ts` when that happens.
+**Workday** navigates to `/<language>/<site>/jobTasks/completed/application` and opens a dialog
+that says "Application Submitted"; that page has neither the offer link nor the job title, the
+same address for every application of the site. So for Workday the application is only proposed
+when the panel already knew the offer in that tab (read, saved or found as a duplicate, as
+above); otherwise nothing is proposed, because the address of the site would make different
+applications look like the same one. This is a known limitation (`OFFER_NOT_IN_CONFIRMATION` in
+`src/sent/detect.ts`).
+
+The confirmation fixtures (`tests/fixtures/sent/<ats>.html`) have invented content. Workday's
+comes from a captured page (CV-543); the other six are **provisional**: they follow the known
+structure of those pages, not a captured one (CV-556).
 
 ## Development (Docker only)
 
@@ -342,10 +363,11 @@ removed from the production bundle by a build constant, and a test checks it.
    A test rejects fixtures that mention the real companies of the pages used so far.
 4. Add the portal to `src/extract/portals.ts` and a case to `tests/extract-fixtures.test.ts`.
 5. For an application form, the same applies to `tests/fixtures/forms/<ats>.html`, with a case in
-   `tests/fill-fixtures.test.ts`. Replace the provisional fixtures (Workday, Workable and
-   SmartRecruiters) this way and remove the "provisional" comment.
+   `tests/fill-fixtures.test.ts`. A page with shadow roots (SmartRecruiters) is exported with them
+   as `<template shadowrootmode="open">`. Strip scripts, styles, svg and noscript before looking at
+   it with happy-dom.
 
-Workday and Workable (rendered by script) are waiting for a capture made this way. InfoJobs,
+InfoJobs,
 Indeed and Glassdoor come from captures made this way in November 2026 (CV-522), and the
 LinkedIn signed-in extractor was checked against a capture of the search view
 (`/jobs/search-results/?currentJobId=`) as well as `/jobs/view/<id>`.

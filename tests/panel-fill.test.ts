@@ -345,6 +345,17 @@ describe('panel: autorrelleno en un ATS (fase B)', () => {
     expect(buttonNamed('Ver mis datos')).toBeDefined();
   });
 
+  it('Workable en el dominio propio de la empresa se rellena sin pedir permiso de host (CV-543)', async () => {
+    // Un dominio que el manifiesto no conoce no se puede pedir como permiso opcional: vale activeTab.
+    const env = setup({ tabUrl: 'https://careers.empresaficticia.example/_/j/ABC123/apply/' });
+    withReadyApplication(env);
+    await openPanel('Ya tienes esta oferta en Aplica');
+    buttonNamed('Rellenar este formulario')?.click();
+    await until(() => body().includes('Datos de contacto rellenados'));
+    expect(env.permissionRequests).toEqual([]);
+    expect(fillCalls(env)).toHaveLength(1);
+  });
+
   it('sin candidatura de esta oferta rellena el contacto y dice por qué falta el resto', async () => {
     const env = setup({ fillResult: { ...SUMMARY, questionsFilled: 0, attachment: 'no_file' } });
     await openPanel();

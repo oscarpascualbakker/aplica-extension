@@ -41,6 +41,23 @@ describe('selección', () => {
   });
 });
 
+describe('Workable en el dominio propio de la empresa (CV-543)', () => {
+  const TITLE = 'Desarrolladora backend';
+  const COMPANY = 'Empresa Ficticia S.L.';
+  const ld = JSON.stringify({ '@type': 'JobPosting', title: TITLE, hiringOrganization: { name: COMPANY }, description: '<p>Texto</p>' });
+  const page = `<html><head><script type="application/ld+json">${ld}</script></head><body><div id="app"><div data-ui="careers-page-content"><h1 data-ui="job-title">${TITLE}</h1></div></div></body></html>`;
+
+  it('el host no lo dice, la estructura de la página sí: portal workable', () => {
+    const offer = extractOffer(parseHtml(page, 'https://careers.empresaficticia.example/_/j/ABC123/'), 'careers.empresaficticia.example', '');
+    expect(offer).toMatchObject({ portal: 'workable', title: TITLE, company: COMPANY, description: 'Texto' });
+  });
+
+  it('sin la estructura de Workable, un dominio desconocido sigue siendo other', () => {
+    const plain = page.replace('data-ui="careers-page-content"', 'class="x"');
+    expect(extractOffer(parseHtml(plain), 'careers.empresaficticia.example', '').portal).toBe('other');
+  });
+});
+
 describe('límites', () => {
   it('recorta la descripción a 30000 caracteres y lo indica', () => {
     const long = 'a'.repeat(MAX_DESCRIPTION + 500);

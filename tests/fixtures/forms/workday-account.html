@@ -1,0 +1,31 @@
+<!doctype html>
+<!-- CV-543: pantalla de crear cuenta de Workday, antes del formulario. La estructura sale de la captura real
+     de noviembre de 2026: email con data-automation-id y autocomplete, dos contraseñas y un campo cebo para
+     robots (beecatcher, name="website") que una persona no rellena. El contenido es inventado. -->
+<html lang="en-US">
+<head>
+<meta charset="utf-8"/>
+<title>Candidate Home</title>
+</head>
+<body>
+<main>
+<h2>Create Account</h2>
+<form>
+<div data-automation-id="formField-email">
+<label for="input-4"><span>Email Address<abbr aria-hidden="true">*</abbr></span></label>
+<div><input type="text" width="100%" data-automation-id="email" id="input-4" aria-required="true" aria-invalid="false" autocomplete="email" value=""/></div>
+</div>
+<div data-automation-id="formField-password">
+<label for="input-5"><span>Password<abbr aria-hidden="true">*</abbr></span></label>
+<div><input type="password" width="100%" data-automation-id="password" id="input-5" aria-required="true" autocomplete="new-password" value=""/></div>
+</div>
+<div data-automation-id="formField-verifyPassword">
+<label for="input-6"><span>Verify New Password<abbr aria-hidden="true">*</abbr></span></label>
+<div><input type="password" width="100%" data-automation-id="verifyPassword" id="input-6" aria-required="true" autocomplete="new-password" value=""/></div>
+</div>
+<div><div><label for="e947bbe0-0000-4000-8000-000000000001">Enter website. This input is for robots only, do not enter if you're human.</label><input data-automation-id="beecatcher" id="e947bbe0-0000-4000-8000-000000000001" name="website" type="text"/></div></div>
+<div><button type="button" data-automation-id="click_filter" aria-label="Create Account">Create Account</button></div>
+</form>
+</main>
+</body>
+</html>

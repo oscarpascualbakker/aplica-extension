@@ -256,9 +256,15 @@ describe('fixtures', () => {
   });
 
   it('solo llevan datos ficticios: nada de las páginas reales de las que se tomó la estructura', () => {
-    const real = /palantir|powens|anthropic|ottonova|elevator|infinitum|crit\b|servicenow|cloudflare|hugging|stripe|spotify|salesforce|helmeca|vistalid|anticuarios|bravo|sector alarm|axepta|docplanner|doctoralia|spendesk|vanderlande|biorce|papernest/i;
-    // Las fixtures de ofertas y las de formularios de candidatura (CV-507).
-    const all = [...readdirSync('tests/fixtures').filter((f) => f.endsWith('.html')), ...readdirSync('tests/fixtures/forms').map((f) => `forms/${f}`)];
+    const real = /palantir|powens|anthropic|ottonova|elevator|infinitum|crit\b|servicenow|cloudflare|hugging|stripe|spotify|salesforce|helmeca|vistalid|anticuarios|bravo|sector alarm|axepta|docplanner|doctoralia|spendesk|vanderlande|biorce|papernest|aecom|envista|novartis|teltonika|vb[ -]?(global|group|travel)|vbtravelgroup|\boscar\b|pascual|bakker|alessia|\bforte\b/i;
+    // Las fixtures de ofertas, las de formularios de candidatura (CV-507) y las de confirmación (CV-508). Las
+    // de Workday, Workable, SmartRecruiters, Teamtailor y Personio salen de capturas reales (CV-543): ni
+    // empresas ni personas de esas páginas.
+    const all = [
+      ...readdirSync('tests/fixtures').filter((f) => f.endsWith('.html')),
+      ...readdirSync('tests/fixtures/forms').map((f) => `forms/${f}`),
+      ...readdirSync('tests/fixtures/sent').map((f) => `sent/${f}`),
+    ];
     for (const file of all) {
       const html = readFileSync(`tests/fixtures/${file}`, 'utf8');
       expect(real.test(html), file).toBe(false);

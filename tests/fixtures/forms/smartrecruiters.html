@@ -1,35 +1,60 @@
 <!doctype html>
-<!-- PROVISIONAL (CV-507). Fixture de formulario de candidatura de SmartRecruiters construida con la
-     estructura conocida (name firstName, lastName, email, phoneNumber, city), no con una página
-     capturada. La página real usa componentes web con shadow DOM; aquí van como campos normales y el
-     recorrido de shadow roots abiertos se prueba aparte. Contenido inventado. Se sustituirá cuando el
-     titular capture la página real con "Export page" (ver README). -->
+<!-- CV-543: paso "Personal information" de la candidatura de SmartRecruiters (oneclick-ui). La estructura sale
+     de la captura real de noviembre de 2026, con los shadow roots serializados como
+     <template shadowrootmode="open">: oc-input, spl-input, spl-phone-field, spl-dropzone y spl-textarea
+     llevan el label y el campo dentro de su propio shadow root (el label con for e id del campo). Sin name
+     en los campos: se reconocen por id. Hay tres campos de archivo: la foto de perfil, la zona de arriba
+     "autorrellenar con un CV" (que analiza el archivo y reescribe el formulario) y la sección "Resume", la
+     única que es el CV. Los combobox (ciudad) no se rellenan. El contenido es inventado. -->
 <html lang="en">
 <head>
 <meta charset="utf-8"/>
-<title>Apply - Desarrolladora backend - Empresa Ficticia S.L.</title>
+<base href="/oneclick-ui"/>
+<title>Desarrolladora backend - Empresa Ficticia S.L.</title>
 </head>
 <body>
+<oc-web>
 <main>
-<form class="oneclick-form" action="/oneclick-ui/company/EmpresaFicticia/publication/00000000-0000-0000-0000-000000000001/apply" method="post">
-<h2>Apply for Desarrolladora backend</h2>
-<div class="field"><label for="first-name-input">First name</label><input id="first-name-input" name="firstName" type="text" autocomplete="given-name" aria-required="true"/></div>
-<div class="field"><label for="last-name-input">Last name</label><input id="last-name-input" name="lastName" type="text" autocomplete="family-name" aria-required="true"/></div>
-<div class="field"><label for="email-input">Email</label><input id="email-input" name="email" type="email" autocomplete="email" aria-required="true"/></div>
-<div class="field"><label for="confirm-email-input">Confirm your email</label><input id="confirm-email-input" name="confirmEmail" type="email" aria-required="true"/></div>
-<div class="field"><label for="phone-input">Phone number</label><input id="phone-input" name="phoneNumber" type="tel" autocomplete="tel"/></div>
-<div class="field"><label for="city-input">City</label><input id="city-input" name="city" type="text"/></div>
-<div class="field"><label for="linkedin-input">LinkedIn</label><input id="linkedin-input" name="linkedin" type="text"/></div>
-<div class="field"><label for="web-input">Website</label><input id="web-input" name="website" type="text"/></div>
-<div class="field"><label for="resume-input">Resume</label><input id="resume-input" name="resume" type="file" accept=".pdf,.doc,.docx,.rtf,.txt"/></div>
-<div class="field"><label for="q1">Why do you want to work at Empresa Ficticia S.L.?</label><textarea id="q1" name="question-1"></textarea></div>
-<div class="field"><label for="q2">Describe a project you are proud of and what you learned from it</label><textarea id="q2" name="question-2"></textarea></div>
-<fieldset class="field"><legend>Do you require visa sponsorship to work in Spain?</legend><label><input type="radio" name="question-3" value="yes"/> Yes</label><label><input type="radio" name="question-3" value="no"/> No</label></fieldset>
-<div class="field"><label for="q4">Expected annual salary</label><input id="q4" name="question-4" type="text"/></div>
-<div class="field"><label for="q5">Gender</label><select id="q5" name="question-5"><option value="">Select</option><option value="f">Female</option><option value="m">Male</option><option value="x">Prefer not to say</option></select></div>
-<div class="field"><label for="q6">Are you willing to relocate?</label><input id="q6" name="question-6" type="text"/></div>
-<button type="submit" class="btn">Submit application</button>
-</form>
+<h1>Desarrolladora backend</h1>
+<div data-test="avatar"><button type="button" data-sr-id="fileUpload-uploadButton" data-test="avatar-browse" aria-label="Upload profile image">Upload</button><input type="file" name="file-upload-00000000-0000-4000-8000-000000000001" accept=".bmp,.gif,.jfif,.jpeg,.jpg,.png,.tif,.tiff,.webp" aria-label="Upload profile image"/></div>
+<section data-test="apply-with-section">
+<h3>Apply with</h3>
+<p>Choose an option to autocomplete your application. You can still fill your profile manually.</p>
+<oc-apply-with-resume>
+<spl-form-field reserveerrormsgspacing="true" variant="vertical"><template shadowrootmode="open"><spl-internal-form-field variant="vertical"><template shadowrootmode="open"><div><slot name="label"></slot><slot></slot></div></template><slot></slot></spl-internal-form-field></template>
+<spl-dropzone data-test="apply-with-resume-container" hidefilelist="" label="" browselabel="Choose a file" enablefiledeletions=""><template shadowrootmode="open"><div><slot name="icon"></slot><label for="spl-dropzone-file-input-2"><span>Choose a file</span><span>or drop it here</span></label><input type="file" id="spl-dropzone-file-input-2" accept=".doc, .dot, .rmr, .rsm, .resume, .oxps, .pdf, .p7s, .ai, .rtf, .pages, .gdoc, .xls, .odt, .pptx, .xlsx, .docx, .dotx, .txt, .jpeg, .jpg, .png" aria-describedby="spl-dropzone-restriction-label-2"/><span id="spl-dropzone-restriction-label-2">10MB size limit</span></div></template></spl-dropzone>
+</spl-form-field>
+</oc-apply-with-resume>
+</section>
+<section data-test="personal-info">
+<h3>Personal information</h3>
+<oc-input formcontrolname="firstName" attrid="first-name-input" data-test="personal-info-first-name-input" autocomplete="given-name"><spl-input type="text" required="" id="first-name-input" label="First name" value="" autocomplete="given-name"><template shadowrootmode="open" shadowrootdelegatesfocus=""><spl-internal-form-field variant="vertical"><template shadowrootmode="open"><div><slot name="label"></slot><slot name="description"></slot><slot></slot><slot name="error-msg"></slot></div></template><label slot="label" for="first-name-input" id="first-name-input-label"><spl-typography-label variant="md"><template shadowrootmode="open"><span><slot></slot></span></template><span><span>First name<span aria-hidden="true">*</span></span><span><slot name="label-suffix"></slot></span></span></spl-typography-label></label><div><div><slot name="inner-prefix"></slot><input id="first-name-input" autocomplete="given-name" type="text" placeholder="" aria-invalid="false" aria-required="true"/><slot name="inner-suffix"></slot></div></div></spl-internal-form-field></template></spl-input></oc-input>
+<oc-input formcontrolname="lastName" attrid="last-name-input" data-test="personal-info-last-name-input" autocomplete="family-name"><spl-input type="text" required="" id="last-name-input" label="Last name" value="" autocomplete="family-name"><template shadowrootmode="open" shadowrootdelegatesfocus=""><spl-internal-form-field variant="vertical"><template shadowrootmode="open"><div><slot name="label"></slot><slot name="description"></slot><slot></slot><slot name="error-msg"></slot></div></template><label slot="label" for="last-name-input" id="last-name-input-label"><spl-typography-label variant="md"><template shadowrootmode="open"><span><slot></slot></span></template><span><span>Last name<span aria-hidden="true">*</span></span><span><slot name="label-suffix"></slot></span></span></spl-typography-label></label><div><div><slot name="inner-prefix"></slot><input id="last-name-input" autocomplete="family-name" type="text" placeholder="" aria-invalid="false" aria-required="true"/><slot name="inner-suffix"></slot></div></div></spl-internal-form-field></template></spl-input></oc-input>
+<oc-input formcontrolname="email" attrid="email-input" data-test="personal-info-email-input" autocomplete="email"><spl-input type="text" required="" id="email-input" label="Email" value="" autocomplete="email"><template shadowrootmode="open" shadowrootdelegatesfocus=""><spl-internal-form-field variant="vertical"><template shadowrootmode="open"><div><slot name="label"></slot><slot name="description"></slot><slot></slot><slot name="error-msg"></slot></div></template><label slot="label" for="email-input" id="email-input-label"><spl-typography-label variant="md"><template shadowrootmode="open"><span><slot></slot></span></template><span><span>Email<span aria-hidden="true">*</span></span><span><slot name="label-suffix"></slot></span></span></spl-typography-label></label><div><div><slot name="inner-prefix"></slot><input id="email-input" autocomplete="email" type="email" placeholder="" aria-invalid="false" aria-required="true"/><slot name="inner-suffix"></slot></div></div></spl-internal-form-field></template></spl-input></oc-input>
+<oc-input formcontrolname="confirmEmail" attrid="confirm-email-input" data-test="personal-info-confirm-email-input" autocomplete="email"><spl-input type="text" required="" id="confirm-email-input" label="Confirm your email" value="" autocomplete="email"><template shadowrootmode="open" shadowrootdelegatesfocus=""><spl-internal-form-field variant="vertical"><template shadowrootmode="open"><div><slot name="label"></slot><slot name="description"></slot><slot></slot><slot name="error-msg"></slot></div></template><label slot="label" for="confirm-email-input" id="confirm-email-input-label"><spl-typography-label variant="md"><template shadowrootmode="open"><span><slot></slot></span></template><span><span>Confirm your email<span aria-hidden="true">*</span></span><span><slot name="label-suffix"></slot></span></span></spl-typography-label></label><div><div><slot name="inner-prefix"></slot><input id="confirm-email-input" autocomplete="email" type="email" placeholder="" aria-invalid="false" aria-required="true"/><slot name="inner-suffix"></slot></div></div></spl-internal-form-field></template></spl-input></oc-input>
+<spl-autocomplete id="spl-form-element_7"><template shadowrootmode="open"><spl-input type="text" required="" id="spl-form-element_7" label="City" value=""><template shadowrootmode="open" shadowrootdelegatesfocus=""><spl-internal-form-field variant="vertical"><template shadowrootmode="open"><div><slot name="label"></slot><slot name="description"></slot><slot></slot><slot name="error-msg"></slot></div></template><label slot="label" for="spl-form-element_7" id="spl-form-element_7-label"><spl-typography-label variant="md"><template shadowrootmode="open"><span><slot></slot></span></template><span><span>City<span aria-hidden="true">*</span></span><span><slot name="label-suffix"></slot></span></span></spl-typography-label></label><div><div><input id="spl-form-element_7" autocomplete="off" type="text" placeholder="" aria-controls="menu-spl-form-element_7" aria-autocomplete="list" aria-invalid="false" aria-required="true" aria-expanded="false" aria-haspopup="listbox" role="combobox"/></div></div></spl-internal-form-field></template></spl-input></template></spl-autocomplete>
+<spl-phone-field customrequiredmessagekey="oneclick-ui.common.validation.personal_info.phone" autocomplete="tel" required="" id="spl-form-element_2" label="Phone number" value="{&quot;country&quot;:&quot;ES&quot;}"><template shadowrootmode="open"><div><spl-internal-form-field variant="vertical"><template shadowrootmode="open"><div><slot name="label"></slot><slot name="description"></slot><slot></slot><slot name="error-msg"></slot></div></template><label slot="label" for="spl-form-element_2" id="spl-form-element_2-label"><spl-typography-label variant="md"><template shadowrootmode="open"><span><slot></slot></span></template><span><span>Phone number<span aria-hidden="true">*</span></span><span><slot name="label-suffix"></slot></span></span></spl-typography-label></label><div role="group" aria-labelledby="spl-form-element_2-label"><spl-select id="spl-form-element_9" value="ES" splarialabel="Country code"><template shadowrootmode="open"><spl-dropdown><template shadowrootmode="open"><div><slot name="trigger"></slot><slot name="menu"></slot></div></template><button slot="trigger" role="combobox" aria-haspopup="listbox" aria-autocomplete="none" aria-label="Country code" id="spl-form-element_9" aria-expanded="false" aria-controls="spl-form-element_9-menu" aria-required="false">Spain</button><div slot="menu" id="spl-form-element_9-menu" role="listbox"><spl-dropdown-search slot="search" placeholder="Search by country/region or code" arialabel="Search by country/region or code"><template shadowrootmode="open"><div><input autocomplete="off" type="text" placeholder="Search by country/region or code" aria-label="Search by country/region or code" role="combobox" aria-haspopup="listbox" aria-expanded="false" aria-controls="spl-form-element_9-menu"/></div></template></spl-dropdown-search><spl-select-option value="ES" label="Spain"></spl-select-option></div></spl-dropdown></template></spl-select><spl-input id="spl-form-element_2" label="Phone number" type="tel" value=""><template shadowrootmode="open" shadowrootdelegatesfocus=""><div><input autocomplete="off" id="spl-form-element_2" type="tel" placeholder="" aria-label="Phone number" aria-invalid="false" aria-required="true"/></div></template></spl-input></div></spl-internal-form-field></div></template></spl-phone-field>
+</section>
+<section data-test="social-links">
+<h3>Social links</h3>
+<oc-input formcontrolname="linkedin" attrid="linkedin-input" data-test="social-links-linkedin-input"><spl-input type="text" id="linkedin-input" label="LinkedIn" value=""><template shadowrootmode="open" shadowrootdelegatesfocus=""><spl-internal-form-field variant="vertical"><template shadowrootmode="open"><div><slot name="label"></slot><slot name="description"></slot><slot></slot><slot name="error-msg"></slot></div></template><label slot="label" for="linkedin-input" id="linkedin-input-label"><spl-typography-label variant="md"><template shadowrootmode="open"><span><slot></slot></span></template><span><span>LinkedIn</span><span><slot name="label-suffix"></slot></span></span></spl-typography-label></label><div><div><slot name="inner-prefix"></slot><input id="linkedin-input" type="text" placeholder="" aria-invalid="false" aria-required="false"/><slot name="inner-suffix"></slot></div></div></spl-internal-form-field></template></spl-input></oc-input>
+</section>
+<oc-resume-upload>
+<div data-test="resume-upload-container">
+<h3 data-test="section-title">Resume<span data-test="section-required-mark">*</span></h3>
+<spl-form-field reserveerrormsgspacing="true" variant="vertical"><template shadowrootmode="open"><spl-internal-form-field variant="vertical"><template shadowrootmode="open"><div><slot name="label"></slot><slot></slot></div></template><slot></slot></spl-internal-form-field></template>
+<spl-dropzone data-test="resume-upload" label="" browselabel="Choose a file" enablefiledeletions=""><template shadowrootmode="open"><div><slot name="icon"></slot><label for="spl-dropzone-file-input-1"><span>Choose a file</span><span>or drop it here</span></label><input type="file" id="spl-dropzone-file-input-1" accept=".doc, .dot, .rmr, .rsm, .resume, .oxps, .pdf, .p7s, .ai, .rtf, .pages, .gdoc, .xls, .odt, .pptx, .xlsx, .docx, .dotx, .txt, .jpeg, .jpg, .png" aria-describedby="spl-dropzone-restriction-label-1"/><span id="spl-dropzone-restriction-label-1">10MB size limit</span></div></template></spl-dropzone>
+</spl-form-field>
+</div>
+</oc-resume-upload>
+<oc-hiring-manager-message>
+<div data-test="hiring-manager-message-container">
+<h3 data-test="section-title">Message to the Hiring Team</h3>
+<oc-textarea attrid="hiring-manager-message-input" rows="10" formcontrolname="message" data-test="hiring-manager-message-text"><spl-textarea rows="10" id="hiring-manager-message-input" label="Let the company know about your interest working there" value=""><template shadowrootmode="open"><spl-internal-form-field variant="vertical"><template shadowrootmode="open"><div><slot name="label"></slot><slot name="description"></slot><slot></slot><slot name="error-msg"></slot></div></template><label slot="label" for="hiring-manager-message-input" id="hiring-manager-message-input-label"><spl-typography-label variant="md"><template shadowrootmode="open"><span><slot></slot></span></template><span><span>Let the company know about your interest working there</span><span><slot name="label-suffix"></slot></span></spl-typography-label></label><div><textarea rows="10" id="hiring-manager-message-input" placeholder="" aria-required="false"></textarea></div></spl-internal-form-field></template></spl-textarea></oc-textarea>
+</div>
+</oc-hiring-manager-message>
+<footer data-test="footer"><oc-button type="primary" data-test="footer-next"><spl-button type="primary" stretch="no"><template shadowrootmode="open"><button type="button"><slot name="prefixIcon"></slot><slot></slot><slot name="suffixIcon"></slot></button></template><span>Next</span></spl-button></oc-button></footer>
 </main>
+</oc-web>
 </body>
 </html>

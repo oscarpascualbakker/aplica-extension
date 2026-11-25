@@ -11,7 +11,7 @@ import { STAGES_BEFORE_SENT, type ApiClient, type ApplicationRef, type OfferPayl
 import { atsFromUrl } from '../fill/ats';
 import { ATS_KEYS } from '../fill/types';
 import type { ExtractedOffer } from '../extract/types';
-import type { Confirmation } from '../sent/detect';
+import { OFFER_NOT_IN_CONFIRMATION, type Confirmation } from '../sent/detect';
 
 /** Lo que el panel sabe de una pestaña mientras está abierto (solo en memoria, nunca en `storage.*`). */
 export type Remembered = {
@@ -127,6 +127,8 @@ export async function findSentCandidate(
 
   const known = rememberedFor(remembered, tabUrl);
   if (known?.application) return proposable(known.application);
+  // Workday no dice la oferta en su confirmación: sin la oferta recordada, no se adivina (CV-543).
+  if (!known?.offer && OFFER_NOT_IN_CONFIRMATION.includes(confirmation.ats)) return null;
 
   const query = {
     url: known?.offer?.url ?? confirmation.offerUrl,

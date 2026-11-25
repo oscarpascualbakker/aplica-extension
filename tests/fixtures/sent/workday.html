@@ -1,21 +1,31 @@
 <!doctype html>
-<!-- Fixture de confirmación (CV-508). Estructura conocida de Workday: aplicación de una sola página; al
-     enviar, la misma ruta del formulario enseña un aviso con data-automation-id propio. Contenido inventado;
-     provisional hasta capturar la página real. -->
-<html lang="es">
+<!-- CV-543: confirmación de Workday. La estructura sale de la captura real de noviembre de 2026: tras enviar,
+     Workday navega a /<idioma>/<sitio>/jobTasks/completed/application y abre un diálogo
+     (candidateHomeTaskModal) con "Application Submitted". La página no lleva la oferta ni su título. El
+     contenido es inventado. -->
+<html lang="en-US">
 <head>
 <meta charset="utf-8"/>
-<meta property="og:site_name" content="Empresa Ficticia S.L."/>
-<title>Careers</title>
+<title>Candidate Home</title>
+<meta name="title" property="og:title" content="Empresa Ficticia Careers"/>
+<meta property="og:type" content="website"/>
+<meta property="og:url" content="https://empresaficticia.wd3.myworkdayjobs.com/en-US/empresaficticia/jobTasks/completed/application"/>
 </head>
 <body>
-<div data-automation-id="applyFlowPage">
-<h2 data-automation-id="jobPostingHeader">Desarrolladora backend</h2>
-<div data-automation-id="applicationSubmittedPage">
-<h2>Solicitud enviada</h2>
-<p>Hemos recibido tu solicitud. Puedes ver su estado en tu cuenta de candidato.</p>
-<button type="button" data-automation-id="viewMyApplications">Ver mis candidaturas</button>
+<header><nav><button data-automation-id="navigationItem-Search for Jobs">Search for Jobs</button><button data-automation-id="navigationItem-Candidate Home">Candidate Home</button></nav></header>
+<main>
+<div role="dialog" aria-labelledby="task-modal-title" aria-modal="true" data-automation-id="candidateHomeTaskModal">
+<button data-automation-id="taskModalCloseButton" aria-label="Close"><span></span></button>
+<div>
+<h2 id="task-modal-title">Application Submitted</h2>
 </div>
+<div data-automation-id="richText">
+<h2><span>Process completed</span></h2>
+<p><span>Thank you for sending us your online job submission. If your profile matches what we are looking for, a member of our team will contact you.</span></p>
 </div>
+<div>You have no more tasks.</div>
+<div><button aria-label="Return to Home" data-automation-id="returnToHome"><span>Return to Home</span></button></div>
+</div>
+</main>
 </body>
 </html>

@@ -10,7 +10,8 @@ export const FORM_URLS: Record<AtsKey, string> = {
   greenhouse: 'https://job-boards.greenhouse.io/empresaficticia/jobs/1234567',
   lever: 'https://jobs.lever.co/empresaficticia/00000000-0000-0000-0000-000000000001/apply',
   smartrecruiters: 'https://jobs.smartrecruiters.com/oneclick-ui/company/EmpresaFicticia/publication/1',
-  workable: 'https://apply.workable.com/empresaficticia/j/ABC123/apply/',
+  // Workable en el dominio propio de la empresa, como en la captura real (CV-543).
+  workable: 'https://careers.empresaficticia.example/_/j/ABC123/apply/',
   teamtailor: 'https://empresaficticia.teamtailor.com/jobs/1234567-desarrolladora-backend',
   personio: 'https://empresaficticia.jobs.personio.de/job/1234567',
 };
@@ -49,8 +50,28 @@ export function request(ats: AtsKey | null, overrides: Partial<FillRequest> = {}
   return { ats, profile: PROFILE, answers: ANSWERS, cv: CV, askYouLabel: 'Contéstalo tú', ...overrides };
 }
 
-export function formHtml(ats: AtsKey): string {
-  return readFileSync(`tests/fixtures/forms/${ats}.html`, 'utf8');
+/** El HTML de una fixture de formulario: `workday`, o un paso suyo (`workday-experience`). */
+export function formHtml(name: string): string {
+  return readFileSync(`tests/fixtures/forms/${name}.html`, 'utf8');
+}
+
+/**
+ * happy-dom no convierte `<template shadowrootmode>` en shadow roots al leer el HTML. Las capturas guardan así
+ * los shadow roots abiertos (SmartRecruiters), así que se crean aquí: el contenido de cada plantilla pasa al
+ * shadow root de su elemento, a cualquier profundidad (CV-543).
+ */
+export function attachDeclarativeShadowRoots(root: ParentNode): void {
+  for (const template of Array.from(root.querySelectorAll('template[shadowrootmode]'))) {
+    const host = template.parentElement ?? (template.getRootNode() as ShadowRoot).host;
+    if (host.shadowRoot) continue;
+    const shadow = host.attachShadow({ mode: 'open' });
+    shadow.innerHTML = template.innerHTML;
+    template.remove();
+    attachDeclarativeShadowRoots(shadow);
+  }
+  for (const element of Array.from(root.querySelectorAll('*'))) {
+    if (element.shadowRoot) attachDeclarativeShadowRoots(element.shadowRoot);
+  }
 }
 
 /** Documento de happy-dom con el formulario, listo para rellenar (sin ejecutar scripts). */
@@ -65,17 +86,30 @@ export function formDocument(html: string, url: string): Document {
     },
   });
   window.document.write(html);
-  return window.document as unknown as Document;
+  const doc = window.document as unknown as Document;
+  attachDeclarativeShadowRoots(doc);
+  return doc;
 }
 
-export function formFor(ats: AtsKey): Document {
-  return formDocument(formHtml(ats), FORM_URLS[ats]);
+export function formFor(ats: AtsKey, name: string = ats): Document {
+  return formDocument(formHtml(name), FORM_URLS[ats]);
 }
 
 export type Field = HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
 
+/** El primer elemento que encaja con el selector, mirando también dentro de los shadow roots. */
+export function deepFind(root: ParentNode, selector: string): Element | null {
+  const found = root.querySelector(selector);
+  if (found) return found;
+  for (const element of Array.from(root.querySelectorAll('*'))) {
+    const inside = element.shadowRoot ? deepFind(element.shadowRoot, selector) : null;
+    if (inside) return inside;
+  }
+  return null;
+}
+
 export function pick(doc: Document, selector: string): Field {
-  const found = doc.querySelector(selector);
+  const found = deepFind(doc, selector);
   if (!found) throw new Error(`No existe ${selector}`);
   return found as Field;
 }

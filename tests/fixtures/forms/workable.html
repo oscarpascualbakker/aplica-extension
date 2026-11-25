@@ -1,34 +1,86 @@
 <!doctype html>
-<!-- PROVISIONAL (CV-507). Fixture de formulario de candidatura de Workable construida con la estructura
-     conocida (atributos data-ui firstname, lastname, email, phone, address, resume y preguntas QA_<id>),
-     no con una página capturada. Contenido inventado. Se sustituirá cuando el titular capture la página
-     real con "Export page" (ver README). -->
+<!-- CV-543: formulario de candidatura de Workable en el dominio propio de la empresa (/_/j/<código>/apply/).
+     La estructura sale de la captura real de noviembre de 2026: data-ui en la cabecera y en cada sección,
+     firstname, lastname, email y address con data-ui en el campo, el teléfono con el data-ui en su
+     contenedor (campo con name="phone"), ciudad, código postal y país ocultos con aria-hidden, el CV en
+     data-ui="resume", las preguntas de sí o no como radios con aria-hidden dentro de un fieldset
+     role="radiogroup". La pregunta abierta de texto (QA_12087194) no estaba en la captura: va con el mismo
+     envoltorio. El contenido es inventado. -->
 <html lang="en">
 <head>
-<meta charset="utf-8"/>
-<title>Desarrolladora backend - Empresa Ficticia S.L.</title>
+<meta charset="UTF-8"/>
+<title>Desarrolladora backend - Empresa Ficticia S.L. - Application</title>
 </head>
 <body>
 <div id="app">
-<form data-ui="application-form" action="/api/v1/jobs/ABC123/apply" method="post" enctype="multipart/form-data">
-<h2 data-ui="application-title">Submit your application</h2>
-<div><label for="firstname">First name</label><input id="firstname" name="firstname" type="text" data-ui="firstname" aria-required="true"/></div>
-<div><label for="lastname">Last name</label><input id="lastname" name="lastname" type="text" data-ui="lastname" aria-required="true"/></div>
-<div><label for="email">Email</label><input id="email" name="email" type="email" data-ui="email" aria-required="true"/></div>
-<div><label for="phone">Phone</label><input id="phone" name="phone" type="tel" data-ui="phone"/></div>
-<div><label for="address">Address</label><input id="address" name="address" type="text" data-ui="address"/></div>
-<div><label for="resume">Resume</label><input id="resume" name="resume" type="file" data-ui="resume" accept=".pdf,.doc,.docx,.rtf,.odt"/></div>
-<div><label for="cover_letter">Cover letter</label><textarea id="cover_letter" name="cover_letter" data-ui="cover_letter"></textarea></div>
-<div><label for="QA_100001">LinkedIn</label><input id="QA_100001" name="QA_100001" type="text"/></div>
-<div><label for="QA_100002">Website</label><input id="QA_100002" name="QA_100002" type="text"/></div>
-<div><label for="QA_100003">Why do you want to work at Empresa Ficticia S.L.?</label><textarea id="QA_100003" name="QA_100003" data-ui="QA_100003"></textarea></div>
-<div><label for="QA_100004">Describe a project you are proud of and what you learned from it</label><textarea id="QA_100004" name="QA_100004" data-ui="QA_100004"></textarea></div>
-<fieldset><legend>Do you require visa sponsorship?</legend><label><input type="radio" name="QA_100005" value="Yes"/> Yes</label><label><input type="radio" name="QA_100005" value="No"/> No</label></fieldset>
-<div><label for="QA_100006">What is your desired salary?</label><input id="QA_100006" name="QA_100006" type="text"/></div>
-<div><label for="QA_100007">When can you start?</label><input id="QA_100007" name="QA_100007" type="text"/></div>
-<div><label for="QA_100008">Gender</label><select id="QA_100008" name="QA_100008"><option value="">Choose</option><option value="f">Female</option><option value="m">Male</option></select></div>
-<button type="submit" data-ui="apply-button">Submit application</button>
+<div data-ui="careers-page-content">
+<header role="banner">
+<div data-ui="header-logo"><a data-ui="company-logo" href="/_/"><img alt="Empresa Ficticia S.L." src="logo.png"/></a></div>
+<h1 data-ui="job-title">Desarrolladora backend</h1>
+<p><span data-ui="job-workplace"><strong>On-site</strong></span><span data-ui="job-department">Technology</span><span data-ui="job-type">Full time</span></p>
+<div data-ui="job-location"><span>Villanueva del Ejemplo, Provincia Ficticia, Spain</span></div>
+</header>
+<nav role="navigation"><a data-ui="role-overview-tab" href="/_/j/ABC123/">Overview</a><a data-ui="application-form-tab" href="/_/j/ABC123/apply/">Application</a></nav>
+<main role="main">
+<form data-ui="application-form">
+<div data-ui="autofill-button"><button aria-haspopup="true" aria-expanded="false" type="button"><span>Import resume from</span></button></div>
+<span><span>*</span>&nbsp;<span>Required fields</span></span>
+<section data-ui="section">
+<div><h2 id="section-0_section_name">Personal information</h2><a role="button" data-ui="clear-section-0" aria-label="Clear Personal information"><span>Clear</span></a></div>
+<div data-ui="section-fields">
+<div><label><span><strong>*</strong><span id="firstname_label"><strong>First name</strong></span></span><div data-role="illustrated-input"><div><input aria-required="true" id="firstname" maxlength="127" data-ui="firstname" name="firstname" aria-labelledby="firstname_label" required="" type="text" value=""/></div></div></label></div>
+<div><label><span><strong>*</strong><span id="lastname_label"><strong>Last name</strong></span></span><div data-role="illustrated-input"><div><input aria-required="true" id="lastname" maxlength="127" data-ui="lastname" name="lastname" aria-labelledby="lastname_label" required="" type="text" value=""/></div></div></label></div>
+<div><label><span><strong>*</strong><span id="email_label"><strong>Email</strong></span></span><div data-role="illustrated-input"><div><input aria-required="true" id="email" maxlength="255" data-ui="email" name="email" aria-labelledby="email_label" required="" type="email" value=""/></div></div></label></div>
+<div>
+<div><span><strong>*</strong><span id="phone_label"><strong>Phone</strong></span></span>
+<div data-ignore-focus="true" data-ui="phone"><div data-role="illustrated-input">
+<button type="button" aria-expanded="false" aria-label="Change country for phone number, currently selected Spain (+34)" aria-haspopup="dialog" aria-controls="iti-0__country-selector" title="Spain"><div>+34</div></button>
+<div id="iti-0__country-selector" role="dialog" aria-modal="true"><ul id="iti-0__country-listbox" role="listbox" aria-label="List of countries"><li id="iti-0__item-es" role="option" aria-selected="true" data-dial-code="34" data-iso2="es"><span>Spain <span>(+34)</span></span></li></ul></div>
+<input aria-required="true" aria-labelledby="phone_label" maxlength="255" required="" id="input_phone" aria-describedby="phone_helper" name="phone" type="tel" data-intl-tel-input-id="0" autocomplete="tel" inputmode="tel"/>
+</div></div></div>
+<div><span id="phone_helper">The hiring team may use this number to contact you about this job.</span></div>
+</div>
+<div><label><span><span id="address_label"><strong>Address</strong></span><span> (Optional)</span></span><div data-role="illustrated-input"><input aria-required="false" id="address" data-ui="address" name="address" aria-labelledby="address_label" aria-describedby="address_helper" type="text" value=""/></div></label><div><span id="address_helper">Include your city, region, and country, so that employers can easily manage your application.</span></div></div>
+<div><label><div data-role="illustrated-input"><input id="city" aria-hidden="true" tabindex="-1" name="city" type="text" value=""/></div></label></div>
+<div><label><div data-role="illustrated-input"><input id="postcode" aria-hidden="true" tabindex="-1" name="postcode" type="text" value=""/></div></label></div>
+<div><label><div data-role="illustrated-input"><input id="country" aria-hidden="true" tabindex="-1" name="country" type="text" value=""/></div></label></div>
+</div>
+</section>
+<section data-ui="section">
+<div><h2 id="section-1_section_name">Profile</h2><a role="button" data-ui="clear-section-1" aria-label="Clear Profile" aria-disabled="true"><span>Clear</span></a></div>
+<div data-ui="section-fields">
+<div><span><strong>*</strong><span id="resume_label"><strong>Resume</strong></span></span>
+<div data-role="dropzone"><div data-role="preview"><label for="input_files_input_resume"></label></div>
+<label role="button" for="input_files_input_resume" id="description_input_resume" aria-describedby="resume_label">Choose file</label> <span>or drag and drop here</span>
+<input data-ui="resume" id="input_files_input_resume" type="file" tabindex="-1" aria-labelledby="resume_label description_input_resume" accept=".pdf,.doc,.docx,.odt,.rtf,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.oasis.opendocument.text,application/rtf" required=""/></div></div>
+</div>
+</section>
+<section data-ui="section">
+<div><h2 id="section-2_section_name">Details</h2></div>
+<div data-ui="section-fields">
+<div><span><strong>*</strong><span id="q1_label"><strong>Do you have B2-level (or higher) proficiency in English (both written and spoken)?</strong></span></span>
+<fieldset role="radiogroup" data-ui="QA_12087192" aria-labelledby="q1_label">
+<div data-ui="option" id="wrapper_q1_yes" role="radio" aria-checked="false" aria-required="true"><label><input aria-required="true" required="" id="q1_yes" aria-hidden="true" tabindex="-1" type="radio" name="QA_12087192" value="true"/><span id="radio_label_q1_yes">YES</span></label></div>
+<div data-ui="option" id="wrapper_q1_no" role="radio" aria-checked="false" aria-required="true"><label><input aria-required="true" required="" id="q1_no" aria-hidden="true" tabindex="-1" type="radio" name="QA_12087192" value="false"/><span id="radio_label_q1_no">NO</span></label></div>
+</fieldset></div>
+<div><span><strong>*</strong><span id="q2_label"><strong>Are you legally authorized to work in Spain?</strong></span></span>
+<fieldset role="radiogroup" data-ui="QA_12843816" aria-labelledby="q2_label">
+<div data-ui="option" id="wrapper_q2_yes" role="radio" aria-checked="false" aria-required="true"><label><input aria-required="true" required="" id="q2_yes" aria-hidden="true" tabindex="-1" type="radio" name="QA_12843816" value="true"/><span id="radio_label_q2_yes">YES</span></label></div>
+<div data-ui="option" id="wrapper_q2_no" role="radio" aria-checked="false" aria-required="true"><label><input aria-required="true" required="" id="q2_no" aria-hidden="true" tabindex="-1" type="radio" name="QA_12843816" value="false"/><span id="radio_label_q2_no">NO</span></label></div>
+</fieldset></div>
+<div><label><span><span id="q3_label"><strong>Why do you want to work at Empresa Ficticia S.L.?</strong></span></span><div data-role="illustrated-input"><textarea aria-required="false" id="QA_12087194" name="QA_12087194" aria-labelledby="q3_label"></textarea></div></label></div>
+<div><label><span><span id="q4_label"><strong>Describe a project you are proud of and what you learned from it</strong></span></span><div data-role="illustrated-input"><textarea aria-required="false" id="QA_12087195" name="QA_12087195" aria-labelledby="q4_label"></textarea></div></label></div>
+</div>
+</section>
+<section data-ui="section">
+<div data-ui="section-fields">
+<div data-ui="gdpr"><label><label data-ui="gdpr" data-checked="false"><div aria-labelledby="checkbox_label_gdpr" role="checkbox" aria-checked="false" id="gdpr_box"><input aria-hidden="true" type="checkbox" name="gdpr"/></div><span id="checkbox_label_gdpr"><span>I have read, understand and accept the content of the <a href="https://apply.workable.com/empresaficticia/gdpr_policy?lng=en">Privacy Notice</a> and consent to the processing of my data as part of this application.</span></span></label></label></div>
+</div>
+</section>
+<button data-ui="apply-button" type="submit">Submit application</button>
 </form>
+</main>
+</div>
 </div>
 </body>
 </html>

@@ -1,35 +1,98 @@
 <!doctype html>
-<!-- Fixture de formulario de candidatura (CV-507). Estructura de Teamtailor (<empresa>.teamtailor.com/jobs/<id>):
-     name="candidate[first_name]", "candidate[last_name]", "candidate[email]", "candidate[phone]",
-     "candidate[resume]" y preguntas answers[<id>][answer]. Contenido inventado. -->
-<html lang="es">
+<!-- CV-543: formulario de candidatura de Teamtailor. La estructura sale de la captura real de noviembre de
+     2026: form#job-application-form, cada pregunta en su fieldset o su label con name
+     candidate[answers_attributes][N][...], los datos personales con candidate[first_name], candidate[last_name],
+     candidate[email] y candidate[phone] (autocomplete y type propios), el campo de archivo sin name (id
+     candidate_resume_remote_url) y el envío como input type="submit". No hay campos de ciudad, LinkedIn ni web.
+     El contenido es inventado. -->
+<html lang="en">
 <head>
 <meta charset="utf-8"/>
 <title>Desarrolladora backend - Empresa Ficticia S.L.</title>
 </head>
 <body>
 <main>
-<section id="apply" class="apply-section">
-<h2>Solicita este puesto</h2>
-<form class="new_candidate" id="new_candidate" action="/jobs/1234567-desarrolladora-backend/applications" accept-charset="UTF-8" method="post" enctype="multipart/form-data">
-<div class="form-group"><label for="candidate_first_name">Nombre *</label><input type="text" name="candidate[first_name]" id="candidate_first_name" required="required" autocomplete="given-name"/></div>
-<div class="form-group"><label for="candidate_last_name">Apellidos *</label><input type="text" name="candidate[last_name]" id="candidate_last_name" required="required" autocomplete="family-name"/></div>
-<div class="form-group"><label for="candidate_email">Correo electrónico *</label><input type="email" name="candidate[email]" id="candidate_email" required="required" autocomplete="email"/></div>
-<div class="form-group"><label for="candidate_phone">Teléfono</label><input type="tel" name="candidate[phone]" id="candidate_phone" autocomplete="tel"/></div>
-<div class="form-group"><label for="candidate_city">Ciudad</label><input type="text" name="candidate[city]" id="candidate_city"/></div>
-<div class="form-group"><label for="candidate_linkedin">Perfil de LinkedIn</label><input type="url" name="candidate[linkedin]" id="candidate_linkedin"/></div>
-<div class="form-group"><label for="candidate_website">Sitio web</label><input type="url" name="candidate[website]" id="candidate_website"/></div>
-<div class="form-group"><label for="candidate_resume">Currículum *</label><input type="file" name="candidate[resume]" id="candidate_resume" accept=".pdf,.doc,.docx,.rtf,.odt"/></div>
-<div class="form-group"><label for="answer_1">¿Por qué quieres trabajar en Empresa Ficticia S.L.?</label><textarea name="answers[1][answer]" id="answer_1"></textarea></div>
-<div class="form-group"><label for="answer_2">Cuéntanos un proyecto del que te sientas orgullosa y qué aprendiste</label><textarea name="answers[2][answer]" id="answer_2"></textarea></div>
-<div class="form-group"><label for="answer_3">¿Cuáles son tus pretensiones salariales?</label><input type="text" name="answers[3][answer]" id="answer_3"/></div>
-<div class="form-group"><label for="answer_4">¿Necesitas permiso de trabajo o visado para trabajar en España?</label><input type="text" name="answers[4][answer]" id="answer_4"/></div>
-<div class="form-group"><label for="answer_5">¿Cuándo podrías incorporarte?</label><input type="text" name="answers[5][answer]" id="answer_5"/></div>
-<fieldset class="form-group"><legend>Género</legend><label><input type="radio" name="answers[6][answer]" value="mujer"/> Mujer</label><label><input type="radio" name="answers[6][answer]" value="hombre"/> Hombre</label><label><input type="radio" name="answers[6][answer]" value="otro"/> Prefiero no decirlo</label></fieldset>
-<div class="form-group"><label><input type="checkbox" name="candidate[consent]" value="1"/> Acepto la política de privacidad</label></div>
-<button type="submit" class="button button-primary">Enviar solicitud</button>
+<h1>Desarrolladora backend</h1>
+<form id="job-application-form" action="/jobs/1234567-desarrolladora-backend/applications" method="post">
+<input type="hidden" name="authenticity_token" value="token-de-prueba"/>
+<input type="hidden" name="form_metrics[keystrokes]" value="0"/>
+<input type="hidden" value="9000001" name="candidate[answers_attributes][0][question_id]" id="candidate_answers_attributes_0_question_id"/>
+<div data-question-mandatory="true" data-question-multiple-choice="false">
+<fieldset id="id_1001">
+<legend><span>Are you authorized to work in the country listed?<sup data-asterisk="true" aria-hidden="true">*</sup><span>Required</span></span></legend>
+<div data-controller="forms--inputs--boolean">
+<input id="boolean-1001-true" data-forms--inputs--boolean-target="yes" type="radio" value="true" name="candidate[answers_attributes][0][boolean]"/>
+<label for="boolean-1001-true">Yes</label>
+</div>
+<div data-controller="forms--inputs--boolean">
+<input id="boolean-1001-false" type="radio" value="false" name="candidate[answers_attributes][0][boolean]"/>
+<label for="boolean-1001-false">No</label>
+</div>
+</fieldset>
+</div>
+<input type="hidden" value="9000002" name="candidate[answers_attributes][1][question_id]" id="candidate_answers_attributes_1_question_id"/>
+<div data-question-mandatory="true" data-question-multiple-choice="false">
+<div id="id_1002" data-controller="forms--inputs--text tooltip">
+<label for="candidate_answers_attributes_1_text">Why do you want to work at Empresa Ficticia S.L.?<sup data-asterisk="true" aria-hidden="true">*</sup><span>Required</span></label>
+<textarea data-forms--inputs--text-target="text" rows="3" name="candidate[answers_attributes][1][text]" id="candidate_answers_attributes_1_text"></textarea>
+</div>
+</div>
+<input type="hidden" value="9000003" name="candidate[answers_attributes][2][question_id]" id="candidate_answers_attributes_2_question_id"/>
+<div data-question-mandatory="true" data-question-multiple-choice="false">
+<div id="id_1003" data-controller="forms--inputs--text tooltip">
+<label for="candidate_answers_attributes_2_text">What are your salary expectations, including base and commission? Are you flexible if we discuss compensation options?<sup data-asterisk="true" aria-hidden="true">*</sup><span>Required</span></label>
+<textarea data-forms--inputs--text-target="text" rows="3" name="candidate[answers_attributes][2][text]" id="candidate_answers_attributes_2_text"></textarea>
+</div>
+</div>
+<input type="hidden" value="9000004" name="candidate[answers_attributes][3][question_id]" id="candidate_answers_attributes_3_question_id"/>
+<div data-question-mandatory="false" data-question-multiple-choice="false">
+<div id="id_1004" data-controller="forms--inputs--text tooltip">
+<label for="candidate_answers_attributes_3_text">Describe a project you are proud of and what you learned from it</label>
+<textarea data-forms--inputs--text-target="text" rows="3" name="candidate[answers_attributes][3][text]" id="candidate_answers_attributes_3_text"></textarea>
+</div>
+</div>
+<input type="hidden" value="9000005" name="candidate[answers_attributes][4][question_id]" id="candidate_answers_attributes_4_question_id"/>
+<div data-question-mandatory="false" data-question-multiple-choice="true">
+<fieldset id="id_1005">
+<legend id="id_1005_label"><span>Please indicate the languages you speak fluently?</span></legend>
+<div data-controller="forms--inputs--choice" data-forms--inputs--choice-show-as-dropdown-value="true" data-forms--inputs--choice-multiple-value="true">
+<div data-controller="common--dropdown"><input aria-hidden="true" data-common--dropdown-target="hiddenInput" data-validation-message="You must select an option"/></div>
+<button type="button" role="button" id="trigger-dropdown-1005" aria-required="false" aria-label="Select one or more options" aria-haspopup="menu" aria-expanded="false" aria-controls="dropdown-1005" aria-labelledby="id_1005_label id_1005_selected"><span>Select one or more options</span></button>
+<div id="dropdown-1005" role="menu" aria-labelledby="trigger-dropdown-1005"><button type="button" role="menuitemcheckbox" data-value="1" aria-checked="false"><span data-label-value="Spanish">Spanish</span></button><button type="button" role="menuitemcheckbox" data-value="2" aria-checked="false"><span data-label-value="English">English</span></button></div>
+<input data-forms--inputs--choice-target="checkbox" type="checkbox" value="1" name="candidate[answers_attributes][4][choices][]" id="candidate_answers_attributes_4_choices_1"/>
+<input data-forms--inputs--choice-target="checkbox" type="checkbox" value="2" name="candidate[answers_attributes][4][choices][]" id="candidate_answers_attributes_4_choices_2"/>
+</div>
+</fieldset>
+</div>
+<h2><span>Personal information</span></h2>
+<div id="id_1010" data-controller="forms--inputs--text tooltip">
+<label for="candidate_first_name">First name<sup data-asterisk="true" aria-hidden="true">*</sup><span>Required</span></label>
+<input autocomplete="given-name" data-forms--inputs--text-target="text" maxlength="50" data-careersite--form-target="firstName" size="50" type="text" name="candidate[first_name]" id="candidate_first_name"/>
+</div>
+<div id="id_1011" data-controller="forms--inputs--text tooltip">
+<label for="candidate_last_name">Last name<sup data-asterisk="true" aria-hidden="true">*</sup><span>Required</span></label>
+<input autocomplete="family-name" data-forms--inputs--text-target="text" maxlength="50" data-careersite--form-target="lastName" size="50" type="text" name="candidate[last_name]" id="candidate_last_name"/>
+</div>
+<div id="id_1012" data-controller="forms--inputs--text tooltip">
+<label for="candidate_email">Email<sup data-asterisk="true" aria-hidden="true">*</sup><span>Required</span></label>
+<input autocomplete="email" data-forms--inputs--text-target="text" data-careersite--form-target="email" data-suggest-email-correction="true" type="email" name="candidate[email]" id="candidate_email"/>
+</div>
+<div id="id_1013">
+<label for="candidate_phone">Phone<sup data-asterisk="true" aria-hidden="true">*</sup><span>Required</span></label>
+<button type="button" aria-expanded="false" aria-label="Change country, selected Spain (+34)" aria-haspopup="dialog" aria-controls="iti-0__dropdown-content" title="Spain"><div aria-hidden="true"></div></button>
+<div id="iti-0__dropdown-content" role="dialog" aria-modal="true"><div><input id="iti-0__search-input" type="search" placeholder="Search" role="combobox" aria-expanded="true" aria-label="Search" aria-controls="iti-0__country-listbox" aria-autocomplete="list" autocomplete="off"/></div><ul id="iti-0__country-listbox" role="listbox" aria-label="List of countries"></ul></div>
+<input autocomplete="tel" aria-label="Phone number with country code" data-controller="phone-input" data-phone-input-country-value="ES" data-careersite--form-target="phone" type="tel" name="candidate[phone]" id="candidate_phone" data-intl-tel-input-id="0" placeholder="612 34 56 78" aria-invalid="false"/>
+</div>
+<div data-controller="forms--inputs--upload" data-forms--inputs--upload-accepted-files-value=".doc,.docx,.pptx,.pdf,.pages,.txt,.rtf" data-forms--inputs--upload-max-files-value="1">
+<label for="candidate_resume_remote_url">Upload CV<sup data-asterisk="true" aria-hidden="true">*</sup><span>Required</span></label>
+<div data-forms--inputs--upload-target="trigger"><span>Drop your file or <u>upload</u></span></div>
+<input type="file" accept=".doc,.docx,.pptx,.pdf,.pages,.txt,.rtf" id="candidate_resume_remote_url" aria-label="Drop your file or upload, Upload CV" required=""/>
+<input value="" disabled="disabled" data-forms--inputs--upload-preview-target="urlInput" type="text" name="candidate[resume_remote_url]"/>
+</div>
+<div id="id_1020"><input type="checkbox" value="1" name="candidate[consent_given]" id="candidate_consent_given"/><label for="candidate_consent_given"><span>Required.</span><p>By submitting this application, I confirm that I have read the <a href="https://empresaficticia.teamtailor.com/privacy-policy">Privacy Policy</a>.</p></label></div>
+<div id="id_1021"><input type="checkbox" value="1" name="candidate[consent_given_future_jobs]" id="candidate_consent_given_future_jobs"/><label for="candidate_consent_given_future_jobs"><p>I consent to being considered for future vacancies.</p></label></div>
+<input type="submit" name="commit" value="Submit application" data-careersite--form-target="submitButton"/>
 </form>
-</section>
 </main>
 </body>
 </html>
