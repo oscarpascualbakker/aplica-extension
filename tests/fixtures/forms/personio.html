@@ -1,33 +1,41 @@
 <!doctype html>
-<!-- Fixture de formulario de candidatura (CV-507). Estructura de Personio (<empresa>.jobs.personio.de/job/<id>):
-     campos first_name, last_name, email, phone, location, linkedin, salary_expectations y available_from,
-     y el campo de archivo del CV. Contenido inventado. -->
-<html lang="en">
+<!-- CV-543: formulario de candidatura de Personio (/job/<id>/apply), en español como en la captura real de
+     noviembre de 2026: ids field-<nombre> y name first_name, last_name, email, phone, available_from y
+     salary_expectations; dos campos de archivo, el CV (name="documents.cv") y "Otro" (name="documents.other"),
+     y un botón de enviar. No hay campos de ciudad, LinkedIn ni web, ni preguntas propias de la empresa. El
+     contenido es inventado. -->
+<html lang="es">
 <head>
 <meta charset="utf-8"/>
-<title>Desarrolladora backend - Empresa Ficticia S.L. Jobs</title>
+<title>Desarrolladora backend - Empresa Ficticia S.L.</title>
 </head>
 <body>
 <main>
-<form id="apply-form" class="application-form" action="/job/1234567/apply" method="post" enctype="multipart/form-data">
-<h2>Apply now</h2>
-<div class="form-group"><label for="first_name">First name *</label><input type="text" id="first_name" name="first_name" required="" autocomplete="given-name"/></div>
-<div class="form-group"><label for="last_name">Last name *</label><input type="text" id="last_name" name="last_name" required="" autocomplete="family-name"/></div>
-<div class="form-group"><label for="email">Email *</label><input type="email" id="email" name="email" required="" autocomplete="email"/></div>
-<div class="form-group"><label for="phone">Phone</label><input type="tel" id="phone" name="phone" autocomplete="tel"/></div>
-<div class="form-group"><label for="location">Location</label><input type="text" id="location" name="location"/></div>
-<div class="form-group"><label for="linkedin">LinkedIn profile</label><input type="text" id="linkedin" name="linkedin"/></div>
-<div class="form-group"><label for="website">Personal website</label><input type="text" id="website" name="website"/></div>
-<div class="form-group"><label for="available_from">Earliest starting date</label><input type="date" id="available_from" name="available_from"/></div>
-<div class="form-group"><label for="salary_expectations">Salary expectations (gross per year)</label><input type="text" id="salary_expectations" name="salary_expectations"/></div>
-<div class="form-group"><label for="cv">CV *</label><input type="file" id="cv" name="cv" accept=".pdf,.doc,.docx"/></div>
-<div class="form-group"><label for="cover_letter_file">Cover letter</label><input type="file" id="cover_letter_file" name="cover_letter_file" accept=".pdf,.doc,.docx"/></div>
-<div class="form-group"><label for="question_11">Why do you want to work at Empresa Ficticia S.L.?</label><textarea id="question_11" name="questions[11]"></textarea></div>
-<div class="form-group"><label for="question_12">Describe a project you are proud of and what you learned from it</label><textarea id="question_12" name="questions[12]"></textarea></div>
-<div class="form-group"><label for="question_13">Do you have a work permit for Spain, or do you need a visa?</label><input type="text" id="question_13" name="questions[13]"/></div>
-<div class="form-group"><label for="question_14">Date of birth</label><input type="text" id="question_14" name="questions[14]"/></div>
-<div class="form-group"><label><input type="checkbox" name="privacy_policy" value="1"/> I agree to the privacy policy</label></div>
-<button type="submit" class="btn btn-primary">Submit application</button>
+<h1>Desarrolladora backend</h1>
+<form>
+<fieldset>
+<div role="group" aria-labelledby="name-group-label"><span id="name-group-label">Name<span aria-hidden="true">*</span><span> (obligatorio)</span></span>
+<div><label for="field-first_name">Nombre</label><input id="field-first_name" type="text" maxlength="255" placeholder="Nombre" name="first_name" value=""/></div>
+<div><label for="field-last_name">Apellido</label><input id="field-last_name" type="text" maxlength="255" placeholder="Apellido" name="last_name" value=""/></div>
+</div>
+<div><label for="field-email">Correo electrónico<span aria-hidden="true">*</span><span> (obligatorio)</span></label><input id="field-email" type="email" maxlength="255" placeholder="yourmail@domain.com" name="email" value=""/></div>
+<div><label for="field-phone">Teléfono<span aria-hidden="true">*</span><span> (obligatorio)</span></label><input id="field-phone" type="text" maxlength="255" placeholder="+49 176 123 4455" name="phone" value=""/></div>
+<div><label for="field-available_from">Disponible desde<span aria-hidden="true">*</span><span> (obligatorio)</span></label><input id="field-available_from" type="text" maxlength="255" placeholder="Disponible desde" name="available_from" value=""/></div>
+<div><label for="field-salary_expectations">Expectativas salariales<span aria-hidden="true">*</span><span> (obligatorio)</span></label><input id="field-salary_expectations" type="text" maxlength="255" placeholder="Expectativas salariales" name="salary_expectations" value=""/></div>
+<h3>Documentos</h3>
+<div>Por favor, sube tu currículum, certificados actuales (máx. 20 MB en total).</div>
+<div role="group" aria-labelledby="doc-label-cv">
+<div id="doc-label-cv">CV<span aria-hidden="true">*</span><span> (obligatorio)</span></div>
+<button type="button">Añadir archivo</button>
+<input id="doc-input-cv" type="file" multiple="" accept=".pdf,.docx,.doc,.png,.jpg,.jpeg,.txt,.odt,.ods,.xlsx,.rtf" aria-label="Upload CV" name="documents.cv"/>
+</div>
+<div role="group" aria-labelledby="doc-label-other">
+<div id="doc-label-other">Otro<span> (Opcional)</span></div>
+<button type="button">Añadir archivo</button>
+<input id="doc-input-other" type="file" multiple="" accept=".pdf,.docx,.doc,.png,.jpg,.jpeg,.txt,.odt,.ods,.xlsx,.rtf" aria-label="Upload Otro" name="documents.other"/>
+</div>
+<button type="submit">Enviar candidatura</button>
+</fieldset>
 </form>
 </main>
 </body>

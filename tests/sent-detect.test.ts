@@ -4,7 +4,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { ATS_KEYS, type AtsKey } from '../src/fill/types';
-import { detectConfirmation, headlineConfirms, offerUrlFromConfirmation } from '../src/sent/detect';
+import { detectConfirmation, headlineConfirms, OFFER_NOT_IN_CONFIRMATION, offerUrlFromConfirmation } from '../src/sent/detect';
 import { fixture, parseHtml } from './helpers/dom';
 import { FORM_URLS, formHtml } from './helpers/fill';
 
@@ -22,11 +22,12 @@ const CONFIRMATIONS: Record<AtsKey, { url: string; offerUrl: string; title: stri
     title: 'Desarrolladora backend',
     company: 'Empresa Ficticia S.L.',
   },
+  // La confirmación de Workday no dice la oferta: la dirección es la del sitio y el puesto y la empresa salen vacíos (CV-543).
   workday: {
-    url: 'https://empresaficticia.wd3.myworkdayjobs.com/es/Careers/job/Madrid/Desarrolladora-backend_R-1/apply/applyManually',
-    offerUrl: 'https://empresaficticia.wd3.myworkdayjobs.com/es/Careers/job/Madrid/Desarrolladora-backend_R-1',
-    title: 'Desarrolladora backend',
-    company: 'Empresa Ficticia S.L.',
+    url: 'https://empresaficticia.wd3.myworkdayjobs.com/en-US/empresaficticia/jobTasks/completed/application',
+    offerUrl: 'https://empresaficticia.wd3.myworkdayjobs.com/en-US/empresaficticia',
+    title: '',
+    company: '',
   },
   workable: {
     url: 'https://apply.workable.com/empresaficticia/j/ABC123/apply/',
@@ -97,6 +98,37 @@ describe('página de confirmación de cada ATS', () => {
     expect(detectConfirmation(parseHtml(html, url), url)).toBeNull();
   });
 
+  it('Workday: solo la página de tareas completadas es la confirmación, no el formulario ni la página de inicio del candidato', () => {
+    const html = confirmationHtml('workday');
+    const site = 'https://empresaficticia.wd3.myworkdayjobs.com/en-US/empresaficticia';
+    // El diálogo de otra tarea (otra ruta) no es el envío de una candidatura.
+    expect(detectConfirmation(parseHtml(html.replaceAll('Application Submitted', 'Task completed'), `${site}/jobTasks/completed/other`), `${site}/jobTasks/completed/other`)).toBeNull();
+    // Tras cerrar el diálogo, la página de inicio no lo enseña.
+    const home = `${site}/userHome`;
+    expect(detectConfirmation(parseHtml('<h3>Candidate Home</h3><div>No submitted applications</div>', home), home)).toBeNull();
+  });
+
+  it('Workday: sin la oferta recordada no se propone nada, porque la confirmación no la dice', () => {
+    expect(OFFER_NOT_IN_CONFIRMATION).toEqual(['workday']);
+  });
+
+  it('Workable con dominio propio: se reconoce por la ruta /_/j/ o por la estructura de la página', () => {
+    const url = 'https://careers.empresaficticia.example/_/j/ABC123/apply/';
+    const html =
+      '<div data-ui="careers-page-content"><header><img data-ui="company-logo-img" alt="x"/><a data-ui="company-logo" href="/_/"><img alt="Empresa Ficticia S.L." src="logo.png"/></a><h1 data-ui="job-title">Desarrolladora backend</h1></header><div data-ui="application-success">Application submitted</div></div>';
+    expect(detectConfirmation(parseHtml(html, url), url)).toEqual({
+      ats: 'workable',
+      offerUrl: 'https://careers.empresaficticia.example/_/j/ABC123/',
+      title: 'Desarrolladora backend',
+      company: 'Empresa Ficticia S.L.',
+    });
+    // Sin ruta de Workable (la careers page en la raíz del dominio) basta la estructura.
+    const other = 'https://careers.empresaficticia.example/gracias';
+    expect(detectConfirmation(parseHtml(html, other), other)?.ats).toBe('workable');
+    // Y una página cualquiera de ese dominio no lo es.
+    expect(detectConfirmation(parseHtml('<h1>Application submitted</h1>', other), other)).toBeNull();
+  });
+
   it('sin puesto ni empresa en la página, los deja vacíos', () => {
     const url = 'https://apply.workable.com/empresaficticia/j/ABC123/apply/';
     const found = detectConfirmation(parseHtml('<h2>Application submitted</h2>', url), url);
@@ -137,9 +169,13 @@ describe('enlace de la oferta a partir de la confirmación', () => {
     );
   });
 
-  it('Workday: corta en /apply aunque no haya más ruta', () => {
-    expect(offerUrlFromConfirmation('workday', 'https://empresaficticia.wd3.myworkdayjobs.com/Careers/job/Madrid/X_R-1/apply')).toBe(
-      'https://empresaficticia.wd3.myworkdayjobs.com/Careers/job/Madrid/X_R-1',
+  it('Workday: la dirección del sitio, sin la ruta de las tareas ni la consulta', () => {
+    expect(offerUrlFromConfirmation('workday', 'https://empresaficticia.wd3.myworkdayjobs.com/en-US/empresaficticia/jobTasks/completed/application?x=1')).toBe(
+      'https://empresaficticia.wd3.myworkdayjobs.com/en-US/empresaficticia',
     );
+  });
+
+  it('Workable en el dominio propio: la oferta es /_/j/<código>/', () => {
+    expect(offerUrlFromConfirmation('workable', 'https://careers.empresaficticia.example/_/j/ABC123/apply/?lng=es')).toBe('https://careers.empresaficticia.example/_/j/ABC123/');
   });
 });

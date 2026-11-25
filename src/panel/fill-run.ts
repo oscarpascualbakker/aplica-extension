@@ -6,7 +6,7 @@
 
 import type { ApiClient, ApplicationDocuments, ApplicationRef, DocumentFormat, ProfileData, ProfileResult } from '../api';
 import { chooseFormat, CV_MIME } from '../fill/accept';
-import { ATS_ORIGINS, atsFromUrl } from '../fill/ats';
+import { ATS_ORIGINS, atsFromUrl, isKnownAtsHost } from '../fill/ats';
 import type { FillAnswer, FillFile, FillProfile, FillRequest, FillSummary } from '../fill/types';
 import { parseScan, parseSummary, type FillPageDeps } from './fill-page';
 
@@ -104,13 +104,18 @@ async function loadDocuments(client: ApiClient, token: string, input: FillInput)
 export async function runFill(input: FillInput, client: ApiClient, deps: FillPageDeps): Promise<FillOutcome> {
   const ats = atsFromUrl(input.pageUrl);
   if (!ats) return { status: 'unsupported' };
-  let granted: boolean;
-  try {
-    granted = await deps.requestHostPermission([...ATS_ORIGINS[ats]]);
-  } catch {
-    granted = false;
+  // Workable en el dominio propio de la empresa (CV-543) no tiene permiso opcional que pedir: el manifiesto
+  // no puede listar dominios que no conoce. Ahí solo vale el acceso que da el icono (activeTab) y, si falta,
+  // el script falla y el panel lo explica (`no_access`).
+  if (isKnownAtsHost(input.pageUrl)) {
+    let granted: boolean;
+    try {
+      granted = await deps.requestHostPermission([...ATS_ORIGINS[ats]]);
+    } catch {
+      granted = false;
+    }
+    if (!granted) return { status: 'denied' };
   }
-  if (!granted) return { status: 'denied' };
 
   let tabId: number;
   try {

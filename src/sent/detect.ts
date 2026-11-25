@@ -6,10 +6,11 @@
 // ("Gracias por tu candidatura", "Application submitted"). Mientras la página siga teniendo el formulario
 // (un campo de email o de archivo), no es la confirmación: así la oferta y el formulario nunca dan positivo.
 //
-// No envía nada ni toca la página: solo lee. Las reglas de Workday, Workable, SmartRecruiters, Teamtailor y
-// Personio salen de la estructura conocida de sus páginas y son provisionales hasta capturar las reales.
+// No envía nada ni toca la página: solo lee. La regla de Workday sale de la captura real de su confirmación
+// (noviembre de 2026, CV-543). Las de Workable, SmartRecruiters, Teamtailor y Personio siguen siendo las de la
+// estructura conocida de sus páginas: son provisionales hasta capturar las reales (CV-556).
 
-import { atsFromUrl } from '../fill/ats';
+import { atsFromDocument, atsFromUrl } from '../fill/ats';
 import type { AtsKey } from '../fill/types';
 import { MAX_FIELD } from '../extract/types';
 import { clip, inlineText } from '../extract/text';
@@ -127,6 +128,15 @@ function cutAt(path: string, pattern: RegExp): string {
   return match ? path.slice(0, match.index) : path;
 }
 
+/**
+ * ATS cuya página de confirmación no dice de qué oferta es (CV-543). Workday navega a
+ * `/<idioma>/<sitio>/jobTasks/completed/application`, sin la ruta de la oferta ni su título: la misma
+ * dirección para todas las candidaturas del sitio. Ahí la oferta solo se conoce si el panel la vio antes en
+ * esa pestaña (la oferta leída, guardada o encontrada, `Remembered`); si no, no se propone nada, porque con
+ * la dirección del sitio todas las candidaturas se confundirían entre sí. Limitación conocida.
+ */
+export const OFFER_NOT_IN_CONFIRMATION: readonly AtsKey[] = ['workday'];
+
 export const CONFIRMATION_RULES: Record<AtsKey, Rule> = {
   // https://job-boards.greenhouse.io/<empresa>/jobs/<id>/confirmation
   greenhouse: {
@@ -140,20 +150,24 @@ export const CONFIRMATION_RULES: Record<AtsKey, Rule> = {
     offerPath: (path) => cutAt(path, /\/(thanks|apply)\/?$/),
     names: (doc) => companyDashTitle(text(doc, 'title')) ?? none(),
   },
-  // Workday: una aplicación de una sola página; la confirmación es un aviso propio, sin cambiar de ruta.
+  // https://<empresa>.wd3.myworkdayjobs.com/<idioma>/<sitio>/jobTasks/completed/application: tras enviar, Workday
+  // navega ahí y abre un diálogo (candidateHomeTaskModal) con "Application Submitted". La página no lleva la
+  // oferta (ver OFFER_NOT_IN_CONFIRMATION): `offerPath` da la raíz del sitio y la oferta sale de lo recordado.
   workday: {
-    selector: '[data-automation-id="applicationSubmittedPage"], [data-automation-id="congratulationsPopup"]',
-    offerPath: (path) => cutAt(path, /\/apply(\/|$)/),
-    names: (doc) => ({ title: text(doc, '[data-automation-id="jobPostingHeader"]'), company: meta(doc, 'og:site_name') }),
+    path: /\/jobTasks\/completed\/application\/?$/,
+    offerPath: (path) => cutAt(path, /\/jobTasks(\/|$)/),
+    names: none,
   },
-  // https://apply.workable.com/<empresa>/j/<código>/apply/ → aviso de enviado en la misma ruta.
+  // https://apply.workable.com/<empresa>/j/<código>/apply/ (o <dominio propio>/_/j/<código>/apply/) → aviso de
+  // enviado en la misma ruta.
   workable: {
     selector: '[data-ui="application-success"], [data-ui="application-form-success"]',
     offerPath: (path) => {
       const match = /^\/[^/]+\/j\/[^/]+/.exec(path);
       return match ? `${match[0]}/` : path;
     },
-    names: (doc) => ({ title: text(doc, '[data-ui="job-title"]'), company: meta(doc, 'og:site_name') }),
+    // La empresa, del logo de la cabecera si la página no la dice en og:site_name.
+    names: (doc) => ({ title: text(doc, '[data-ui="job-title"]'), company: meta(doc, 'og:site_name') || inlineText(doc.querySelector('[data-ui="company-logo"] img')?.getAttribute('alt')) }),
   },
   // https://jobs.smartrecruiters.com/oneclick-ui/company/<Empresa>/publication/<uuid>/...
   smartrecruiters: {
@@ -189,7 +203,8 @@ export function offerUrlFromConfirmation(ats: AtsKey, pageUrl: string): string {
  * aún tiene formulario; después la regla del ATS (ruta o elemento propio) o un titular de confirmación.
  */
 export function detectConfirmation(doc: Document, pageUrl: string): Confirmation | null {
-  const ats = atsFromUrl(pageUrl);
+  // Workable en el dominio propio de la empresa se reconoce por la estructura de la página (CV-543).
+  const ats = atsFromUrl(pageUrl) ?? atsFromDocument(doc);
   if (!ats) return null;
   if (hasApplicationForm(doc)) return null;
 

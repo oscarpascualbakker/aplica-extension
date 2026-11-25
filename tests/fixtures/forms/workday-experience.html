@@ -1,0 +1,74 @@
+<!doctype html>
+<!-- CV-543: paso "My Experience" de un formulario de Workday. La estructura sale de la captura real de
+     noviembre de 2026: ids workExperience-N e education-N en cada campo del historial, fechas como
+     spinbuttons con data-automation-id, y la subida del CV con file-upload-input-ref. El contenido es
+     inventado. -->
+<html lang="en-US">
+<head>
+<meta charset="utf-8"/>
+<title>Candidate Home</title>
+</head>
+<body>
+<main>
+<h3>My Experience</h3>
+<div data-automation-id="applyFlowMyExpPage">
+<div role="group" aria-labelledby="Work-Experience-section">
+<h4 id="Work-Experience-section">Work Experience</h4>
+<div data-fkit-id="workExperience-346--jobTitle" data-automation-id="formField-jobTitle">
+<label for="workExperience-346--jobTitle"><span>Job Title<abbr aria-hidden="true">*</abbr></span></label>
+<div><input type="text" id="workExperience-346--jobTitle" name="jobTitle" aria-required="true" value=""/></div>
+</div>
+<div data-fkit-id="workExperience-346--companyName" data-automation-id="formField-companyName">
+<label for="workExperience-346--companyName"><span>Company<abbr aria-hidden="true">*</abbr></span></label>
+<div><input type="text" id="workExperience-346--companyName" name="companyName" aria-required="true" value=""/></div>
+</div>
+<div data-fkit-id="workExperience-346--location" data-automation-id="formField-location">
+<label for="workExperience-346--location">Location</label>
+<div><input type="text" id="workExperience-346--location" name="location" aria-required="false" value=""/></div>
+</div>
+<div data-fkit-id="workExperience-346--currentlyWorkHere" data-automation-id="formField-currentlyWorkHere">
+<label for="workExperience-346--currentlyWorkHere">I currently work here</label>
+<input id="workExperience-346--currentlyWorkHere" type="checkbox" aria-checked="false" name="currentlyWorkHere" aria-required="false"/>
+</div>
+<div data-fkit-id="workExperience-346--startDate" data-automation-id="formField-startDate">
+<label id="startDate-label"><span>From<abbr aria-hidden="true">*</abbr></span></label>
+<div role="group" aria-labelledby="startDate-label">
+<input role="spinbutton" aria-describedby="helpText-workExperience-346--startDate" aria-label="Month" aria-valuemax="12" aria-valuemin="1" aria-valuetext="MM" aria-required="true" id="workExperience-346--startDate-dateSectionMonth-input" data-automation-id="dateSectionMonth-input" value=""/>
+<input role="spinbutton" aria-label="Year" aria-valuemax="9999" aria-valuemin="1" aria-valuetext="YYYY" aria-required="true" id="workExperience-346--startDate-dateSectionYear-input" data-automation-id="dateSectionYear-input" value=""/>
+</div>
+</div>
+<div data-fkit-id="workExperience-346--endDate" data-automation-id="formField-endDate">
+<label id="endDate-label"><span>To<abbr aria-hidden="true">*</abbr></span></label>
+<div role="group" aria-labelledby="endDate-label">
+<input role="spinbutton" aria-describedby="helpText-workExperience-346--endDate" aria-label="Month" aria-valuemax="12" aria-valuemin="1" aria-valuetext="MM" aria-required="true" id="workExperience-346--endDate-dateSectionMonth-input" data-automation-id="dateSectionMonth-input" value=""/>
+<input role="spinbutton" aria-label="Year" aria-valuemax="9999" aria-valuemin="1" aria-valuetext="YYYY" aria-required="true" id="workExperience-346--endDate-dateSectionYear-input" data-automation-id="dateSectionYear-input" value=""/>
+</div>
+</div>
+<div data-fkit-id="workExperience-346--roleDescription" data-automation-id="formField-roleDescription">
+<label for="workExperience-346--roleDescription">Role Description</label>
+<textarea id="workExperience-346--roleDescription" aria-required="false"></textarea>
+</div>
+</div>
+<div role="group" aria-labelledby="Education-section">
+<h4 id="Education-section">Education</h4>
+<div data-fkit-id="education-347--schoolName" data-automation-id="formField-schoolName">
+<label for="education-347--schoolName"><span>School or University<abbr aria-hidden="true">*</abbr></span></label>
+<div><input type="text" id="education-347--schoolName" name="schoolName" aria-required="true" value=""/></div>
+</div>
+<div data-fkit-id="education-347--fieldOfStudy" data-automation-id="formField-fieldOfStudy">
+<label for="education-347--fieldOfStudy">Field of Study</label>
+<div data-automation-id="multiSelectContainer" data-uxi-widget-type="multiselect"><div data-automation-id="multiselectInputContainer"><input id="education-347--fieldOfStudy" enterkeyhint="search" placeholder="Search" aria-required="false" autocomplete="off" data-uxi-widget-type="selectinput" value=""/></div></div>
+</div>
+</div>
+<div role="group" aria-labelledby="Resume-section">
+<h4 id="Resume-section">Resume/CV</h4>
+<div data-automation-id="attachments-FileUpload" aria-labelledby="label349">
+<div data-automation-id="file-upload-drop-zone"><div>Drop files here</div><div><div>or</div><button type="button" data-automation-id="select-files" id="resumeAttachments--attachments"><span>Select files</span></button></div></div>
+<input data-automation-id="file-upload-input-ref" type="file" multiple=""/>
+</div>
+</div>
+</div>
+<div data-automation-id="pageFooter"><button data-automation-id="pageFooterBackButton" type="button">Back</button><button data-automation-id="pageFooterNextButton">Save and Continue</button></div>
+</main>
+</body>
+</html>

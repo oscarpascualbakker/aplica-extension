@@ -3,6 +3,8 @@
 // navegador y la API simulados. Nada cambia hasta que la persona pulsa. Solo datos ficticios.
 import { readFileSync } from 'node:fs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { ApiClient } from '../src/api';
+import { findSentCandidate, type Remembered } from '../src/panel/sent-run';
 
 const API = 'https://api.test';
 const OFFER_URL = 'https://jobs.lever.co/empresaficticia/00000000-0000-0000-0000-000000000001';
@@ -311,5 +313,42 @@ describe('panel: aviso de candidatura enviada', () => {
     env.replies['GET /offers/match'] = { status: 200, body: { match: 'url', application: APP } };
     await openPanel(env, '¿Has enviado la candidatura?');
     expect(body()).toContain('Desarrolladora backend en Empresa Ficticia S.L.');
+  });
+});
+
+describe('findSentCandidate: Workday no dice la oferta en su confirmación (CV-543)', () => {
+  const SITE = 'https://empresaficticia.wd3.myworkdayjobs.com/en-US/empresaficticia';
+  const TAB = `${SITE}/jobTasks/completed/application`;
+  const WORKDAY = { ats: 'workday', offerUrl: SITE, title: '', company: '' };
+  const OFFER: NonNullable<Remembered['offer']> = { ...EXTRACTED, workMode: 'hibrido', portal: 'workday', url: `${SITE}/job/Madrid/Desarrolladora-backend_R-1` };
+  const deps = { detect: () => Promise.resolve(WORKDAY) };
+  const matchOffer = vi.fn((): Promise<unknown> => Promise.resolve({ ok: true, data: null }));
+  const client = { matchOffer } as unknown as ApiClient;
+
+  beforeEach(() => {
+    matchOffer.mockClear();
+  });
+
+  it('sin la oferta recordada en esa pestaña no propone nada ni consulta Aplica', async () => {
+    expect(await findSentCandidate(7, TAB, undefined, 'tok', client, deps)).toBeNull();
+    expect(matchOffer).not.toHaveBeenCalled();
+  });
+
+  it('con la oferta que el panel leyó en /apply (mismo sitio), la propone con sus datos, no con la dirección del sitio', async () => {
+    const remembered = { pageUrl: `${OFFER.url}/apply/applyManually`, offer: OFFER, application: null };
+    const found = await findSentCandidate(7, TAB, remembered, 'tok', client, deps);
+    expect(matchOffer).toHaveBeenCalledWith('tok', { url: OFFER.url, title: OFFER.title, company: OFFER.company });
+    expect(found).toMatchObject({ kind: 'new', offer: { url: OFFER.url, title: 'Desarrolladora backend', company: 'Empresa Ficticia S.L.', sent: true } });
+  });
+
+  it('con la candidatura recordada propone esa, sin consultar', async () => {
+    const remembered = { pageUrl: `${OFFER.url}/apply`, offer: OFFER, application: APP };
+    expect(await findSentCandidate(7, TAB, remembered, 'tok', client, deps)).toEqual({ kind: 'existing', application: APP });
+    expect(matchOffer).not.toHaveBeenCalled();
+  });
+
+  it('lo recordado de otro sitio no vale', async () => {
+    const remembered = { pageUrl: 'https://otra.wd1.myworkdayjobs.com/en-US/otra/job/X', offer: OFFER, application: null };
+    expect(await findSentCandidate(7, TAB, remembered, 'tok', client, deps)).toBeNull();
   });
 });

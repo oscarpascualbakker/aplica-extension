@@ -2,7 +2,7 @@
 // formatos del CV, dominios de los ATS y casos sueltos de detección.
 import { describe, expect, it } from 'vitest';
 import { acceptsFile, chooseFormat } from '../src/fill/accept';
-import { ATS_ORIGINS, atsFromUrl } from '../src/fill/ats';
+import { ATS_ORIGINS, atsFromDocument, atsFromUrl, isKnownAtsHost } from '../src/fill/ats';
 import { fillForm, scanForm, splitName } from '../src/fill/fill';
 import { similarity } from '../src/fill/text';
 import { ATS_HOST_PATTERNS } from '../scripts/manifest.mjs';
@@ -283,6 +283,34 @@ describe('dominios de los ATS', () => {
       expect(atsFromUrl(other), other).toBeNull();
     }
     expect(atsFromUrl(undefined)).toBeNull();
+  });
+
+  it('Workable en el dominio propio de la empresa se reconoce por la ruta /_/j/<código> (CV-543)', () => {
+    expect(atsFromUrl('https://careers.empresaficticia.example/_/j/ABC123/')).toBe('workable');
+    expect(atsFromUrl('https://careers.empresaficticia.example/_/j/ABC123/apply/?lng=es')).toBe('workable');
+    expect(atsFromUrl('https://careers.empresaficticia.example/_/j/ABC123')).toBe('workable');
+    // Solo la forma exacta: ni el listado de la careers page ni rutas parecidas.
+    for (const other of [
+      'https://careers.empresaficticia.example/_/',
+      'https://careers.empresaficticia.example/j/ABC123/',
+      'https://careers.empresaficticia.example/_/jobs/ABC123/',
+      'https://careers.empresaficticia.example/x/_/j/ABC123/',
+    ]) {
+      expect(atsFromUrl(other), other).toBeNull();
+    }
+  });
+
+  it('solo los dominios conocidos piden permiso de host', () => {
+    expect(isKnownAtsHost('https://apply.workable.com/x/j/1/apply/')).toBe(true);
+    expect(isKnownAtsHost('https://careers.empresaficticia.example/_/j/ABC123/apply/')).toBe(false);
+    expect(isKnownAtsHost('https://example.com/')).toBe(false);
+  });
+
+  it('Workable se reconoce también por la estructura de la página', () => {
+    const url = 'https://careers.empresaficticia.example/_/';
+    expect(atsFromDocument(formDocument('<div data-ui="careers-page-content"><h1 data-ui="job-title">X</h1></div>', url))).toBe('workable');
+    expect(atsFromDocument(formDocument('<form data-ui="application-form"><input name="email"/></form>', url))).toBe('workable');
+    expect(atsFromDocument(formDocument('<form><input name="email"/></form>', url))).toBeNull();
   });
 
   it('los permisos opcionales del manifiesto son exactamente los dominios del código', () => {
