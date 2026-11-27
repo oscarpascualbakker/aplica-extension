@@ -17,7 +17,13 @@ Supported browsers: Chrome, Edge and Firefox, from a single Manifest V3 code bas
   open, it checks whether a page of the seven ATS you allowed for form filling is the "thank you"
   page of an application.
 - What it reads (job title, company, location, work mode, salary and description) is shown to
-  you, editable, in the panel. Nothing is sent to Aplica until you press "Save to Aplica".
+  you, editable, in the panel. Nothing is sent to Aplica until you press "Save to Aplica", with one exception: extractor health.
+  Each time the extension reads an offer on a portal that has its own extractor (not Workday or
+  Workable, which rely on structured data and your selection) and the browser is connected, it
+  sends Aplica three values: the portal name (for example `lever`), the extension version and
+  whether the job title, company and description were found on the page. It never sends the offer,
+  its URL or its host, and it is silent: no retries and no messages. Aplica uses it to notice when a
+  portal changes its pages and an extractor stops working.
 - It **never submits an application for you**: it never presses "Submit", never calls
   `submit()` or `requestSubmit()` on a form, never clicks a button and never fires Enter. The
   form filling help only writes values into fields (see "Filling in forms").

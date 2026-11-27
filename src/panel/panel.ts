@@ -32,6 +32,7 @@ import { closePanel } from './close';
 import { devExportSection } from './dev-export';
 import { actions, button, el, linkButton } from './dom';
 import { fillSection } from './fill-section';
+import { reportExtraction } from '../extract/report';
 import { readPage, type ReadOutcome, type TabInfo } from './read-page';
 import { confirmSent, findSentCandidate, type Remembered, type SentCandidate } from './sent-run';
 
@@ -279,6 +280,10 @@ async function read(session: Session, again = false): Promise<void> {
   const tab = activeTab;
   if (tab?.id !== undefined && tab.url && (await checkSent(session, tab.id, tab.url))) return;
   if (gen !== generation) return;
+  // CV-539, D-253: una lectura, un envío; no bloquea el panel.
+  if (outcome.status === 'ok') {
+    void reportExtraction(outcome.offer, { getToken: () => tokens.get(), client, version: () => extensionApi().runtime.getManifest().version });
+  }
   if (outcome.status === 'ok' && tab?.id !== undefined && outcome.offer.description) {
     remembered.set(tab.id, { pageUrl: tab.url ?? outcome.offer.url, offer: outcome.offer, application: null });
   }
