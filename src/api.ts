@@ -136,7 +136,7 @@ export type ApiClient = {
   exchangeToken(request: TokenRequest): Promise<ApiResult<TokenResponse>>;
   getMe(token: string): Promise<ApiResult<MeResponse>>;
   revokeToken(token: string): Promise<ApiResult<null>>;
-  /** Lectura de un extractor (CV-539, D-253): solo portal, versión y si salió bien. Nada de la oferta. */
+  /** Lectura de un extractor (CV-539, D-257): solo portal, versión y si salió bien. Nada de la oferta. */
   reportExtraction(token: string, report: ExtractionReport): Promise<ApiResult<null>>;
   /** ¿Ya está esta oferta en la cuenta? (CV-504) */
   matchOffer(token: string, query: { url: string; title: string; company: string }): Promise<ApiResult<MatchResponse>>;
@@ -440,7 +440,7 @@ export function createApiClient(apiBase: string, fetchImpl: typeof fetch = fetch
     },
 
     async reportExtraction(token, report) {
-      // Cuerpo cerrado a tres campos (D-253): nunca se cuela contenido de la oferta.
+      // Cuerpo cerrado a tres campos (D-257): nunca se cuela contenido de la oferta.
       const json = { portal: report.portal, version: report.version, ok: report.ok };
       const result = await request('/extraction-reports', { method: 'POST', token, json });
       if ('error' in result) return { ok: false, ...result.error };

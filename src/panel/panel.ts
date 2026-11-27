@@ -280,7 +280,7 @@ async function read(session: Session, again = false): Promise<void> {
   const tab = activeTab;
   if (tab?.id !== undefined && tab.url && (await checkSent(session, tab.id, tab.url))) return;
   if (gen !== generation) return;
-  // CV-539, D-253: una lectura, un envío; no bloquea el panel.
+  // CV-539, D-257: una lectura, un envío; no bloquea el panel.
   if (outcome.status === 'ok') {
     void reportExtraction(outcome.offer, { getToken: () => tokens.get(), client, version: () => extensionApi().runtime.getManifest().version });
   }

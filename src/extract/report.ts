@@ -1,4 +1,4 @@
-// Vigilancia de los extractores (CV-539, D-253, D-204). Cada lectura de una oferta en un portal con
+// Vigilancia de los extractores (CV-539, D-257, D-204). Cada lectura de una oferta en un portal con
 // extractor propio manda a la API un solo dato: si el extractor sacó lo esencial. Nada del contenido
 // de la oferta, ni la URL ni el host: solo portal, versión y resultado.
 

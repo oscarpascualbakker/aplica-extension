@@ -1,4 +1,4 @@
-// Vigilancia de los extractores (CV-539, D-253): la regla de "lectura correcta" y el envío.
+// Vigilancia de los extractores (CV-539, D-257): la regla de "lectura correcta" y el envío.
 import { describe, expect, it, vi } from 'vitest';
 import { createApiClient } from '../src/api';
 import { extractOffer } from '../src/extract/extract';
